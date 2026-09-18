@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Friseur-Umschulung</title>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-storage-compat.js"></script>
+<style>
+  :root{
+    --bwk:#1A1A2E; --bwk2:#2D2D44; --bwk3:#3D3D5C;
+    --bg:#FAF8F4; --surface:#FFFFFF; --surface-2:#F2EFE8; --surface-3:#E9E3D8;
+    --border:#E2E2EA; --border-strong:#D0D0DC;
+    --text:#1A1A2E; --text-dim:#555555; --text-faint:#999999;
+    --accent:#E8401C; --accent-strong:#C73315; --accent-ink:#FFFFFF; --accent-dim:#FCE8E6;
+    --focus:#C73315;
+    --success:#16A34A; --success-bg:#F0FDF4; --success-ink:#14532D;
+    --warning:#D97706; --warning-bg:#FFFBEB; --warning-ink:#7C4A03;
+    --danger:#DC2626; --danger-bg:#FEF2F2; --danger-ink:#7F1D1D;
+    --info:#2563EB; --info-bg:#EFF6FF; --info-ink:#1E3A8A;
+    --neutral:#64748B; --neutral-bg:#F8FAFC;
+    --shadow-1:0 1px 4px rgba(26,26,46,.10);
+    --shadow-2:0 10px 30px -14px rgba(26,26,46,.30);
+    --radius-s:6px; --radius-m:10px; --radius-l:14px;
+    --font-display:-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-body:-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bwk:#12121F; --bwk2:#1D1D30; --bwk3:#2A2A42;
+      --bg:#15131F; --surface:#1F1D2E; --surface-2:#272536; --surface-3:#322F42;
+      --border:#3A3750; --border-strong:#4A4666;
+      --text:#F2EFE8; --text-dim:#C9C4D6; --text-faint:#8F8AA3;
+      --accent:#FF7A52; --accent-strong:#FF9A78; --accent-ink:#1A1A2E; --accent-dim:#3A2620;
+      --focus:#FF7A52;
+      --success:#4ADE80; --success-bg:#123322; --success-ink:#BBF7D0;
+      --warning:#FBBF24; --warning-bg:#3A2C0C; --warning-ink:#FDE68A;
+      --danger:#F87171; --danger-bg:#3A1616; --danger-ink:#FECACA;
+      --info:#60A5FA; --info-bg:#132540; --info-ink:#BFDBFE;
+      --neutral:#94A3B8; --neutral-bg:#242938;
+      --shadow-1:0 1px 4px rgba(0,0,0,.4);
+      --shadow-2:0 10px 30px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bwk:#12121F; --bwk2:#1D1D30; --bwk3:#2A2A42;
+    --bg:#15131F; --surface:#1F1D2E; --surface-2:#272536; --surface-3:#322F42;
+    --border:#3A3750; --border-strong:#4A4666;
+    --text:#F2EFE8; --text-dim:#C9C4D6; --text-faint:#8F8AA3;
+    --accent:#FF7A52; --accent-strong:#FF9A78; --accent-ink:#1A1A2E; --accent-dim:#3A2620;
+    --focus:#FF7A52;
+    --success:#4ADE80; --success-bg:#123322; --success-ink:#BBF7D0;
+    --warning:#FBBF24; --warning-bg:#3A2C0C; --warning-ink:#FDE68A;
+    --danger:#F87171; --danger-bg:#3A1616; --danger-ink:#FECACA;
+    --info:#60A5FA; --info-bg:#132540; --info-ink:#BFDBFE;
+    --neutral:#94A3B8; --neutral-bg:#242938;
+    --shadow-1:0 1px 4px rgba(0,0,0,.4);
+    --shadow-2:0 10px 30px -14px rgba(0,0,0,.6);
+  }
+  *{box-sizing:border-box;}
+  [hidden]{display:none !important;}
+  html{height:100%;}
+  body{height:100%; overflow:hidden; display:flex; flex-direction:column; background:var(--bg); color:var(--text); font-family:var(--font-body); font-size:14.5px; line-height:1.45;}
+  h1,h2,h3,h4{font-family:var(--font-display); font-weight:600; margin:0; text-wrap:balance; color:var(--text);}
+  button, input, select, textarea{font-family:inherit; font-size:inherit; color:inherit;}
+  table{font-variant-numeric:tabular-nums;}
+  .app{flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;}
+  .app-inner{max-width:1180px; margin:0 auto; padding:0 16px 64px;}
+  a{color:var(--accent-strong);}
+
+  /* topbar */
+  .topbar{flex-shrink:0; width:100%; background:var(--bwk); padding-top:calc(12px + env(safe-area-inset-top,0px)); padding-bottom:10px; border-bottom:1px solid var(--bwk3);}
+  .topbar-inner{max-width:1180px; margin:0 auto; padding:0 16px;}
+  .topbar-row{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+  .brand{display:flex; flex-direction:column; gap:6px; min-width:0;}
+  .brand h1{font-size:19px; font-weight:700; letter-spacing:.2px; color:#fff;}
+  .brand .sub{color:rgba(255,255,255,.75); font-size:12px; background:rgba(255,255,255,.1); padding:3px 10px; border-radius:20px; display:inline-block; width:fit-content;}
+  .topbar-actions{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+  .topbar-actions .btn-ghost{color:rgba(255,255,255,.75); border-color:rgba(255,255,255,.25);}
+  .topbar-actions .btn-ghost:hover{background:rgba(255,255,255,.12); color:#fff;}
+  .demo-banner{display:flex; align-items:center; gap:10px; background:var(--warning-bg); color:var(--warning-ink); border:1px solid var(--warning); border-radius:var(--radius-s); padding:8px 12px; font-size:12.5px; margin-top:10px;}
+  .demo-banner button{margin-left:auto;}
+
+  /* tabs */
+  .tabs{display:flex; gap:2px; margin-top:12px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:2px;}
+  .tab{flex:0 0 auto; padding:7px 14px; border-radius:var(--radius-s); border:1px solid transparent; background:transparent; color:rgba(255,255,255,.6); font-weight:600; font-size:13px; cursor:pointer; white-space:nowrap;}
+  .tab:hover{background:rgba(255,255,255,.1); color:#fff;}
+  .tab[aria-selected="true"]{background:var(--accent); color:#fff; box-shadow:none;}
+
+  main{padding-top:18px; display:flex; flex-direction:column; gap:18px;}
+  section[data-view]{display:flex; flex-direction:column; gap:16px;}
+  section[hidden]{display:none;}
+
+  /* buttons */
+  .btn{display:inline-flex; align-items:center; gap:6px; border-radius:var(--radius-s); border:1px solid var(--border-strong); background:var(--surface); color:var(--text); padding:8px 13px; font-weight:600; font-size:13px; cursor:pointer; line-height:1.2;}
+  .btn:hover{background:var(--surface-2);}
+  .btn:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, .tab:focus-visible{outline:2px solid var(--focus); outline-offset:2px;}
+  .btn-primary{background:var(--accent); border-color:var(--accent); color:var(--accent-ink);}
+  .btn-primary:hover{background:var(--accent-strong); border-color:var(--accent-strong);}
+  .btn-ghost{background:transparent; border-color:transparent;}
+  .btn-ghost:hover{background:var(--surface-2);}
+  .btn-danger{background:transparent; border-color:var(--danger); color:var(--danger);}
+  .btn-danger:hover{background:var(--danger-bg);}
+  .btn-sm{padding:5px 10px; font-size:12px; border-radius:7px;}
+  .btn[disabled]{opacity:.5; cursor:not-allowed;}
+  .icon-btn{width:32px; height:32px; padding:0; display:inline-flex; align-items:center; justify-content:center; border-radius:8px;}
+
+  /* cards & layout */
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:16px; box-shadow:var(--shadow-1);}
+  .card h3{font-size:15.5px;}
+  .grid-stats{display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:10px;}
+  .stat-tile{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-m); padding:14px; display:flex; flex-direction:column; gap:4px;}
+  .stat-tile .n{font-family:var(--font-display); font-size:28px; font-variant-numeric:tabular-nums; line-height:1;}
+  .stat-tile .l{color:var(--text-dim); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.4px;}
+  .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  .row-between{display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
+  .spacer{flex:1;}
+  .muted{color:var(--text-dim);}
+  .faint{color:var(--text-faint); font-size:12px;}
+  .divider{height:1px; background:var(--border); border:0; margin:4px 0;}
+
+  /* form fields */
+  .field{display:flex; flex-direction:column; gap:5px;}
+  .field label{font-size:12px; font-weight:600; color:var(--text-dim);}
+  .input, .select, .textarea{background:var(--surface); border:1px solid var(--border-strong); border-radius:8px; padding:8px 10px; width:100%;}
+  .textarea{resize:vertical; min-height:70px; font-family:inherit;}
+  .form-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(190px,1fr)); gap:12px;}
+  fieldset{border:1px solid var(--border); border-radius:var(--radius-m); padding:12px; margin:0;}
+  legend{padding:0 6px; font-weight:700; font-size:12.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.4px;}
+
+  /* pills / badges */
+  .pill{display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px; font-size:12px; font-weight:700; white-space:nowrap;}
+  .st-info{background:var(--info-bg); color:var(--info-ink);}
+  .st-warn{background:var(--warning-bg); color:var(--warning-ink);}
+  .st-success{background:var(--success-bg); color:var(--success-ink);}
+  .st-danger{background:var(--danger-bg); color:var(--danger-ink);}
+  .st-neutral{background:var(--neutral-bg); color:var(--neutral);}
+  .demo-tag{background:var(--accent-dim); color:var(--accent-strong); border-radius:999px; padding:2px 8px; font-size:10.5px; font-weight:700; letter-spacing:.3px; text-transform:uppercase;}
+
+  /* table */
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--radius-m); background:var(--surface);}
+  table{width:100%; border-collapse:collapse; min-width:560px;}
+  th, td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--border); font-size:13px;}
+  th{font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--text-dim); background:var(--surface-2); position:sticky; top:0;}
+  tbody tr{cursor:pointer;}
+  tbody tr:hover{background:var(--surface-2);}
+  tbody tr:last-child td{border-bottom:none;}
+  .empty{padding:28px 16px; text-align:center; color:var(--text-dim);}
+
+  /* dialogs */
+  dialog{border:none; border-radius:var(--radius-l); padding:0; background:var(--surface); color:var(--text); box-shadow:var(--shadow-2); max-width:640px; width:min(94vw,640px); max-height:88vh;}
+  dialog.wide{max-width:820px; width:min(96vw,820px);}
+  dialog::backdrop{background:rgba(20,14,12,.45);}
+  .dlg-head{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; padding:18px 20px 12px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--surface); border-radius:var(--radius-l) var(--radius-l) 0 0; z-index:2;}
+  .dlg-body{padding:16px 20px; overflow-y:auto; max-height:calc(88vh - 130px); display:flex; flex-direction:column; gap:14px;}
+  .dlg-foot{display:flex; gap:8px; justify-content:flex-end; padding:14px 20px; border-top:1px solid var(--border); flex-wrap:wrap;}
+
+  /* notes / messages list */
+  .note-item, .msg-item{border:1px solid var(--border); border-radius:var(--radius-m); padding:11px 13px; background:var(--surface); display:flex; flex-direction:column; gap:6px;}
+  .note-item.done{opacity:.6;}
+  .note-item .meta, .msg-item .meta{display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:11.5px; color:var(--text-dim);}
+  .avatar{width:22px; height:22px; border-radius:999px; flex:0 0 auto; object-fit:cover;}
+  .doc-row{display:flex; align-items:center; gap:8px; border:1px solid var(--border); border-radius:8px; padding:7px 10px; font-size:12.5px;}
+  .doc-row .cat{color:var(--text-dim);}
+  .curr-row{border:1px solid var(--border); border-radius:10px; padding:9px 11px;}
+  .curr-title{font-size:13px; font-weight:600;}
+  .att-btn{min-width:36px; font-weight:800;}
+  .att-btn.active.st-success{background:var(--success-bg); color:var(--success-ink); border-color:var(--success);}
+  .att-btn.active.st-warn{background:var(--warning-bg); color:var(--warning-ink); border-color:var(--warning);}
+  .att-btn.active.st-info{background:var(--info-bg); color:var(--info-ink); border-color:var(--info);}
+  .att-btn.active.st-danger{background:var(--danger-bg); color:var(--danger-ink); border-color:var(--danger);}
+  .att-btn.active.st-neutral{background:var(--neutral-bg); color:var(--neutral); border-color:var(--border-strong);}
+
+  /* charts */
+  .bar-chart{display:flex; flex-direction:column; gap:8px;}
+  .bar-row{display:grid; grid-template-columns:120px 1fr 46px; align-items:center; gap:10px; font-size:12.5px;}
+  .bar-track{background:var(--surface-3); border-radius:6px; height:16px; overflow:hidden;}
+  .bar-fill{height:100%; border-radius:6px;}
+
+  .toast-wrap{position:fixed; bottom:calc(16px + env(safe-area-inset-bottom,0px)); left:50%; transform:translateX(-50%); z-index:50; display:flex; flex-direction:column; gap:8px; align-items:center;}
+  .toast{background:var(--text); color:var(--bg); padding:9px 16px; border-radius:999px; font-size:12.5px; box-shadow:var(--shadow-2);}
+
+  .letter{background:#fff; color:#241b18; border:1px solid var(--border); border-radius:var(--radius-m); padding:28px; white-space:pre-wrap; font-family:var(--font-body); line-height:1.6; min-height:300px;}
+
+  .login-screen{position:fixed; inset:0; z-index:200; display:none; align-items:center; justify-content:center; background:var(--bwk); padding:24px;}
+  .login-screen.show{display:flex;}
+  .login-card{background:var(--surface); border-radius:var(--radius-l); padding:32px 28px; width:100%; max-width:380px; box-shadow:var(--shadow-2); display:flex; flex-direction:column; gap:14px;}
+  .login-card h1{font-size:20px; text-align:center;}
+  .login-card form{display:flex; flex-direction:column; gap:12px;}
+  .login-error{color:var(--danger); font-size:12.5px; margin:0;}
+
+  @media (max-width:640px){
+    .bar-row{grid-template-columns:88px 1fr 40px;}
+    th, td{padding:8px;}
+  }
+  @media print{
+    body *{visibility:hidden;}
+    #printArea, #printArea *{visibility:visible;}
+    #printArea{position:absolute; left:0; top:0; width:100%; padding:0; background:#fff; color:#000;}
+    .no-print{display:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <h1>Friseur-Umschulung</h1>
+    <p class="faint" style="text-align:center;">Bitte mit Ihrem persönlichen Zugang anmelden.</p>
+    <form id="frmLogin">
+      <div class="field"><label>E-Mail</label><input class="input" type="email" id="loginEmail" required autocomplete="username"></div>
+      <div class="field"><label>Passwort</label><input class="input" type="password" id="loginPassword" required autocomplete="current-password"></div>
+      <p class="login-error" id="loginError" hidden></p>
+      <button type="submit" class="btn btn-primary" style="width:100%;">Anmelden</button>
+    </form>
+    <button type="button" class="btn btn-ghost" id="btnForgotPassword" style="width:100%;">Passwort vergessen?</button>
+    <p class="faint" id="configWarning" style="margin-top:4px; text-align:center;" hidden>&#9888; Firebase ist noch nicht konfiguriert (firebaseConfig im Quellcode eintragen).</p>
+  </div>
+</div>
+
+<div id="appShell" hidden>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="topbar-row">
+      <div class="brand">
+        <h1 id="programTitle">Umschulung Friseurhandwerk</h1>
+        <div class="sub" id="orgSub">Verwaltung der Ausbildungs-Durchgänge · papierlos</div>
+      </div>
+      <div class="topbar-actions no-print">
+        <span class="faint" id="currentUserLabel" style="color:rgba(255,255,255,.7); font-size:11.5px;"></span>
+        <button class="btn btn-ghost icon-btn" id="btnSettings" title="Einstellungen">⚙</button>
+        <button class="btn btn-ghost icon-btn" id="btnLogout" title="Abmelden">⏏</button>
+        <button class="btn btn-primary" id="btnNewParticipant">+ Teilnehmerin</button>
+      </div>
+    </div>
+    <div class="demo-banner no-print" id="demoBanner" hidden>
+      <span>Diese Übersicht enthält <strong>Beispieldaten</strong> zur Veranschaulichung.</span>
+      <button class="btn btn-sm" id="btnClearDemo">Beispieldaten entfernen</button>
+    </div>
+    <nav class="tabs no-print" role="tablist" id="tabs">
+      <button class="tab" role="tab" data-tab="uebersicht">Übersicht</button>
+      <button class="tab" role="tab" data-tab="teilnehmerinnen">Teilnehmerinnen</button>
+      <button class="tab" role="tab" data-tab="anwesenheit">Anwesenheit</button>
+      <button class="tab" role="tab" data-tab="durchgaenge">Durchgänge</button>
+      <button class="tab" role="tab" data-tab="notizen">Notizen &amp; Aufgaben</button>
+      <button class="tab" role="tab" data-tab="kommunikation">Kommunikation</button>
+      <button class="tab" role="tab" data-tab="statistik">Statistik</button>
+    </nav>
+  </div>
+</header>
+
+<div class="app"><div class="app-inner">
+  <main>
+    <!-- ÜBERSICHT -->
+    <section data-view="uebersicht">
+      <div class="grid-stats" id="ovStats"></div>
+      <div class="card">
+        <div class="row-between">
+          <h3>Aktive Durchgänge</h3>
+          <button class="btn btn-sm" data-goto="durchgaenge">Alle Durchgänge →</button>
+        </div>
+        <div id="ovCohorts" style="margin-top:10px;"></div>
+      </div>
+      <div class="row" style="align-items:stretch; gap:16px; flex-wrap:wrap;">
+        <div class="card" style="flex:1; min-width:260px;">
+          <div class="row-between"><h3>Offene Aufgaben</h3><button class="btn btn-sm" data-goto="notizen">Alle →</button></div>
+          <div id="ovTasks" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+        <div class="card" style="flex:1; min-width:260px;">
+          <div class="row-between"><h3>Letzte interne Mitteilungen</h3><button class="btn btn-sm" data-goto="kommunikation">Alle →</button></div>
+          <div id="ovMessages" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEILNEHMERINNEN -->
+    <section data-view="teilnehmerinnen" hidden>
+      <div class="card">
+        <div class="row">
+          <div class="field" style="flex:2; min-width:180px;">
+            <label>Suche</label>
+            <input class="input" id="fltSearch" placeholder="Name, Ort, Aktenzeichen …">
+          </div>
+          <div class="field" style="min-width:170px;">
+            <label>Durchgang</label>
+            <select class="select" id="fltCohort"><option value="">Alle Durchgänge</option></select>
+          </div>
+          <div class="field" style="min-width:170px;">
+            <label>Status</label>
+            <select class="select" id="fltStatus"><option value="">Alle Status</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="participantsTable">
+          <thead><tr><th>Name</th><th>Durchgang</th><th>Status</th><th>Eintritt</th><th>Kostenträger</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ANWESENHEIT -->
+    <section data-view="anwesenheit" hidden>
+      <div class="card">
+        <div class="row">
+          <div class="field" style="min-width:200px;">
+            <label>Durchgang</label>
+            <select class="select" id="attCohort"></select>
+          </div>
+          <div class="field" style="min-width:160px;">
+            <label>Datum</label>
+            <input class="input" type="date" id="attDate">
+          </div>
+          <div class="spacer"></div>
+          <div class="row" id="attLegend" style="gap:6px; flex-wrap:wrap;"></div>
+        </div>
+      </div>
+      <div class="grid-stats" id="attSummary"></div>
+      <div id="attList" style="display:flex; flex-direction:column; gap:8px;"></div>
+    </section>
+
+    <!-- DURCHGÄNGE -->
+    <section data-view="durchgaenge" hidden>
+      <div class="row-between">
+        <h3>Durchgänge</h3>
+        <button class="btn btn-primary" id="btnNewCohort">+ Neuer Durchgang</button>
+      </div>
+      <div id="cohortsList" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </section>
+
+    <!-- NOTIZEN & AUFGABEN -->
+    <section data-view="notizen" hidden>
+      <div class="card">
+        <div class="row">
+          <div class="field" style="min-width:190px;">
+            <label>Teilnehmerin</label>
+            <select class="select" id="noteFltParticipant"><option value="">Alle / allgemein</option></select>
+          </div>
+          <div class="field" style="min-width:150px;">
+            <label>Art</label>
+            <select class="select" id="noteFltType">
+              <option value="">Alle Arten</option>
+              <option value="notiz">Notiz</option>
+              <option value="aufgabe">Aufgabe</option>
+            </select>
+          </div>
+          <div class="field" style="min-width:150px;">
+            <label>Status</label>
+            <select class="select" id="noteFltDone">
+              <option value="offen">Offen</option>
+              <option value="alle">Alle</option>
+              <option value="erledigt">Erledigt</option>
+            </select>
+          </div>
+          <div class="spacer"></div>
+          <button class="btn btn-primary" id="btnNewNote" style="align-self:flex-end;">+ Notiz / Aufgabe</button>
+        </div>
+      </div>
+      <div id="notesList" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </section>
+
+    <!-- KOMMUNIKATION -->
+    <section data-view="kommunikation" hidden>
+      <div class="card">
+        <div class="row">
+          <h3 style="flex:1;">Interne Kommunikation &amp; Kontaktverlauf</h3>
+          <button class="btn btn-primary" id="btnNewMessage">+ Eintrag</button>
+        </div>
+        <p class="faint" style="margin:4px 0 0;">Austausch der Ausbilderinnen untereinander sowie protokollierte Kontakte mit Teilnehmerinnen und Fördermittelgebern.</p>
+      </div>
+      <div id="messagesList" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </section>
+
+    <!-- STATISTIK -->
+    <section data-view="statistik" hidden>
+      <div class="row-between no-print">
+        <h3>Statistik</h3>
+        <button class="btn" id="btnPrintStats">Drucken</button>
+      </div>
+      <div id="printArea">
+        <div class="card">
+          <h3 id="statTitle">Gesamtübersicht</h3>
+          <div class="grid-stats" id="statTotals" style="margin-top:10px;"></div>
+        </div>
+        <div class="card" style="margin-top:14px;">
+          <h3>Status insgesamt</h3>
+          <div class="bar-chart" id="statStatusChart" style="margin-top:12px;"></div>
+        </div>
+        <div class="card" style="margin-top:14px;">
+          <h3>Nach Durchgang</h3>
+          <div class="table-wrap" style="margin-top:10px;">
+            <table>
+              <thead><tr><th>Durchgang</th><th>Aktiv</th><th>Verlängerung</th><th>Unterbrochen</th><th>Bestanden</th><th>Abgebrochen</th><th>Gesamt</th></tr></thead>
+              <tbody id="statCohortTable"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card" style="margin-top:14px;">
+          <h3>Ausbildungsrahmenplan – Fortschritt je Durchgang</h3>
+          <div class="bar-chart" id="statCurriculumChart" style="margin-top:12px;"></div>
+        </div>
+        <div class="card" style="margin-top:14px;">
+          <h3>Anwesenheit – laufender Monat</h3>
+          <div class="grid-stats" id="statAttendance" style="margin-top:10px;"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div></div>
+</div>
+
+<!-- Teilnehmerin Dialog -->
+<dialog id="dlgParticipant" class="wide">
+  <form method="dialog" id="frmParticipant">
+    <div class="dlg-head">
+      <div>
+        <h3 id="pDlgTitle">Neue Teilnehmerin</h3>
+        <div class="faint" id="pDlgSub"></div>
+      </div>
+      <button type="button" class="btn btn-ghost icon-btn" data-close>✕</button>
+    </div>
+    <div class="dlg-body">
+      <fieldset>
+        <legend>Persönliche Daten</legend>
+        <div class="form-grid">
+          <div class="field"><label>Vorname *</label><input class="input" id="pVorname" required></div>
+          <div class="field"><label>Nachname *</label><input class="input" id="pNachname" required></div>
+          <div class="field"><label>Geburtsdatum</label><input class="input" type="date" id="pGeburtsdatum"></div>
+          <div class="field"><label>Telefon</label><input class="input" id="pTelefon"></div>
+          <div class="field"><label>E-Mail</label><input class="input" type="email" id="pEmail"></div>
+          <div class="field"><label>Straße, Hausnr.</label><input class="input" id="pStrasse"></div>
+          <div class="field"><label>PLZ / Ort</label><input class="input" id="pOrt"></div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Ausbildung &amp; Förderung</legend>
+        <div class="form-grid">
+          <div class="field"><label>Durchgang</label><select class="select" id="pCohort"></select></div>
+          <div class="field"><label>Einstiegsart</label>
+            <select class="select" id="pEntryType"><option value="regulaer">Regulärer Start</option><option value="quereinstieg">Quereinstieg</option></select>
+          </div>
+          <div class="field"><label>Eintrittsdatum</label><input class="input" type="date" id="pEntryDate"></div>
+          <div class="field"><label>Status</label><select class="select" id="pStatus"></select></div>
+          <div class="field"><label>Austrittsdatum</label><input class="input" type="date" id="pExitDate"></div>
+          <div class="field"><label>Kostenträger / Fördermittelgeber</label><input class="input" id="pFunding" list="fundingList"></div>
+          <div class="field"><label>Aktenzeichen / Kundennummer</label><input class="input" id="pAktenzeichen"></div>
+        </div>
+        <datalist id="fundingList"></datalist>
+      </fieldset>
+      <fieldset>
+        <legend>Verlauf</legend>
+        <div class="row" style="gap:6px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-sm" data-quick="verlaengerung">→ Verlängerung</button>
+          <button type="button" class="btn btn-sm" data-quick="pausiert">→ Unterbrochen</button>
+          <button type="button" class="btn btn-sm" data-quick="aktiv">→ Reaktivieren</button>
+          <button type="button" class="btn btn-sm" data-quick="bestanden">✓ Bestanden (Austritt)</button>
+          <button type="button" class="btn btn-sm" data-quick="abgebrochen">✕ Abgebrochen (Austritt)</button>
+        </div>
+        <div id="pHistory" style="margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Anwesenheit</legend>
+        <div class="grid-stats" id="pAttSummary"></div>
+        <p class="faint" style="margin-top:8px; margin-bottom:0;">Tägliche Erfassung im Tab „Anwesenheit“ (für alle Teilnehmerinnen eines Durchgangs auf einmal).</p>
+      </fieldset>
+      <fieldset>
+        <legend>Ausbildungsrahmenplan</legend>
+        <div class="row-between" style="margin-bottom:10px; gap:12px;">
+          <span class="faint" id="pCurriculumProgress"></span>
+          <div class="bar-track" style="flex:1; max-width:180px;"><div class="bar-fill" id="pCurriculumBar" style="width:0%; background:var(--success);"></div></div>
+        </div>
+        <div id="pCurriculumList" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </fieldset>
+      <fieldset id="pDocsFieldset" hidden>
+        <legend>Dokumente</legend>
+        <div id="pDocs" style="display:flex; flex-direction:column; gap:8px;"></div>
+        <div class="row" style="margin-top:8px;">
+          <select class="select" id="pDocCat" style="max-width:220px;"></select>
+          <input type="file" id="pDocFile" accept=".pdf,.png,.jpg,.jpeg,.webp,.gif">
+          <button type="button" class="btn btn-sm" id="btnUploadDoc">Hochladen</button>
+        </div>
+        <p class="faint" id="pDocsHint" style="margin:4px 0 0;"></p>
+      </fieldset>
+      <fieldset>
+        <legend>Brief / Mitteilung erzeugen</legend>
+        <div class="row">
+          <select class="select" id="pTemplate" style="flex:1; min-width:160px;"></select>
+          <button type="button" class="btn btn-sm" id="btnMakeLetter">Vorschau &amp; Druck</button>
+        </div>
+      </fieldset>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn btn-danger no-print" id="btnDeleteParticipant" style="margin-right:auto;">Löschen</button>
+      <button type="button" class="btn" data-close>Abbrechen</button>
+      <button type="submit" class="btn btn-primary" id="btnSaveParticipant">Speichern</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Kohorte Dialog -->
+<dialog id="dlgCohort">
+  <form method="dialog" id="frmCohort">
+    <div class="dlg-head"><h3 id="cDlgTitle">Neuer Durchgang</h3><button type="button" class="btn btn-ghost icon-btn" data-close>✕</button></div>
+    <div class="dlg-body">
+      <div class="field"><label>Bezeichnung *</label><input class="input" id="cName" placeholder="z. B. Durchgang 2026–2028" required></div>
+      <div class="form-grid">
+        <div class="field"><label>Start</label><input class="input" type="date" id="cStart"></div>
+        <div class="field"><label>Geplantes Ende</label><input class="input" type="date" id="cEnd"></div>
+      </div>
+      <div class="field"><label>Status</label>
+        <select class="select" id="cStatus"><option value="aktiv">Aktiv</option><option value="abgeschlossen">Abgeschlossen</option></select>
+      </div>
+      <div class="field"><label>Bemerkung</label><textarea class="textarea" id="cNote"></textarea></div>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn btn-danger no-print" id="btnDeleteCohort" style="margin-right:auto;">Löschen</button>
+      <button type="button" class="btn" data-close>Abbrechen</button>
+      <button type="submit" class="btn btn-primary">Speichern</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Notiz/Aufgabe Dialog -->
+<dialog id="dlgNote">
+  <form method="dialog" id="frmNote">
+    <div class="dlg-head"><h3>Notiz / Aufgabe</h3><button type="button" class="btn btn-ghost icon-btn" data-close>✕</button></div>
+    <div class="dlg-body">
+      <div class="form-grid">
+        <div class="field"><label>Art</label>
+          <select class="select" id="nType"><option value="notiz">Notiz</option><option value="aufgabe">Aufgabe</option></select>
+        </div>
+        <div class="field"><label>Teilnehmerin (optional)</label><select class="select" id="nParticipant"><option value="">Allgemein</option></select></div>
+        <div class="field" id="nDueWrap"><label>Fällig am</label><input class="input" type="date" id="nDue"></div>
+      </div>
+      <div class="field"><label>Text *</label><textarea class="textarea" id="nText" required></textarea></div>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn" data-close>Abbrechen</button>
+      <button type="submit" class="btn btn-primary">Speichern</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Nachricht Dialog -->
+<dialog id="dlgMessage">
+  <form method="dialog" id="frmMessage">
+    <div class="dlg-head"><h3>Eintrag Kommunikation</h3><button type="button" class="btn btn-ghost icon-btn" data-close>✕</button></div>
+    <div class="dlg-body">
+      <div class="form-grid">
+        <div class="field"><label>Richtung / Zielgruppe</label>
+          <select class="select" id="mAudience">
+            <option value="intern">Intern (Ausbilderinnen)</option>
+            <option value="teilnehmerin">Kontakt mit Teilnehmerin</option>
+            <option value="foerdermittelgeber">Kontakt mit Fördermittelgeber</option>
+          </select>
+        </div>
+        <div class="field"><label>Teilnehmerin (optional)</label><select class="select" id="mParticipant"><option value="">—</option></select></div>
+      </div>
+      <div class="field"><label>Text *</label><textarea class="textarea" id="mText" required></textarea></div>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn" data-close>Abbrechen</button>
+      <button type="submit" class="btn btn-primary">Speichern</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Einstellungen Dialog -->
+<dialog id="dlgSettings">
+  <form method="dialog" id="frmSettings">
+    <div class="dlg-head"><h3>Einstellungen</h3><button type="button" class="btn btn-ghost icon-btn" data-close>✕</button></div>
+    <div class="dlg-body">
+      <div class="field"><label>Institut</label><input class="input" id="sInstitution"></div>
+      <div class="field"><label>Programmbezeichnung</label><input class="input" id="sProgram"></div>
+      <div class="field"><label>Kostenträger (durch Komma getrennt)</label><input class="input" id="sFunding"></div>
+      <div class="field"><label>Themen des Ausbildungsrahmenplans (eine Zeile je Thema)</label><textarea class="textarea" id="sCurriculum" style="min-height:180px;"></textarea></div>
+      <p class="faint">Diese App ist so angelegt, dass sie als Vorlage für weitere Ausbildungs-/Umschulungsgänge in anderen Abteilungen kopiert und angepasst werden kann.</p>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn" data-close>Abbrechen</button>
+      <button type="submit" class="btn btn-primary">Speichern</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Brief Dialog -->
+<dialog id="dlgLetter" class="wide">
+  <div class="dlg-head"><h3>Brief-Vorschau</h3><button type="button" class="btn btn-ghost icon-btn" data-close>✕</button></div>
+  <div class="dlg-body">
+    <div id="printArea2" class="letter" id="letterText" contenteditable="true"></div>
+  </div>
+  <div class="dlg-foot">
+    <button type="button" class="btn" data-close>Schließen</button>
+    <button type="button" class="btn btn-primary" id="btnPrintLetter">Drucken</button>
+  </div>
+</dialog>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ==== Firebase-Konfiguration ====
+  // Diese Werte findest du in der Firebase-Konsole unter:
+  // Projekteinstellungen (Zahnrad) -> Allgemein -> "Meine Apps" -> Web-App -> SDK-Einrichtung und Konfiguration
+  const firebaseConfig = {
+    apiKey: "HIER_API_KEY_EINTRAGEN",
+    authDomain: "HIER_PROJEKT.firebaseapp.com",
+    projectId: "HIER_PROJEKT_ID",
+    storageBucket: "HIER_PROJEKT.appspot.com",
+    messagingSenderId: "HIER_SENDER_ID",
+    appId: "HIER_APP_ID"
+  };
+  const FIREBASE_CONFIGURED = !!(firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith('HIER_'));
+  let firebaseAuth = null, firebaseDb = null, firebaseStorage = null;
+  if(FIREBASE_CONFIGURED && window.firebase){
+    firebase.initializeApp(firebaseConfig);
+    firebaseAuth = firebase.auth();
+    firebaseDb = firebase.firestore();
+    firebaseStorage = firebase.storage();
+  }
+
+  const $ = (s,r)=> (r||document).querySelector(s);
+  const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+  const esc = s => (s==null?'':String(s)).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fmtDate = iso => { if(!iso) return '—'; const d=new Date(iso+'T00:00:00'); if(isNaN(d.getTime())) return esc(iso); return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}); };
+  const fmtDateTime = iso => { if(!iso) return '—'; const d=new Date(iso); if(isNaN(d.getTime())) return esc(iso); return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})+' · '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}); };
+  const todayISO = () => new Date().toISOString().slice(0,10);
+  const nowISO = () => new Date().toISOString();
+
+  const STATUS = {
+    aktiv:        {label:'Aktiv',        cls:'st-info'},
+    verlaengerung:{label:'Verlängerung', cls:'st-warn'},
+    pausiert:     {label:'Unterbrochen', cls:'st-neutral'},
+    bestanden:    {label:'Bestanden',    cls:'st-success'},
+    abgebrochen:  {label:'Abgebrochen',  cls:'st-danger'}
+  };
+  const STATUS_ORDER = ['aktiv','verlaengerung','pausiert','bestanden','abgebrochen'];
+  const STATUS_COLOR_VAR = {aktiv:'--info', verlaengerung:'--warning', pausiert:'--neutral', bestanden:'--success', abgebrochen:'--danger'};
+  const ENTRY_LABEL = {regulaer:'Regulärer Start', quereinstieg:'Quereinstieg'};
+  const DOC_CATS = {formular:'Fördermittel-Formular', zertifikat:'Zertifikat', ausweis:'Persönliches Dokument', mahnung:'Mahnung / Mitteilung', sonstiges:'Sonstiges'};
+  const ATT_CODES = {A:{label:'Anwesend',cls:'st-success'}, V:{label:'Verspätet',cls:'st-warn'}, E:{label:'Entschuldigt',cls:'st-info'}, U:{label:'Unentschuldigt',cls:'st-danger'}, K:{label:'Krank',cls:'st-neutral'}};
+  const ATT_ORDER = ['A','V','E','U','K'];
+  const CURR_STATUS = {offen:{label:'Offen',cls:'st-neutral'}, in_arbeit:{label:'In Arbeit',cls:'st-warn'}, abgeschlossen:{label:'Abgeschlossen',cls:'st-success'}};
+  const CURR_CYCLE = ['offen','in_arbeit','abgeschlossen'];
+
+  function defaultCurriculum(){
+    const items = ['Arbeits- und Betriebsorganisation, Hygiene & Arbeitsschutz','Kundenempfang und Beratung','Haare und Kopfhaut waschen, pflegen, kurieren','Haarschnitttechniken Damen','Haarschnitttechniken Herren','Föhn- und Stylingtechniken','Dauerwelle / Umformung','Coloration und Tönung','Blondiertechniken','Hochsteck- und Festliche Frisuren','Bart- und Rasurpflege','Waren- und Verkaufskunde','Betriebswirtschaftliche Grundlagen','Vorbereitung Zwischen- und Abschlussprüfung'];
+    return items.map((title,i)=>({id:'lf'+String(i+1).padStart(2,'0'), title}));
+  }
+
+  function defaultTemplates(){
+    return [
+      {id:'erinnerung', title:'Erinnerung: fehlende Unterlagen', body:'Sehr geehrte/r {vorname} {nachname},\n\nuns fehlen noch Unterlagen für Ihre Umschulung ({durchgang}). Bitte reichen Sie diese bis {datum} nach.\n\nMit freundlichen Grüßen\nIhr Ausbildungsteam'},
+      {id:'mahnung', title:'Mahnung: Fehlzeiten', body:'Sehr geehrte/r {vorname} {nachname},\n\nwir haben festgestellt, dass Ihre Fehlzeiten im Durchgang {durchgang} zugenommen haben. Bitte setzen Sie sich zeitnah mit uns in Verbindung.\n\nMit freundlichen Grüßen\nIhr Ausbildungsteam'},
+      {id:'verlaengerung', title:'Mitteilung: Verlängerung', body:'Sehr geehrte/r {vorname} {nachname},\n\nda die Abschlussprüfung nicht bestanden wurde, geht Ihre Umschulung ({durchgang}) in die Verlängerung. Über den weiteren Ablauf informieren wir Sie zeitnah gesondert.\n\nMit freundlichen Grüßen\nIhr Ausbildungsteam'},
+      {id:'glueckwunsch', title:'Glückwunsch: Prüfung bestanden', body:'Sehr geehrte/r {vorname} {nachname},\n\nherzlichen Glückwunsch zum erfolgreichen Abschluss Ihrer Umschulung ({durchgang}) am {datum}!\n\nMit freundlichen Grüßen\nIhr Ausbildungsteam'}
+    ];
+  }
+
+  let db=null, assetsCap=null, userCap=null, myId=null, myName='Ich';
+  let cohorts=[], participants=[], notes=[], messages=[], attendance=[];
+  let settings = {institutionName:'', programName:'Umschulung Friseurhandwerk', fundingBodies:['Agentur für Arbeit','Jobcenter'], templates: defaultTemplates(), curriculum: defaultCurriculum()};
+  let hasDemoData=false;
+  let editingParticipantId=null, editingCohortId=null, editingDocs=[], editingHistory=[], editingCurriculum={};
+  let activeLetterParticipant=null;
+
+  function toast(msg){
+    const w = $('#toastWrap');
+    const t = document.createElement('div');
+    t.className='toast'; t.textContent=msg;
+    w.appendChild(t);
+    setTimeout(()=>t.remove(), 3200);
+  }
+
+  // ---------- Firebase auth bootstrap ----------
+  function makeAssetsShim(){
+    return {
+      upload: async (file) => {
+        const path = 'documents/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '_' + file.name;
+        const ref = firebaseStorage.ref(path);
+        await ref.put(file);
+        const url = await ref.getDownloadURL();
+        return {id: path, url};
+      }
+    };
+  }
+  function makeUserShim(){
+    return {
+      id: async () => firebaseAuth.currentUser ? firebaseAuth.currentUser.uid : null,
+      me: async () => ({ name: (firebaseAuth.currentUser && (firebaseAuth.currentUser.displayName || (firebaseAuth.currentUser.email||'').split('@')[0])) || '' })
+    };
+  }
+  function loginErrorText(code){
+    return ({
+      'auth/invalid-email':'Ungültige E-Mail-Adresse.',
+      'auth/user-disabled':'Dieses Konto wurde deaktiviert.',
+      'auth/user-not-found':'Kein Konto mit dieser E-Mail-Adresse gefunden.',
+      'auth/wrong-password':'Falsches Passwort.',
+      'auth/invalid-credential':'E-Mail oder Passwort ist falsch.',
+      'auth/missing-password':'Bitte ein Passwort eingeben.',
+      'auth/too-many-requests':'Zu viele Versuche. Bitte kurz warten.'
+    })[code] || 'Anmeldung fehlgeschlagen. Bitte Angaben prüfen.';
+  }
+  function wireLogin(){
+    $('#frmLogin').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      $('#loginError').hidden = true;
+      if(!FIREBASE_CONFIGURED){ $('#loginError').textContent='Firebase ist noch nicht konfiguriert.'; $('#loginError').hidden=false; return; }
+      const email = $('#loginEmail').value.trim(), pw = $('#loginPassword').value;
+      try{ await firebaseAuth.signInWithEmailAndPassword(email, pw); }
+      catch(err){ $('#loginError').textContent = loginErrorText(err.code); $('#loginError').hidden=false; }
+    });
+    $('#btnForgotPassword').addEventListener('click', async ()=>{
+      if(!FIREBASE_CONFIGURED){ toast('Firebase ist noch nicht konfiguriert.'); return; }
+      const email = $('#loginEmail').value.trim();
+      if(!email){ toast('Bitte zuerst die E-Mail-Adresse oben eingeben.'); return; }
+      try{ await firebaseAuth.sendPasswordResetEmail(email); toast('E-Mail zum Zurücksetzen des Passworts wurde versendet.'); }
+      catch(err){ toast('Fehler: ' + (err.message||err.code)); }
+    });
+    $('#btnLogout').addEventListener('click', ()=> firebaseAuth && firebaseAuth.signOut());
+  }
+  function init(){
+    wireStaticUI();
+    wireLogin();
+    if(!FIREBASE_CONFIGURED){
+      $('#configWarning').hidden = false;
+      $('#loginScreen').classList.add('show');
+      return;
+    }
+    firebaseAuth.onAuthStateChanged(user=>{
+      if(user){
+        db = firebaseDb;
+        assetsCap = makeAssetsShim();
+        userCap = makeUserShim();
+        myId = user.uid;
+        myName = user.displayName || (user.email||'').split('@')[0] || 'Ich';
+        $('#currentUserLabel').textContent = myName;
+        $('#loginScreen').classList.remove('show');
+        $('#appShell').hidden = false;
+        renderAll();
+        subscribeAll();
+      } else {
+        db = null; assetsCap = null; userCap = null;
+        $('#appShell').hidden = true;
+        $('#loginScreen').classList.add('show');
+      }
+    });
+  }
+
+  function subscribeAll(){
+    db.doc('settings/general').onSnapshot(snap=>{
+      if(snap.exists){
+        const d = snap.data();
+        settings.institutionName = d.institutionName || settings.institutionName;
+        settings.programName = d.programName || settings.programName;
+        settings.fundingBodies = Array.isArray(d.fundingBodies) && d.fundingBodies.length ? d.fundingBodies : settings.fundingBodies;
+        settings.templates = Array.isArray(d.templates) && d.templates.length ? d.templates : settings.templates;
+        if(Array.isArray(d.curriculum) && d.curriculum.length){
+          settings.curriculum = d.curriculum;
+        } else {
+          db.doc('settings/general').update({curriculum: settings.curriculum}).catch(()=>{});
+        }
+      } else {
+        seedIfEmpty();
+      }
+      renderTopMeta();
+      fillStaticSelects();
+      if($('#dlgParticipant').open) renderCurriculumList();
+    }, e=>console.warn('settings', e));
+
+    db.collection('attendance').onSnapshot(snap=>{
+      attendance = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      renderAttendanceTab();
+      if($('#dlgParticipant').open) renderAttendanceSummary();
+      if(!$('section[data-view="statistik"]').hidden) renderStats();
+    }, e=>console.warn('attendance', e));
+
+    db.collection('cohorts').orderBy('startDate','desc').onSnapshot(snap=>{
+      cohorts = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      fillCohortSelects();
+      renderAll();
+    }, e=>console.warn('cohorts', e));
+
+    db.collection('participants').onSnapshot(snap=>{
+      participants = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      hasDemoData = participants.some(p=>p.demo) || cohorts.some(c=>c.demo);
+      $('#demoBanner').hidden = !hasDemoData;
+      renderAll();
+    }, e=>console.warn('participants', e));
+
+    db.collection('notes').orderBy('createdAt','desc').limit(300).onSnapshot(snap=>{
+      notes = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      renderNotes(); renderOverview();
+    }, e=>console.warn('notes', e));
+
+    db.collection('messages').orderBy('createdAt','desc').limit(300).onSnapshot(snap=>{
+      messages = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      renderMessages(); renderOverview();
+    }, e=>console.warn('messages', e));
+  }
+
+  async function seedIfEmpty(){
+    if(!db) return;
+    try{
+      const existing = await db.collection('cohorts').limit(1).get();
+      if(!existing.empty) return;
+      await db.doc('settings/general').set({
+        institutionName:'(Beispiel) Bildungsinstitut',
+        programName:'Umschulung Friseurhandwerk',
+        fundingBodies:['Agentur für Arbeit','Jobcenter'],
+        templates: defaultTemplates(),
+        curriculum: defaultCurriculum()
+      });
+      const c1 = await db.collection('cohorts').add({name:'Durchgang 2025–2027', startDate:'2025-09-01', endDate:'2027-08-31', status:'aktiv', note:'', demo:true, createdAt: nowISO()});
+      const c2 = await db.collection('cohorts').add({name:'Durchgang 2024–2026', startDate:'2024-09-01', endDate:'2026-08-31', status:'aktiv', note:'', demo:true, createdAt: nowISO()});
+      const mk = (data)=> db.collection('participants').add(Object.assign({
+        documents:[], history:[], demo:true, createdAt: nowISO(), updatedAt: nowISO()
+      }, data));
+      await mk({vorname:'(Beispiel) Sabine', nachname:'Muster', geburtsdatum:'1998-04-12', telefon:'', email:'', strasse:'', ort:'', cohortId:c1.id, entryType:'regulaer', entryDate:'2025-09-01', status:'aktiv', exitDate:'', fundingBody:'Agentur für Arbeit', aktenzeichen:'AA-10234'});
+      await mk({vorname:'(Beispiel) Elif', nachname:'Beispielhaft', geburtsdatum:'1995-11-02', telefon:'', email:'', strasse:'', ort:'', cohortId:c1.id, entryType:'quereinstieg', entryDate:'2026-01-15', status:'aktiv', exitDate:'', fundingBody:'Jobcenter', aktenzeichen:'JC-55219'});
+      await mk({vorname:'(Beispiel) Nora', nachname:'Testfall', geburtsdatum:'1997-07-23', telefon:'', email:'', strasse:'', ort:'', cohortId:c2.id, entryType:'regulaer', entryDate:'2024-09-01', status:'verlaengerung', exitDate:'', fundingBody:'Agentur für Arbeit', aktenzeichen:'AA-88213', history:[{date:'2026-07-01', type:'verlaengerung_start', note:'Praktische Prüfung nicht bestanden, Wiederholung vereinbart.'}]});
+      await mk({vorname:'(Beispiel) Carla', nachname:'Vorlage', geburtsdatum:'1993-02-18', telefon:'', email:'', strasse:'', ort:'', cohortId:c2.id, entryType:'regulaer', entryDate:'2024-09-01', status:'bestanden', exitDate:'2026-07-20', fundingBody:'Jobcenter', aktenzeichen:'JC-11002', history:[{date:'2026-07-20', type:'austritt_bestanden', note:'Abschlussprüfung bestanden.'}]});
+      await db.collection('notes').add({type:'aufgabe', participantId:null, text:'(Beispiel) Zertifikate für Durchgang 2024–2026 anfordern', due:'2026-10-01', done:false, authorName:'Beispiel-Ausbilderin', authorId:null, demo:true, createdAt: nowISO()});
+      await db.collection('messages').add({audience:'intern', participantId:null, text:'(Beispiel) Bitte alle Anwesenheitslisten bis Freitag einreichen.', authorName:'Beispiel-Ausbilderin', authorId:null, demo:true, createdAt: nowISO()});
+      toast('Beispieldaten wurden angelegt.');
+    }catch(e){ console.warn('seed failed', e); }
+  }
+
+  async function clearDemoData(){
+    if(!db) return;
+    if(!confirm('Alle Beispieldaten entfernen? Dies kann nicht rückgängig gemacht werden.')) return;
+    const jobs = [];
+    for(const p of participants) if(p.demo) jobs.push(db.collection('participants').doc(p.id).delete());
+    for(const c of cohorts) if(c.demo) jobs.push(db.collection('cohorts').doc(c.id).delete());
+    for(const n of notes) if(n.demo) jobs.push(db.collection('notes').doc(n.id).delete());
+    for(const m of messages) if(m.demo) jobs.push(db.collection('messages').doc(m.id).delete());
+    await Promise.all(jobs);
+    toast('Beispieldaten entfernt.');
+  }
+
+  // ---------- static UI wiring ----------
+  function wireStaticUI(){
+    $$('.tab').forEach(btn=> btn.addEventListener('click', ()=> switchTab(btn.dataset.tab)));
+    $$('[data-goto]').forEach(btn=> btn.addEventListener('click', ()=> switchTab(btn.dataset.goto)));
+    switchTab('uebersicht');
+
+    $('#btnClearDemo').addEventListener('click', clearDemoData);
+    $('#btnNewParticipant').addEventListener('click', ()=> openParticipantDialog(null));
+    $('#btnNewCohort').addEventListener('click', ()=> openCohortDialog(null));
+    $('#btnNewNote').addEventListener('click', ()=> openNoteDialog());
+    $('#btnNewMessage').addEventListener('click', ()=> openMessageDialog());
+    $('#btnSettings').addEventListener('click', openSettingsDialog);
+    $('#btnPrintStats').addEventListener('click', ()=> window.print());
+    $('#btnPrintLetter').addEventListener('click', ()=> window.print());
+
+    $$('[data-close]').forEach(btn=> btn.addEventListener('click', (e)=>{ e.target.closest('dialog').close(); }));
+
+    $('#fltSearch').addEventListener('input', renderParticipants);
+    $('#fltCohort').addEventListener('change', renderParticipants);
+    $('#fltStatus').addEventListener('change', renderParticipants);
+    $('#noteFltParticipant').addEventListener('change', renderNotes);
+    $('#noteFltType').addEventListener('change', renderNotes);
+    $('#noteFltDone').addEventListener('change', renderNotes);
+
+    $('#attCohort').addEventListener('change', renderAttendanceTab);
+    $('#attDate').addEventListener('change', renderAttendanceTab);
+    $('#attList').addEventListener('click', onAttendanceClick);
+    $('#attDate').value = todayISO();
+    $('#attLegend').innerHTML = ATT_ORDER.map(c=>`<span class="pill ${ATT_CODES[c].cls}">${c} = ${esc(ATT_CODES[c].label)}</span>`).join('');
+
+    $('#pCurriculumList').addEventListener('click', onCurriculumToggleClick);
+    $('#pCurriculumList').addEventListener('change', onCurriculumFieldChange);
+
+    $('#participantsTable tbody').addEventListener('click', (e)=>{
+      const tr = e.target.closest('tr[data-id]');
+      if(tr) openParticipantDialog(tr.dataset.id);
+    });
+
+    $('#frmParticipant').addEventListener('submit', onSaveParticipant);
+    $('#frmCohort').addEventListener('submit', onSaveCohort);
+    $('#frmNote').addEventListener('submit', onSaveNote);
+    $('#frmMessage').addEventListener('submit', onSaveMessage);
+    $('#frmSettings').addEventListener('submit', onSaveSettings);
+
+    $$('#dlgParticipant [data-quick]').forEach(btn=> btn.addEventListener('click', ()=> quickStatusChange(btn.dataset.quick)));
+    $('#btnDeleteParticipant').addEventListener('click', onDeleteParticipant);
+    $('#btnDeleteCohort').addEventListener('click', onDeleteCohort);
+    $('#btnUploadDoc').addEventListener('click', onUploadDoc);
+    $('#btnMakeLetter').addEventListener('click', onMakeLetter);
+
+    Object.entries(DOC_CATS).forEach(([k,v])=>{
+      $('#pDocCat').insertAdjacentHTML('beforeend', `<option value="${k}">${esc(v)}</option>`);
+    });
+    STATUS_ORDER.forEach(k=> $('#pStatus').insertAdjacentHTML('beforeend', `<option value="${k}">${esc(STATUS[k].label)}</option>`));
+    $('#fltStatus').insertAdjacentHTML('beforeend', STATUS_ORDER.map(k=>`<option value="${k}">${esc(STATUS[k].label)}</option>`).join(''));
+    $('#noteFltType');
+  }
+
+  function switchTab(tab){
+    $$('.tab').forEach(b=> b.setAttribute('aria-selected', String(b.dataset.tab===tab)));
+    $$('section[data-view]').forEach(s=> s.hidden = s.dataset.view !== tab);
+    if(tab==='statistik') renderStats();
+    if(tab==='anwesenheit') renderAttendanceTab();
+  }
+
+  function fillStaticSelects(){
+    $('#programTitle').textContent = settings.programName || 'Umschulungsverwaltung';
+    $('#fundingList').innerHTML = (settings.fundingBodies||[]).map(f=>`<option value="${esc(f)}">`).join('');
+    $('#pTemplate').innerHTML = (settings.templates||[]).map(t=>`<option value="${esc(t.id)}">${esc(t.title)}</option>`).join('');
+  }
+
+  function renderTopMeta(){
+    $('#orgSub').textContent = (settings.institutionName ? settings.institutionName+' · ' : '') + 'Verwaltung der Ausbildungs-Durchgänge · papierlos';
+  }
+
+  function fillCohortSelects(){
+    const opts = cohorts.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    const cur1 = $('#fltCohort').value, cur2 = $('#pCohort').value, cur3 = $('#noteFltParticipant');
+    $('#fltCohort').innerHTML = '<option value="">Alle Durchgänge</option>'+opts;
+    $('#fltCohort').value = cur1;
+    $('#pCohort').innerHTML = opts;
+    if(cur2) $('#pCohort').value = cur2;
+    const curAtt = $('#attCohort').value;
+    $('#attCohort').innerHTML = opts;
+    if(curAtt) $('#attCohort').value = curAtt;
+    else if(cohorts.length) $('#attCohort').value = (cohorts.find(c=>c.status==='aktiv')||cohorts[0]).id;
+    const pOpts = participants.slice().sort((a,b)=>(a.nachname||'').localeCompare(b.nachname||'')).map(p=>`<option value="${p.id}">${esc(p.nachname)}, ${esc(p.vorname)}</option>`).join('');
+    ['#noteFltParticipant','#nParticipant','#mParticipant'].forEach(sel=>{
+      const el = $(sel); const cur = el.value; const placeholder = el.querySelector('option[value=""]').outerHTML;
+      el.innerHTML = placeholder + pOpts;
+      el.value = cur;
+    });
+  }
+
+  function renderAll(){
+    fillCohortSelects();
+    renderOverview();
+    renderParticipants();
+    renderCohorts();
+    renderNotes();
+    renderMessages();
+    if(!$('section[data-view="anwesenheit"]').hidden) renderAttendanceTab();
+    if(!$('section[data-view="statistik"]').hidden) renderStats();
+  }
+
+  // ---------- overview ----------
+  function renderOverview(){
+    const counts = {}; STATUS_ORDER.forEach(k=>counts[k]=0);
+    participants.forEach(p=> { if(counts[p.status]!=null) counts[p.status]++; });
+    const activeCohorts = cohorts.filter(c=>c.status==='aktiv').length;
+    const stats = [
+      {n: participants.length, l:'Teilnehmerinnen gesamt'},
+      {n: counts.aktiv, l:'Aktiv'},
+      {n: counts.verlaengerung, l:'In Verlängerung'},
+      {n: counts.bestanden, l:'Bestanden'},
+      {n: activeCohorts, l:'Laufende Durchgänge'},
+      {n: notes.filter(n=>n.type==='aufgabe' && !n.done).length, l:'Offene Aufgaben'}
+    ];
+    $('#ovStats').innerHTML = stats.map(s=>`<div class="stat-tile"><div class="n">${s.n}</div><div class="l">${esc(s.l)}</div></div>`).join('');
+
+    const active = cohorts.filter(c=>c.status==='aktiv').sort((a,b)=>(b.startDate||'').localeCompare(a.startDate||''));
+    $('#ovCohorts').innerHTML = active.length ? active.map(c=>{
+      const cnt = participants.filter(p=>p.cohortId===c.id && ['aktiv','verlaengerung','pausiert'].includes(p.status)).length;
+      return `<div class="row-between" style="padding:8px 0; border-bottom:1px solid var(--border);">
+        <div><strong>${esc(c.name)}</strong> <span class="faint">${fmtDate(c.startDate)} – ${fmtDate(c.endDate)}</span></div>
+        <span class="pill st-info">${cnt} Teilnehmerinnen</span>
+      </div>`;
+    }).join('') : '<p class="empty">Noch keine aktiven Durchgänge.</p>';
+
+    const openTasks = notes.filter(n=>n.type==='aufgabe' && !n.done).slice(0,5);
+    $('#ovTasks').innerHTML = openTasks.length ? openTasks.map(noteItemHTML).join('') : '<p class="empty">Keine offenen Aufgaben.</p>';
+    wireNoteItemEvents('#ovTasks');
+
+    const lastMsgs = messages.slice(0,5);
+    $('#ovMessages').innerHTML = lastMsgs.length ? lastMsgs.map(msgItemHTML).join('') : '<p class="empty">Noch keine Einträge.</p>';
+  }
+
+  // ---------- participants ----------
+  function participantName(p){ return `${p.vorname||''} ${p.nachname||''}`.trim() || '(ohne Namen)'; }
+  function cohortName(id){ const c = cohorts.find(c=>c.id===id); return c ? c.name : '—'; }
+
+  function renderParticipants(){
+    const q = ($('#fltSearch').value||'').toLowerCase();
+    const cohortF = $('#fltCohort').value;
+    const statusF = $('#fltStatus').value;
+    let list = participants.filter(p=>{
+      if(cohortF && p.cohortId!==cohortF) return false;
+      if(statusF && p.status!==statusF) return false;
+      if(q){
+        const hay = [p.vorname,p.nachname,p.ort,p.aktenzeichen,p.fundingBody].join(' ').toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    }).sort((a,b)=>(a.nachname||'').localeCompare(b.nachname||''));
+
+    const tbody = $('#participantsTable tbody');
+    if(!list.length){ tbody.innerHTML = `<tr><td colspan="5" class="empty">Keine Teilnehmerinnen gefunden.</td></tr>`; return; }
+    tbody.innerHTML = list.map(p=>{
+      const st = STATUS[p.status] || {label:p.status, cls:'st-neutral'};
+      return `<tr data-id="${p.id}">
+        <td>${esc(participantName(p))} ${p.demo?'<span class="demo-tag">Beispiel</span>':''}</td>
+        <td>${esc(cohortName(p.cohortId))}</td>
+        <td><span class="pill ${st.cls}">${esc(st.label)}</span></td>
+        <td>${fmtDate(p.entryDate)}</td>
+        <td>${esc(p.fundingBody||'—')}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function openParticipantDialog(id){
+    editingParticipantId = id;
+    const p = id ? participants.find(x=>x.id===id) : null;
+    editingDocs = p && Array.isArray(p.documents) ? p.documents.slice() : [];
+    editingHistory = p && Array.isArray(p.history) ? p.history.slice() : [];
+    editingCurriculum = p && p.curriculum ? JSON.parse(JSON.stringify(p.curriculum)) : {};
+    $('#pDlgTitle').textContent = p ? participantName(p) : 'Neue Teilnehmerin';
+    $('#pDlgSub').textContent = p ? cohortName(p.cohortId) : 'Persönliche Daten und Ausbildungsdetails erfassen';
+    $('#pVorname').value = p?.vorname||''; $('#pNachname').value = p?.nachname||'';
+    $('#pGeburtsdatum').value = p?.geburtsdatum||''; $('#pTelefon').value = p?.telefon||''; $('#pEmail').value = p?.email||'';
+    $('#pStrasse').value = p?.strasse||''; $('#pOrt').value = p?.ort||'';
+    $('#pCohort').value = p?.cohortId || (cohorts[0]?.id||'');
+    $('#pEntryType').value = p?.entryType||'regulaer';
+    $('#pEntryDate').value = p?.entryDate || todayISO();
+    $('#pStatus').value = p?.status||'aktiv';
+    $('#pExitDate').value = p?.exitDate||'';
+    $('#pFunding').value = p?.fundingBody||'';
+    $('#pAktenzeichen').value = p?.aktenzeichen||'';
+    $('#btnDeleteParticipant').hidden = !p;
+    $('#pDocsFieldset').hidden = !p;
+    $('#pDocsHint').textContent = assetsCap ? '' : 'Dokumenten-Upload ist derzeit nicht verfügbar.';
+    $('#btnUploadDoc').disabled = !assetsCap;
+    renderDocsList();
+    renderHistoryList();
+    renderCurriculumList();
+    renderAttendanceSummary();
+    $('#dlgParticipant').showModal();
+  }
+
+  function renderDocsList(){
+    $('#pDocs').innerHTML = editingDocs.length ? editingDocs.map((d,i)=>`
+      <div class="doc-row">
+        <span>📄</span>
+        <a href="${esc(d.url||('/_blob/'+d.assetId))}" target="_blank" rel="noopener">${esc(d.label||'Dokument')}</a>
+        <span class="cat">· ${esc(DOC_CATS[d.category]||d.category||'')}</span>
+        <span class="faint">${fmtDate((d.uploadedAt||'').slice(0,10))}</span>
+        <button type="button" class="btn btn-sm btn-ghost no-print" style="margin-left:auto;" data-remove-doc="${i}">Entfernen</button>
+      </div>`).join('') : '<p class="faint">Noch keine Dokumente hinterlegt.</p>';
+    $$('[data-remove-doc]').forEach(b=> b.addEventListener('click', ()=>{
+      editingDocs.splice(Number(b.dataset.removeDoc),1); renderDocsList();
+    }));
+  }
+
+  function renderHistoryList(){
+    $('#pHistory').innerHTML = editingHistory.length ? editingHistory.slice().reverse().map(h=>`
+      <div class="row" style="gap:8px; font-size:12.5px; border-bottom:1px solid var(--border); padding-bottom:6px;">
+        <span class="faint" style="min-width:78px;">${fmtDate(h.date)}</span>
+        <span>${esc(historyLabel(h.type))}</span>
+        ${h.note?`<span class="muted">— ${esc(h.note)}</span>`:''}
+      </div>`).join('') : '<p class="faint">Noch kein Verlauf.</p>';
+  }
+  function historyLabel(t){
+    return ({eintritt:'Eintritt', quereinstieg:'Quereinstieg', verlaengerung_start:'Verlängerung', pausiert:'Unterbrochen', aktiv_reaktiviert:'Reaktiviert', austritt_bestanden:'Austritt · bestanden', austritt_abgebrochen:'Austritt · abgebrochen', angelegt:'Angelegt'})[t] || t;
+  }
+
+  // ---------- Ausbildungsrahmenplan (curriculum) ----------
+  function renderCurriculumList(){
+    const items = settings.curriculum || [];
+    const done = items.filter(it=> (editingCurriculum[it.id]||{}).status==='abgeschlossen').length;
+    $('#pCurriculumProgress').textContent = items.length ? `${done} von ${items.length} Themen abgeschlossen` : 'Keine Themen konfiguriert — siehe Einstellungen (Zahnrad oben).';
+    $('#pCurriculumBar').style.width = items.length ? Math.round((done/items.length)*100)+'%' : '0%';
+    $('#pCurriculumList').innerHTML = items.length ? items.map(it=>{
+      const entry = editingCurriculum[it.id] || {status:'offen', date:'', note:''};
+      const meta = CURR_STATUS[entry.status] || CURR_STATUS.offen;
+      return `<div class="curr-row" data-curr="${esc(it.id)}">
+        <div class="row-between">
+          <span class="curr-title">${esc(it.title)}</span>
+          <button type="button" class="pill ${meta.cls}" data-curr-toggle="${esc(it.id)}" title="Klicken zum Weiterschalten">${esc(meta.label)}</button>
+        </div>
+        <div class="row" style="gap:8px; margin-top:6px;">
+          <input class="input" type="date" style="max-width:150px;" data-curr-date="${esc(it.id)}" value="${entry.date||''}">
+          <input class="input" placeholder="Bemerkung der Ausbilderin (optional)" data-curr-note="${esc(it.id)}" value="${esc(entry.note||'')}" style="flex:1; min-width:140px;">
+        </div>
+      </div>`;
+    }).join('') : '<p class="faint">Noch keine Themen des Ausbildungsrahmenplans konfiguriert.</p>';
+  }
+  function onCurriculumToggleClick(e){
+    const btn = e.target.closest('[data-curr-toggle]');
+    if(!btn) return;
+    const id = btn.dataset.currToggle;
+    const entry = editingCurriculum[id] || {status:'offen', date:'', note:''};
+    const idx = CURR_CYCLE.indexOf(entry.status);
+    entry.status = CURR_CYCLE[(idx+1)%CURR_CYCLE.length];
+    if(entry.status==='abgeschlossen' && !entry.date) entry.date = todayISO();
+    editingCurriculum[id] = entry;
+    renderCurriculumList();
+  }
+  function onCurriculumFieldChange(e){
+    const dateEl = e.target.closest('[data-curr-date]');
+    const noteEl = e.target.closest('[data-curr-note]');
+    if(dateEl){
+      const id = dateEl.dataset.currDate;
+      const entry = editingCurriculum[id] || {status:'offen', date:'', note:''};
+      entry.date = dateEl.value; editingCurriculum[id] = entry;
+    }
+    if(noteEl){
+      const id = noteEl.dataset.currNote;
+      const entry = editingCurriculum[id] || {status:'offen', date:'', note:''};
+      entry.note = noteEl.value; editingCurriculum[id] = entry;
+    }
+  }
+
+  // ---------- Anwesenheit ----------
+  function monthKeyOf(dateISO){ return dateISO.slice(0,7); }
+  function dayKeyOf(dateISO){ return dateISO.slice(8,10); }
+  function attDocId(participantId, month){ return participantId+'_'+month; }
+  function getAttDoc(participantId, month){ return attendance.find(a=>a.id===attDocId(participantId, month)); }
+  function getAttCode(participantId, dateISO){
+    const doc = getAttDoc(participantId, monthKeyOf(dateISO));
+    if(!doc || !doc.days) return '';
+    return doc.days[dayKeyOf(dateISO)] || '';
+  }
+  async function setAttendance(participantId, dateISO, code){
+    if(!db){ toast('Kein Live-Speicher in dieser Vorschau.'); return; }
+    const month = monthKeyOf(dateISO), day = dayKeyOf(dateISO);
+    const id = attDocId(participantId, month);
+    const existing = getAttDoc(participantId, month);
+    const current = existing && existing.days ? (existing.days[day]||'') : '';
+    const next = current===code ? '' : code;
+    try{
+      if(existing){
+        await db.collection('attendance').doc(id).update({['days.'+day]: next, updatedAt: nowISO()});
+      } else {
+        await db.collection('attendance').doc(id).set({participantId, month, days:{[day]: next}, updatedAt: nowISO()});
+      }
+    }catch(err){ console.warn(err); toast('Anwesenheit konnte nicht gespeichert werden.'); }
+  }
+  function computeAttendanceStats(participantId){
+    const docs = attendance.filter(a=>a.participantId===participantId);
+    const counts = {A:0,V:0,E:0,U:0,K:0};
+    let total=0;
+    docs.forEach(d=> Object.values(d.days||{}).forEach(code=>{ if(counts[code]!=null && code){ counts[code]++; total++; } }));
+    const rate = total ? Math.round((counts.A/total)*100) : null;
+    return {counts, total, rate};
+  }
+  function renderAttendanceTab(){
+    const cohortId = $('#attCohort').value;
+    const date = $('#attDate').value || todayISO();
+    const list = participants.filter(p=> (!cohortId || p.cohortId===cohortId) && ['aktiv','verlaengerung','pausiert'].includes(p.status))
+      .sort((a,b)=>(a.nachname||'').localeCompare(b.nachname||''));
+    const counts = {A:0,V:0,E:0,U:0,K:0,offen:0};
+    $('#attList').innerHTML = list.length ? list.map(p=>{
+      const code = getAttCode(p.id, date);
+      if(code && counts[code]!=null) counts[code]++; else counts.offen++;
+      const stats = computeAttendanceStats(p.id);
+      return `<div class="card" style="padding:10px 14px;">
+        <div class="row-between">
+          <div><strong>${esc(participantName(p))}</strong> <span class="faint">· Quote gesamt ${stats.rate==null?'—':stats.rate+'%'}</span></div>
+          <div class="row" style="gap:6px;" data-att-row="${p.id}">
+            ${ATT_ORDER.map(c=>`<button type="button" class="btn btn-sm att-btn ${code===c?('active '+ATT_CODES[c].cls):''}" data-att-code="${c}" title="${esc(ATT_CODES[c].label)}">${c}</button>`).join('')}
+          </div>
+        </div>
+      </div>`;
+    }).join('') : '<p class="empty">Keine Teilnehmerinnen in diesem Durchgang.</p>';
+    $('#attSummary').innerHTML = [
+      {n:counts.A,l:'Anwesend'},{n:counts.V,l:'Verspätet'},{n:counts.E,l:'Entschuldigt'},{n:counts.U,l:'Unentschuldigt'},{n:counts.K,l:'Krank'},{n:counts.offen,l:'Nicht erfasst'}
+    ].map(s=>`<div class="stat-tile"><div class="n">${s.n}</div><div class="l">${esc(s.l)}</div></div>`).join('');
+  }
+  function onAttendanceClick(e){
+    const btn = e.target.closest('[data-att-code]');
+    if(!btn) return;
+    const row = btn.closest('[data-att-row]');
+    const participantId = row.dataset.attRow;
+    const date = $('#attDate').value || todayISO();
+    setAttendance(participantId, date, btn.dataset.attCode);
+  }
+  function renderAttendanceSummary(){
+    if(!editingParticipantId){ $('#pAttSummary').innerHTML = '<p class="faint">Anwesenheit wird erfasst, sobald die Teilnehmerin gespeichert ist.</p>'; return; }
+    const stats = computeAttendanceStats(editingParticipantId);
+    const tiles = [
+      {n:stats.rate==null?'—':stats.rate+'%', l:'Quote'},
+      {n:stats.counts.A, l:'Anwesend'},
+      {n:stats.counts.V, l:'Verspätet'},
+      {n:stats.counts.E, l:'Entschuldigt'},
+      {n:stats.counts.U, l:'Unentschuldigt'},
+      {n:stats.counts.K, l:'Krank'}
+    ];
+    $('#pAttSummary').innerHTML = tiles.map(t=>`<div class="stat-tile"><div class="n" style="font-size:20px;">${t.n}</div><div class="l">${esc(t.l)}</div></div>`).join('');
+  }
+
+  function quickStatusChange(newStatus){
+    const label = STATUS[newStatus]?.label || newStatus;
+    const note = prompt(`Bemerkung zum Wechsel nach „${label}“ (optional):`, '');
+    if(note===null) return;
+    $('#pStatus').value = newStatus;
+    if(['bestanden','abgebrochen'].includes(newStatus) && !$('#pExitDate').value) $('#pExitDate').value = todayISO();
+    const typeMap = {verlaengerung:'verlaengerung_start', pausiert:'pausiert', aktiv:'aktiv_reaktiviert', bestanden:'austritt_bestanden', abgebrochen:'austritt_abgebrochen'};
+    editingHistory.push({date: todayISO(), type: typeMap[newStatus]||newStatus, note: note||''});
+    renderHistoryList();
+    toast(`Status auf „${label}“ gesetzt — bitte speichern nicht vergessen.`);
+  }
+
+  async function onSaveParticipant(e){
+    e.preventDefault();
+    if(!$('#pVorname').value.trim() || !$('#pNachname').value.trim()){ toast('Vor- und Nachname sind erforderlich.'); return; }
+    const data = {
+      vorname: $('#pVorname').value.trim(), nachname: $('#pNachname').value.trim(),
+      geburtsdatum: $('#pGeburtsdatum').value, telefon: $('#pTelefon').value.trim(), email: $('#pEmail').value.trim(),
+      strasse: $('#pStrasse').value.trim(), ort: $('#pOrt').value.trim(),
+      cohortId: $('#pCohort').value, entryType: $('#pEntryType').value, entryDate: $('#pEntryDate').value,
+      status: $('#pStatus').value, exitDate: $('#pExitDate').value,
+      fundingBody: $('#pFunding').value.trim(), aktenzeichen: $('#pAktenzeichen').value.trim(),
+      documents: editingDocs, history: editingHistory, curriculum: editingCurriculum, updatedAt: nowISO()
+    };
+    if(!db){ toast('Kein Live-Speicher in dieser Vorschau.'); $('#dlgParticipant').close(); return; }
+    try{
+      if(editingParticipantId){
+        await db.collection('participants').doc(editingParticipantId).update(data);
+      } else {
+        data.createdAt = nowISO(); data.demo=false;
+        if(!editingHistory.length) data.history = [{date: data.entryDate || todayISO(), type: data.entryType==='quereinstieg'?'quereinstieg':'eintritt', note:''}];
+        await db.collection('participants').add(data);
+      }
+      toast('Gespeichert.');
+      $('#dlgParticipant').close();
+    }catch(err){ console.warn(err); toast('Speichern fehlgeschlagen.'); }
+  }
+
+  async function onDeleteParticipant(){
+    if(!editingParticipantId) return;
+    if(!confirm('Diese Teilnehmerin wirklich löschen?')) return;
+    try{ await db.collection('participants').doc(editingParticipantId).delete(); toast('Gelöscht.'); $('#dlgParticipant').close(); }
+    catch(e){ toast('Löschen fehlgeschlagen.'); }
+  }
+
+  async function onUploadDoc(){
+    const file = $('#pDocFile').files[0];
+    if(!file){ toast('Bitte zuerst eine Datei auswählen.'); return; }
+    if(!assetsCap){ toast('Upload ist nur in der veröffentlichten App verfügbar.'); return; }
+    try{
+      const res = await assetsCap.upload(file);
+      editingDocs.push({assetId: res.id, url: res.url, label: file.name, category: $('#pDocCat').value, uploadedAt: nowISO(), uploadedBy: myName});
+      renderDocsList();
+      $('#pDocFile').value = '';
+      toast('Dokument hochgeladen — bitte speichern nicht vergessen.');
+    }catch(err){ console.warn(err); toast('Upload fehlgeschlagen.'); }
+  }
+
+  function onMakeLetter(){
+    const tid = $('#pTemplate').value;
+    const tmpl = (settings.templates||[]).find(t=>t.id===tid) || settings.templates[0];
+    if(!tmpl) return;
+    const p = {
+      vorname: $('#pVorname').value||'—', nachname: $('#pNachname').value||'—',
+      durchgang: cohortName($('#pCohort').value) || '—'
+    };
+    const text = tmpl.body
+      .replace(/\{vorname\}/g, p.vorname).replace(/\{nachname\}/g, p.nachname)
+      .replace(/\{durchgang\}/g, p.durchgang).replace(/\{datum\}/g, fmtDate(todayISO()));
+    $('#letterText').textContent = text;
+    $('#dlgLetter').showModal();
+  }
+
+  // ---------- cohorts ----------
+  function renderCohorts(){
+    const list = cohorts.slice().sort((a,b)=>(b.startDate||'').localeCompare(a.startDate||''));
+    $('#cohortsList').innerHTML = list.length ? list.map(c=>{
+      const active = participants.filter(p=>p.cohortId===c.id);
+      const counts = {}; STATUS_ORDER.forEach(k=>counts[k]=0); active.forEach(p=>{ if(counts[p.status]!=null) counts[p.status]++; });
+      return `<div class="card" data-cohort="${c.id}" style="cursor:pointer;">
+        <div class="row-between">
+          <div><h3>${esc(c.name)} ${c.demo?'<span class="demo-tag">Beispiel</span>':''}</h3>
+          <div class="faint">${fmtDate(c.startDate)} – ${fmtDate(c.endDate)} · ${c.status==='aktiv'?'aktiv':'abgeschlossen'}</div></div>
+          <div class="row" style="gap:6px;">
+            ${STATUS_ORDER.map(k=>counts[k]?`<span class="pill ${STATUS[k].cls}">${counts[k]} ${esc(STATUS[k].label)}</span>`:'').join('')}
+          </div>
+        </div>
+      </div>`;
+    }).join('') : '<p class="empty">Noch keine Durchgänge angelegt.</p>';
+    $$('[data-cohort]').forEach(el=> el.addEventListener('click', ()=> openCohortDialog(el.dataset.cohort)));
+  }
+
+  function openCohortDialog(id){
+    editingCohortId = id;
+    const c = id ? cohorts.find(x=>x.id===id) : null;
+    $('#cDlgTitle').textContent = c ? 'Durchgang bearbeiten' : 'Neuer Durchgang';
+    $('#cName').value = c?.name||''; $('#cStart').value = c?.startDate||''; $('#cEnd').value = c?.endDate||'';
+    $('#cStatus').value = c?.status||'aktiv'; $('#cNote').value = c?.note||'';
+    $('#btnDeleteCohort').hidden = !c;
+    $('#dlgCohort').showModal();
+  }
+
+  async function onSaveCohort(e){
+    e.preventDefault();
+    if(!$('#cName').value.trim()){ toast('Bitte eine Bezeichnung angeben.'); return; }
+    const data = {name: $('#cName').value.trim(), startDate: $('#cStart').value, endDate: $('#cEnd').value, status: $('#cStatus').value, note: $('#cNote').value.trim()};
+    if(!db){ $('#dlgCohort').close(); return; }
+    try{
+      if(editingCohortId) await db.collection('cohorts').doc(editingCohortId).update(data);
+      else { data.demo=false; data.createdAt = nowISO(); await db.collection('cohorts').add(data); }
+      toast('Gespeichert.'); $('#dlgCohort').close();
+    }catch(err){ toast('Speichern fehlgeschlagen.'); }
+  }
+
+  async function onDeleteCohort(){
+    if(!editingCohortId) return;
+    const inUse = participants.some(p=>p.cohortId===editingCohortId);
+    if(inUse && !confirm('Diesem Durchgang sind Teilnehmerinnen zugeordnet. Trotzdem löschen?')) return;
+    if(!inUse && !confirm('Durchgang wirklich löschen?')) return;
+    try{ await db.collection('cohorts').doc(editingCohortId).delete(); toast('Gelöscht.'); $('#dlgCohort').close(); }
+    catch(e){ toast('Löschen fehlgeschlagen.'); }
+  }
+
+  // ---------- notes & tasks ----------
+  function noteItemHTML(n){
+    const p = n.participantId ? participants.find(x=>x.id===n.participantId) : null;
+    const overdue = n.type==='aufgabe' && !n.done && n.due && n.due < todayISO();
+    return `<div class="note-item ${n.done?'done':''}" data-note="${n.id}">
+      <div class="row-between">
+        <span class="pill ${n.type==='aufgabe'?'st-warn':'st-neutral'}">${n.type==='aufgabe'?'Aufgabe':'Notiz'}</span>
+        ${n.type==='aufgabe' ? `<label class="row" style="gap:6px; font-size:12px;"><input type="checkbox" data-toggle-done="${n.id}" ${n.done?'checked':''}> erledigt</label>` : ''}
+      </div>
+      <div>${esc(n.text)}</div>
+      <div class="meta">
+        ${p?`<span>👤 ${esc(participantName(p))}</span>`:''}
+        ${n.due?`<span style="${overdue?'color:var(--danger);font-weight:700;':''}">fällig ${fmtDate(n.due)}</span>`:''}
+        <span class="spacer"></span>
+        <span>${esc(n.authorName||'')} · ${fmtDateTime(n.createdAt)}</span>
+        ${n.demo?'<span class="demo-tag">Beispiel</span>':''}
+      </div>
+    </div>`;
+  }
+  function wireNoteItemEvents(scope){
+    $$('[data-toggle-done]', document.querySelector(scope)).forEach(cb=>{
+      cb.addEventListener('click', async (e)=>{
+        e.stopPropagation();
+        const id = cb.dataset.toggleDone;
+        try{ await db.collection('notes').doc(id).update({done: cb.checked}); }catch(err){ toast('Aktualisierung fehlgeschlagen.'); }
+      });
+    });
+  }
+
+  function renderNotes(){
+    const pf = $('#noteFltParticipant').value, tf = $('#noteFltType').value, df = $('#noteFltDone').value;
+    let list = notes.filter(n=>{
+      if(pf && n.participantId!==pf) return false;
+      if(tf && n.type!==tf) return false;
+      if(df==='offen' && n.done) return false;
+      if(df==='erledigt' && !n.done) return false;
+      return true;
+    });
+    $('#notesList').innerHTML = list.length ? list.map(noteItemHTML).join('') : '<p class="empty">Keine Einträge gefunden.</p>';
+    wireNoteItemEvents('#notesList');
+  }
+
+  function openNoteDialog(participantId){
+    $('#nType').value='notiz'; $('#nParticipant').value = participantId||''; $('#nDue').value=''; $('#nText').value='';
+    $('#dlgNote').showModal();
+  }
+
+  async function onSaveNote(e){
+    e.preventDefault();
+    if(!$('#nText').value.trim()){ toast('Bitte einen Text eingeben.'); return; }
+    const data = {type: $('#nType').value, participantId: $('#nParticipant').value||null, text: $('#nText').value.trim(), due: $('#nDue').value||null, done:false, authorId: myId, authorName: myName, demo:false, createdAt: nowISO()};
+    if(!db){ $('#dlgNote').close(); return; }
+    try{ await db.collection('notes').add(data); toast('Gespeichert.'); $('#dlgNote').close(); }
+    catch(err){ toast('Speichern fehlgeschlagen.'); }
+  }
+
+  // ---------- communication ----------
+  function msgItemHTML(m){
+    const p = m.participantId ? participants.find(x=>x.id===m.participantId) : null;
+    const audLabel = {intern:'Intern', teilnehmerin:'Teilnehmerin', foerdermittelgeber:'Fördermittelgeber'}[m.audience]||m.audience;
+    const audCls = {intern:'st-neutral', teilnehmerin:'st-info', foerdermittelgeber:'st-warn'}[m.audience]||'st-neutral';
+    return `<div class="msg-item">
+      <div class="row-between"><span class="pill ${audCls}">${esc(audLabel)}</span><span class="faint">${fmtDateTime(m.createdAt)}</span></div>
+      <div>${esc(m.text)}</div>
+      <div class="meta">${p?`<span>👤 ${esc(participantName(p))}</span>`:''}<span class="spacer"></span><span>${esc(m.authorName||'')}</span>${m.demo?'<span class="demo-tag">Beispiel</span>':''}</div>
+    </div>`;
+  }
+  function renderMessages(){
+    $('#messagesList').innerHTML = messages.length ? messages.map(msgItemHTML).join('') : '<p class="empty">Noch keine Einträge.</p>';
+  }
+  function openMessageDialog(participantId){
+    $('#mAudience').value='intern'; $('#mParticipant').value = participantId||''; $('#mText').value='';
+    $('#dlgMessage').showModal();
+  }
+  async function onSaveMessage(e){
+    e.preventDefault();
+    if(!$('#mText').value.trim()){ toast('Bitte einen Text eingeben.'); return; }
+    const data = {audience: $('#mAudience').value, participantId: $('#mParticipant').value||null, text: $('#mText').value.trim(), authorId: myId, authorName: myName, demo:false, createdAt: nowISO()};
+    if(!db){ $('#dlgMessage').close(); return; }
+    try{ await db.collection('messages').add(data); toast('Gespeichert.'); $('#dlgMessage').close(); }
+    catch(err){ toast('Speichern fehlgeschlagen.'); }
+  }
+
+  // ---------- settings ----------
+  function openSettingsDialog(){
+    $('#sInstitution').value = settings.institutionName||'';
+    $('#sProgram').value = settings.programName||'';
+    $('#sFunding').value = (settings.fundingBodies||[]).join(', ');
+    $('#sCurriculum').value = (settings.curriculum||[]).map(i=>i.title).join('\n');
+    $('#dlgSettings').showModal();
+  }
+  async function onSaveSettings(e){
+    e.preventDefault();
+    const lines = $('#sCurriculum').value.split('\n').map(s=>s.trim()).filter(Boolean);
+    const prev = settings.curriculum || [];
+    const usedIds = new Set();
+    const curriculum = lines.map((title,idx)=>{
+      const match = prev.find(p=>p.title===title && !usedIds.has(p.id));
+      if(match){ usedIds.add(match.id); return {id:match.id, title}; }
+      let base = 'lf'+String(idx+1).padStart(2,'0'), id = base, n=1;
+      while(usedIds.has(id) || prev.some(p=>p.id===id)){ id = base+'_'+(n++); }
+      usedIds.add(id);
+      return {id, title};
+    });
+    const data = {
+      institutionName: $('#sInstitution').value.trim(),
+      programName: $('#sProgram').value.trim() || 'Umschulungsverwaltung',
+      fundingBodies: $('#sFunding').value.split(',').map(s=>s.trim()).filter(Boolean),
+      templates: settings.templates,
+      curriculum
+    };
+    if(!db){ $('#dlgSettings').close(); return; }
+    try{ await db.doc('settings/general').set(data); toast('Gespeichert.'); $('#dlgSettings').close(); }
+    catch(err){ toast('Speichern fehlgeschlagen.'); }
+  }
+
+  // ---------- statistics ----------
+  function renderStats(){
+    $('#statTitle').textContent = 'Gesamtübersicht — ' + (settings.institutionName || settings.programName);
+    const counts = {}; STATUS_ORDER.forEach(k=>counts[k]=0);
+    participants.forEach(p=>{ if(counts[p.status]!=null) counts[p.status]++; });
+    const quer = participants.filter(p=>p.entryType==='quereinstieg').length;
+    $('#statTotals').innerHTML = [
+      {n:participants.length, l:'Teilnehmerinnen gesamt'},
+      {n:cohorts.length, l:'Durchgänge gesamt'},
+      {n:quer, l:'Quereinstiege'},
+      {n:notes.filter(n=>n.type==='aufgabe'&&!n.done).length, l:'Offene Aufgaben'}
+    ].map(s=>`<div class="stat-tile"><div class="n">${s.n}</div><div class="l">${esc(s.l)}</div></div>`).join('');
+
+    const max = Math.max(1, ...STATUS_ORDER.map(k=>counts[k]));
+    $('#statStatusChart').innerHTML = STATUS_ORDER.map(k=>{
+      const pct = Math.round((counts[k]/max)*100);
+      return `<div class="bar-row">
+        <span>${esc(STATUS[k].label)}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%; background:var(${STATUS_COLOR_VAR[k]});"></div></div>
+        <span style="text-align:right;">${counts[k]}</span>
+      </div>`;
+    }).join('');
+
+    const rows = cohorts.slice().sort((a,b)=>(b.startDate||'').localeCompare(a.startDate||'')).map(c=>{
+      const cc = {}; STATUS_ORDER.forEach(k=>cc[k]=0);
+      let total=0;
+      participants.forEach(p=>{ if(p.cohortId===c.id){ if(cc[p.status]!=null) cc[p.status]++; total++; } });
+      return `<tr><td>${esc(c.name)}</td><td>${cc.aktiv}</td><td>${cc.verlaengerung}</td><td>${cc.pausiert}</td><td>${cc.bestanden}</td><td>${cc.abgebrochen}</td><td><strong>${total}</strong></td></tr>`;
+    }).join('');
+    $('#statCohortTable').innerHTML = rows || '<tr><td colspan="7" class="empty">Keine Durchgänge angelegt.</td></tr>';
+
+    const curItems = settings.curriculum||[];
+    const cohortRowsCur = cohorts.slice().sort((a,b)=>(b.startDate||'').localeCompare(a.startDate||'')).map(c=>{
+      const ps = participants.filter(p=>p.cohortId===c.id && ['aktiv','verlaengerung'].includes(p.status));
+      let pct = 0;
+      if(ps.length && curItems.length){
+        const totalDone = ps.reduce((sum,p)=>{
+          const cur = p.curriculum||{};
+          return sum + curItems.filter(it=> (cur[it.id]||{}).status==='abgeschlossen').length;
+        },0);
+        pct = Math.round((totalDone/(ps.length*curItems.length))*100);
+      }
+      return {name:c.name, pct};
+    });
+    $('#statCurriculumChart').innerHTML = cohortRowsCur.length ? cohortRowsCur.map(r=>`
+      <div class="bar-row">
+        <span>${esc(r.name)}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${r.pct}%; background:var(--accent);"></div></div>
+        <span style="text-align:right;">${r.pct}%</span>
+      </div>`).join('') : '<p class="empty">Keine Durchgänge vorhanden.</p>';
+
+    const curMonth = todayISO().slice(0,7);
+    const monthDocs = attendance.filter(a=>a.month===curMonth);
+    const mCounts = {A:0,V:0,E:0,U:0,K:0};
+    monthDocs.forEach(d=> Object.values(d.days||{}).forEach(code=>{ if(mCounts[code]!=null && code) mCounts[code]++; }));
+    const mTotal = Object.values(mCounts).reduce((a,b)=>a+b,0);
+    const mRate = mTotal ? Math.round((mCounts.A/mTotal)*100) : null;
+    $('#statAttendance').innerHTML = [
+      {n:mRate==null?'—':mRate+'%', l:'Anwesenheitsquote'},
+      {n:mCounts.U, l:'Unentschuldigt (Fälle)'},
+      {n:mCounts.K, l:'Krank (Fälle)'},
+      {n:mCounts.E, l:'Entschuldigt (Fälle)'}
+    ].map(s=>`<div class="stat-tile"><div class="n">${s.n}</div><div class="l">${esc(s.l)}</div></div>`).join('');
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+  if(document.readyState !== 'loading') init();
+})();
+</script>
+</body>
+</html>
