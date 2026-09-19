@@ -7,7 +7,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-storage-compat.js"></script>
 <style>
   :root{
     --bwk:#1A1A2E; --bwk2:#2D2D44; --bwk3:#3D3D5C;
@@ -610,18 +609,23 @@
     apiKey: "HIER_API_KEY_EINTRAGEN",
     authDomain: "HIER_PROJEKT.firebaseapp.com",
     projectId: "HIER_PROJEKT_ID",
-    storageBucket: "HIER_PROJEKT.appspot.com",
     messagingSenderId: "HIER_SENDER_ID",
     appId: "HIER_APP_ID"
   };
   const FIREBASE_CONFIGURED = !!(firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith('HIER_'));
-  let firebaseAuth = null, firebaseDb = null, firebaseStorage = null;
+  let firebaseAuth = null, firebaseDb = null;
   if(FIREBASE_CONFIGURED && window.firebase){
     firebase.initializeApp(firebaseConfig);
     firebaseAuth = firebase.auth();
     firebaseDb = firebase.firestore();
-    firebaseStorage = firebase.storage();
   }
+  // Dokumenten-Uploads werden NICHT über Firebase Storage gespeichert (das würde ein
+  // kostenpflichtiges Google-Rechnungskonto voraussetzen), sondern als Base64-Text direkt
+  // in einer eigenen Firestore-Sammlung ("documentBlobs") abgelegt. Das bleibt komplett
+  // innerhalb des kostenlosen Firestore-Kontingents. Firestore erlaubt maximal 1 MB pro
+  // Dokument, daher ist die Dateigröße pro Upload auf ca. 700 KB begrenzt (Base64 vergrößert
+  // die Datei um ca. 33%).
+  const MAX_UPLOAD_BYTES = 700 * 1024;
 
   const $ = (s,r)=> (r||document).querySelector(s);
   const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
@@ -677,14 +681,32 @@
   }
 
   // ---------- Firebase auth bootstrap ----------
+  function readFileAsBase64(file){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+      reader.onerror = () => reject(reader.error || new Error('Datei konnte nicht gelesen werden.'));
+      reader.readAsDataURL(file);
+    });
+  }
   function makeAssetsShim(){
     return {
       upload: async (file) => {
-        const path = 'documents/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '_' + file.name;
-        const ref = firebaseStorage.ref(path);
-        await ref.put(file);
-        const url = await ref.getDownloadURL();
-        return {id: path, url};
+        if(file.size > MAX_UPLOAD_BYTES){
+          throw new Error('Datei zu groß (max. ca. 700 KB). Bitte kleiner scannen, als Foto statt PDF speichern oder komprimieren.');
+        }
+        const mime = file.type || 'application/octet-stream';
+        const base64 = await readFileAsBase64(file);
+        const docRef = await firebaseDb.collection('documentBlobs').add({
+          data: base64, mime, name: file.name, createdAt: nowISO()
+        });
+        return {id: docRef.id, mime, url: 'data:' + mime + ';base64,' + base64};
+      },
+      openStored: async (assetId) => {
+        const snap = await firebaseDb.collection('documentBlobs').doc(assetId).get();
+        if(!snap.exists) throw new Error('Dokument wurde nicht gefunden (evtl. gelöscht).');
+        const d = snap.data();
+        return 'data:' + (d.mime||'application/octet-stream') + ';base64,' + d.data;
       }
     };
   }
@@ -1031,7 +1053,7 @@
     $('#pAktenzeichen').value = p?.aktenzeichen||'';
     $('#btnDeleteParticipant').hidden = !p;
     $('#pDocsFieldset').hidden = !p;
-    $('#pDocsHint').textContent = assetsCap ? '' : 'Dokumenten-Upload ist derzeit nicht verfügbar.';
+    $('#pDocsHint').textContent = assetsCap ? 'Max. ca. 700 KB pro Datei (z. B. eine gescannte Einzelseite als PDF oder Foto).' : 'Dokumenten-Upload ist derzeit nicht verfügbar.';
     $('#btnUploadDoc').disabled = !assetsCap;
     renderDocsList();
     renderHistoryList();
@@ -1044,13 +1066,25 @@
     $('#pDocs').innerHTML = editingDocs.length ? editingDocs.map((d,i)=>`
       <div class="doc-row">
         <span>📄</span>
-        <a href="${esc(d.url||('/_blob/'+d.assetId))}" target="_blank" rel="noopener">${esc(d.label||'Dokument')}</a>
+        ${d.url
+          ? `<a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.label||'Dokument')}</a>`
+          : `<a href="#" data-open-doc="${i}">${esc(d.label||'Dokument')}</a>`}
         <span class="cat">· ${esc(DOC_CATS[d.category]||d.category||'')}</span>
         <span class="faint">${fmtDate((d.uploadedAt||'').slice(0,10))}</span>
         <button type="button" class="btn btn-sm btn-ghost no-print" style="margin-left:auto;" data-remove-doc="${i}">Entfernen</button>
       </div>`).join('') : '<p class="faint">Noch keine Dokumente hinterlegt.</p>';
     $$('[data-remove-doc]').forEach(b=> b.addEventListener('click', ()=>{
       editingDocs.splice(Number(b.dataset.removeDoc),1); renderDocsList();
+    }));
+    $$('[data-open-doc]').forEach(a=> a.addEventListener('click', async (e)=>{
+      e.preventDefault();
+      const d = editingDocs[Number(a.dataset.openDoc)];
+      if(!d || !d.assetId || !assetsCap){ toast('Dokument kann gerade nicht geöffnet werden.'); return; }
+      try{
+        const url = await assetsCap.openStored(d.assetId);
+        const w = window.open();
+        if(w){ w.location.href = url; } else { toast('Bitte Pop-ups für diese Seite erlauben.'); }
+      }catch(err){ console.warn(err); toast(err && err.message ? err.message : 'Dokument konnte nicht geladen werden.'); }
     }));
   }
 
@@ -1213,7 +1247,11 @@
       cohortId: $('#pCohort').value, entryType: $('#pEntryType').value, entryDate: $('#pEntryDate').value,
       status: $('#pStatus').value, exitDate: $('#pExitDate').value,
       fundingBody: $('#pFunding').value.trim(), aktenzeichen: $('#pAktenzeichen').value.trim(),
-      documents: editingDocs, history: editingHistory, curriculum: editingCurriculum, updatedAt: nowISO()
+      // Nur die Metadaten der Dokumente werden im Teilnehmer-Datensatz gespeichert — die eigentliche
+      // Datei (Base64) liegt separat in "documentBlobs", damit der Teilnehmer-Datensatz klein bleibt
+      // (Firestore erlaubt max. 1 MB pro Dokument).
+      documents: editingDocs.map(d=>({assetId:d.assetId, mime:d.mime||'', label:d.label, category:d.category, uploadedAt:d.uploadedAt, uploadedBy:d.uploadedBy})),
+      history: editingHistory, curriculum: editingCurriculum, updatedAt: nowISO()
     };
     if(!db){ toast('Kein Live-Speicher in dieser Vorschau.'); $('#dlgParticipant').close(); return; }
     try{
@@ -1242,11 +1280,11 @@
     if(!assetsCap){ toast('Upload ist nur in der veröffentlichten App verfügbar.'); return; }
     try{
       const res = await assetsCap.upload(file);
-      editingDocs.push({assetId: res.id, url: res.url, label: file.name, category: $('#pDocCat').value, uploadedAt: nowISO(), uploadedBy: myName});
+      editingDocs.push({assetId: res.id, mime: res.mime, url: res.url, label: file.name, category: $('#pDocCat').value, uploadedAt: nowISO(), uploadedBy: myName});
       renderDocsList();
       $('#pDocFile').value = '';
       toast('Dokument hochgeladen — bitte speichern nicht vergessen.');
-    }catch(err){ console.warn(err); toast('Upload fehlgeschlagen.'); }
+    }catch(err){ console.warn(err); toast(err && err.message ? err.message : 'Upload fehlgeschlagen.'); }
   }
 
   function onMakeLetter(){
