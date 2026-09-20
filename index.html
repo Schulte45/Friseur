@@ -165,6 +165,8 @@
   .doc-row .cat{color:var(--text-dim);}
   .ref-link{color:var(--accent); text-decoration:none; font-weight:600; cursor:pointer;}
   .ref-link:hover{text-decoration:underline;}
+  .stat-tile-link{cursor:pointer;}
+  .stat-tile-link:hover{outline:2px solid var(--accent); outline-offset:-2px;}
   .curr-row{border:1px solid var(--border); border-radius:10px; padding:9px 11px;}
   .curr-title{font-size:13px; font-weight:600;}
   .att-btn{min-width:36px; font-weight:800;}
@@ -248,6 +250,7 @@
       <button class="tab" role="tab" data-tab="durchgaenge">Durchgänge</button>
       <button class="tab" role="tab" data-tab="notizen">Notizen &amp; Aufgaben</button>
       <button class="tab" role="tab" data-tab="kommunikation">Kommunikation</button>
+      <button class="tab" role="tab" data-tab="partner">Partner</button>
       <button class="tab" role="tab" data-tab="statistik">Statistik</button>
     </nav>
   </div>
@@ -264,6 +267,10 @@
           <button class="btn btn-sm" data-goto="durchgaenge">Alle Durchgänge →</button>
         </div>
         <div id="ovCohorts" style="margin-top:10px;"></div>
+      </div>
+      <div class="card">
+        <h3>Nächste Prüfungen</h3>
+        <div id="ovExams" style="margin-top:10px;"></div>
       </div>
       <div class="row" style="align-items:stretch; gap:16px; flex-wrap:wrap;">
         <div class="card" style="flex:1; min-width:260px;">
@@ -297,7 +304,7 @@
       </div>
       <div class="table-wrap">
         <table id="participantsTable">
-          <thead><tr><th>Name</th><th>Durchgang</th><th>Status</th><th>Eintritt</th><th>Kostenträger</th></tr></thead>
+          <thead><tr><th>Name</th><th>Durchgang</th><th>Status</th><th>Eintritt</th><th>Kostenträger</th><th>Nächste Prüfung</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -375,6 +382,34 @@
       <div id="messagesList" style="display:flex; flex-direction:column; gap:10px;"></div>
     </section>
 
+    <!-- PARTNER -->
+    <section data-view="partner" hidden>
+      <div class="card">
+        <div class="row">
+          <div class="field" style="flex:2; min-width:180px;">
+            <label>Suche</label>
+            <input class="input" id="fltPartnerSearch" placeholder="Name, Institution, E-Mail …">
+          </div>
+          <div class="field" style="flex:1; min-width:140px;">
+            <label>Typ</label>
+            <select class="select" id="fltPartnerType">
+              <option value="">Alle</option>
+              <option value="intern">Intern</option>
+              <option value="extern">Extern</option>
+            </select>
+          </div>
+          <div class="spacer"></div>
+          <button class="btn btn-primary" id="btnNewPartner" style="align-self:flex-end;">+ Partner</button>
+        </div>
+      </div>
+      <div class="table-wrap" style="margin-top:14px;">
+        <table id="partnersTable">
+          <thead><tr><th>Name</th><th>Institution</th><th>Typ</th><th>E-Mail</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- STATISTIK -->
     <section data-view="statistik" hidden>
       <div class="row-between no-print">
@@ -449,6 +484,7 @@
           <div class="field"><label>Kostenträger / Fördermittelgeber</label><input class="input" id="pFunding" list="fundingList"></div>
           <div class="field"><label>Aktenzeichen / Kundennummer</label><input class="input" id="pAktenzeichen"></div>
         </div>
+        <p class="faint" id="pExamInfo" style="margin:4px 0 0;"></p>
         <datalist id="fundingList"></datalist>
       </fieldset>
       <fieldset>
@@ -514,6 +550,10 @@
       <div class="field"><label>Status</label>
         <select class="select" id="cStatus"><option value="aktiv">Aktiv</option><option value="abgeschlossen">Abgeschlossen</option></select>
       </div>
+      <div class="form-grid">
+        <div class="field"><label>Zwischenprüfung</label><input class="input" type="date" id="cZwischenpruefung"></div>
+        <div class="field"><label>Abschlussprüfung</label><input class="input" type="date" id="cAbschlusspruefung"></div>
+      </div>
       <div class="field"><label>Bemerkung</label><textarea class="textarea" id="cNote"></textarea></div>
     </div>
     <div class="dlg-foot">
@@ -534,7 +574,8 @@
           <select class="select" id="nType"><option value="notiz">Notiz</option><option value="aufgabe">Aufgabe</option></select>
         </div>
         <div class="field"><label>Teilnehmerin (optional)</label><select class="select" id="nParticipant"><option value="">Allgemein</option></select></div>
-        <div class="field" id="nDueWrap"><label>Fällig am</label><input class="input" type="date" id="nDue"></div>
+        <div class="field"><label>Zuständig (optional)</label><input class="input" id="nAssignee" placeholder="z. B. Name der Kollegin"></div>
+        <div class="field" id="nDueWrap"><label>Fällig am (optional)</label><input class="input" type="date" id="nDue"></div>
       </div>
       <div class="field"><label>Text *</label><textarea class="textarea" id="nText" required></textarea></div>
     </div>
@@ -559,10 +600,33 @@
           </select>
         </div>
         <div class="field"><label>Teilnehmerin (optional)</label><select class="select" id="mParticipant"><option value="">—</option></select></div>
+        <div class="field"><label>Partner (optional)</label><select class="select" id="mPartner"><option value="">—</option></select></div>
       </div>
       <div class="field"><label>Text *</label><textarea class="textarea" id="mText" required></textarea></div>
     </div>
     <div class="dlg-foot">
+      <button type="button" class="btn" data-close>Abbrechen</button>
+      <button type="submit" class="btn btn-primary">Speichern</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Partner Dialog -->
+<dialog id="dlgPartner">
+  <form method="dialog" id="frmPartner">
+    <div class="dlg-head"><h3 id="prDlgTitle">Neuer Partner</h3><button type="button" class="btn btn-ghost icon-btn" data-close>✕</button></div>
+    <div class="dlg-body">
+      <div class="field"><label>Name *</label><input class="input" id="prName" required></div>
+      <div class="form-grid">
+        <div class="field"><label>Institution</label><input class="input" id="prInstitution" placeholder="z. B. Agentur für Arbeit, Jobcenter, Praxis …"></div>
+        <div class="field"><label>Typ</label>
+          <select class="select" id="prType"><option value="intern">Intern</option><option value="extern">Extern</option></select>
+        </div>
+      </div>
+      <div class="field"><label>E-Mail-Adresse</label><input class="input" type="email" id="prEmail"></div>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn btn-danger no-print" id="btnDeletePartner" style="margin-right:auto;">Löschen</button>
       <button type="button" class="btn" data-close>Abbrechen</button>
       <button type="submit" class="btn btn-primary">Speichern</button>
     </div>
@@ -669,7 +733,7 @@
   }
 
   let db=null, assetsCap=null, userCap=null, myId=null, myName='Ich';
-  let cohorts=[], participants=[], notes=[], messages=[], attendance=[];
+  let cohorts=[], participants=[], notes=[], messages=[], attendance=[], partners=[];
   let settings = {institutionName:'', programName:'Umschulung Friseurhandwerk', fundingBodies:['Agentur für Arbeit','Jobcenter'], templates: defaultTemplates(), curriculum: defaultCurriculum()};
   let hasDemoData=false;
   let editingParticipantId=null, editingCohortId=null, editingDocs=[], editingHistory=[], editingCurriculum={};
@@ -826,6 +890,12 @@
       messages = snap.docs.map(d=>({id:d.id, ...d.data()}));
       renderMessages(); renderOverview();
     }, e=>console.warn('messages', e));
+
+    db.collection('partners').onSnapshot(snap=>{
+      partners = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      fillCohortSelects();
+      renderPartners(); renderMessages();
+    }, e=>console.warn('partners', e));
   }
 
   async function seedIfEmpty(){
@@ -878,6 +948,7 @@
     $('#btnNewCohort').addEventListener('click', ()=> openCohortDialog(null));
     $('#btnNewNote').addEventListener('click', ()=> openNoteDialog());
     $('#btnNewMessage').addEventListener('click', ()=> openMessageDialog());
+    $('#btnNewPartner').addEventListener('click', ()=> openPartnerDialog(null));
     $('#btnSettings').addEventListener('click', openSettingsDialog);
     $('#btnPrintStats').addEventListener('click', ()=> window.print());
     $('#btnPrintLetter').addEventListener('click', ()=> window.print());
@@ -897,6 +968,7 @@
     $('#attDate').value = todayISO();
     $('#attLegend').innerHTML = ATT_ORDER.map(c=>`<span class="pill ${ATT_CODES[c].cls}">${c} = ${esc(ATT_CODES[c].label)}</span>`).join('');
 
+    $('#pCohort').addEventListener('change', renderParticipantExamInfo);
     $('#pCurriculumList').addEventListener('click', onCurriculumToggleClick);
     $('#pCurriculumList').addEventListener('change', onCurriculumFieldChange);
 
@@ -905,28 +977,38 @@
       if(tr) openParticipantDialog(tr.dataset.id);
     });
 
+    $('#partnersTable tbody').addEventListener('click', (e)=>{
+      const tr = e.target.closest('tr[data-id]');
+      if(tr) openPartnerDialog(tr.dataset.id);
+    });
+    $('#fltPartnerSearch').addEventListener('input', renderPartners);
+    $('#fltPartnerType').addEventListener('change', renderPartners);
+
     // Zentraler Klick-Handler für alle Teilnehmerin-/Durchgang-Links (.ref-link), egal wo sie
     // im Programm auftauchen. Läuft in der Capture-Phase, damit ein Link INNERHALB einer
     // anklickbaren Zeile (z.B. der Durchgang in der Teilnehmerinnen-Tabelle) nicht zusätzlich
     // den Klick der Zeile selbst auslöst.
     document.addEventListener('click', (e)=>{
-      const link = e.target.closest('[data-open-participant], [data-open-cohort]');
+      const link = e.target.closest('[data-open-participant], [data-open-cohort], [data-open-partner]');
       if(!link) return;
       e.preventDefault();
       e.stopPropagation();
       if(link.dataset.openParticipant) openParticipantDialog(link.dataset.openParticipant);
       else if(link.dataset.openCohort) openCohortDialog(link.dataset.openCohort);
+      else if(link.dataset.openPartner) openPartnerDialog(link.dataset.openPartner);
     }, true);
 
     $('#frmParticipant').addEventListener('submit', onSaveParticipant);
     $('#frmCohort').addEventListener('submit', onSaveCohort);
     $('#frmNote').addEventListener('submit', onSaveNote);
     $('#frmMessage').addEventListener('submit', onSaveMessage);
+    $('#frmPartner').addEventListener('submit', onSavePartner);
     $('#frmSettings').addEventListener('submit', onSaveSettings);
 
     $$('#dlgParticipant [data-quick]').forEach(btn=> btn.addEventListener('click', ()=> quickStatusChange(btn.dataset.quick)));
     $('#btnDeleteParticipant').addEventListener('click', onDeleteParticipant);
     $('#btnDeleteCohort').addEventListener('click', onDeleteCohort);
+    $('#btnDeletePartner').addEventListener('click', onDeletePartner);
     $('#btnUploadDoc').addEventListener('click', onUploadDoc);
     $('#btnMakeLetter').addEventListener('click', onMakeLetter);
 
@@ -972,6 +1054,8 @@
       el.innerHTML = placeholder + pOpts;
       el.value = cur;
     });
+    const prOpts = partners.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(pr=>`<option value="${pr.id}">${esc(pr.name)}${pr.institution?' — '+esc(pr.institution):''}</option>`).join('');
+    { const el = $('#mPartner'); const cur = el.value; const placeholder = el.querySelector('option[value=""]').outerHTML; el.innerHTML = placeholder + prOpts; el.value = cur; }
   }
 
   function renderAll(){
@@ -981,8 +1065,45 @@
     renderCohorts();
     renderNotes();
     renderMessages();
+    renderPartners();
     if(!$('section[data-view="anwesenheit"]').hidden) renderAttendanceTab();
     if(!$('section[data-view="statistik"]').hidden) renderStats();
+  }
+
+  // ---------- Prüfungstermine ----------
+  // Zwischen- und Abschlussprüfung werden pro Durchgang erfasst (im Durchgang-Dialog) und von dort
+  // überall angezeigt, wo sie gebraucht werden (Übersicht, Teilnehmerinnen-Liste und -Datensatz).
+  const EXAM_PREP_DAYS = 56; // 8 Wochen — ab wann jemand als "in Prüfungsvorbereitung" zählt
+  const EXAM_TYPES = [
+    {key:'zwischenpruefungDatum', label:'Zwischenprüfung'},
+    {key:'abschlusspruefungDatum', label:'Abschlussprüfung'}
+  ];
+  function daysUntil(iso){
+    if(!iso) return null;
+    const d = new Date(iso+'T00:00:00'), t = new Date(todayISO()+'T00:00:00');
+    if(isNaN(d.getTime())) return null;
+    return Math.round((d-t)/86400000);
+  }
+  // Nächster noch bevorstehender Prüfungstermin eines Durchgangs (Zwischen- oder Abschlussprüfung,
+  // je nachdem was zeitlich näher liegt), oder null falls keiner gesetzt / beide vergangen sind.
+  function nextExamForCohort(c){
+    if(!c) return null;
+    const today = todayISO();
+    const upcoming = EXAM_TYPES
+      .map(t=> c[t.key] ? {type:t.label, date:c[t.key]} : null)
+      .filter(x=> x && x.date >= today)
+      .sort((a,b)=> a.date.localeCompare(b.date));
+    return upcoming[0] || null;
+  }
+  // Alle bevorstehenden Prüfungstermine über alle Durchgänge hinweg, chronologisch sortiert.
+  function upcomingExamsList(){
+    const today = todayISO();
+    const items = [];
+    cohorts.forEach(c=> EXAM_TYPES.forEach(t=>{
+      if(c[t.key] && c[t.key] >= today) items.push({type:t.label, date:c[t.key], cohortId:c.id});
+    }));
+    items.sort((a,b)=> a.date.localeCompare(b.date));
+    return items;
   }
 
   // ---------- overview ----------
@@ -990,15 +1111,25 @@
     const counts = {}; STATUS_ORDER.forEach(k=>counts[k]=0);
     participants.forEach(p=> { if(counts[p.status]!=null) counts[p.status]++; });
     const activeCohorts = cohorts.filter(c=>c.status==='aktiv').length;
+    const inPrep = participants.filter(p=>{
+      if(!['aktiv','verlaengerung'].includes(p.status)) return false;
+      const ex = nextExamForCohort(cohorts.find(c=>c.id===p.cohortId));
+      return ex && daysUntil(ex.date) <= EXAM_PREP_DAYS;
+    }).length;
     const stats = [
-      {n: participants.length, l:'Teilnehmerinnen gesamt'},
-      {n: counts.aktiv, l:'Aktiv'},
-      {n: counts.verlaengerung, l:'In Verlängerung'},
-      {n: counts.bestanden, l:'Bestanden'},
+      {n: participants.length, l:'Teilnehmerinnen gesamt', allParticipants:true},
+      {n: counts.verlaengerung, l:'davon in Verlängerung'},
+      {n: inPrep, l:'In Prüfungsvorbereitung'},
       {n: activeCohorts, l:'Laufende Durchgänge'},
       {n: notes.filter(n=>n.type==='aufgabe' && !n.done).length, l:'Offene Aufgaben'}
     ];
-    $('#ovStats').innerHTML = stats.map(s=>`<div class="stat-tile"><div class="n">${s.n}</div><div class="l">${esc(s.l)}</div></div>`).join('');
+    $('#ovStats').innerHTML = stats.map(s=>`<div class="stat-tile${s.allParticipants?' stat-tile-link':''}"${s.allParticipants?' data-all-participants="1"':''}><div class="n">${s.n}</div><div class="l">${esc(s.l)}</div></div>`).join('');
+    const allTile = $('#ovStats [data-all-participants]');
+    if(allTile) allTile.addEventListener('click', ()=>{
+      $('#fltSearch').value=''; $('#fltCohort').value=''; $('#fltStatus').value='';
+      renderParticipants();
+      switchTab('teilnehmerinnen');
+    });
 
     const active = cohorts.filter(c=>c.status==='aktiv').sort((a,b)=>(b.startDate||'').localeCompare(a.startDate||''));
     $('#ovCohorts').innerHTML = active.length ? active.map(c=>{
@@ -1008,6 +1139,15 @@
         <span class="pill st-info">${cnt} Teilnehmerinnen</span>
       </div>`;
     }).join('') : '<p class="empty">Noch keine aktiven Durchgänge.</p>';
+
+    const exams = upcomingExamsList();
+    $('#ovExams').innerHTML = exams.length ? exams.slice(0,8).map(x=>{
+      const d = daysUntil(x.date);
+      return `<div class="row-between" style="padding:8px 0; border-bottom:1px solid var(--border);">
+        <div><strong>${esc(x.type)}</strong> <span class="faint">· ${cohortLinkHTML(x.cohortId)}</span></div>
+        <span class="pill ${d<=EXAM_PREP_DAYS?'st-warn':'st-info'}">${fmtDate(x.date)}</span>
+      </div>`;
+    }).join('') : '<p class="empty">Keine Prüfungstermine eingetragen.</p>';
 
     const openTasks = notes.filter(n=>n.type==='aufgabe' && !n.done).slice(0,5);
     $('#ovTasks').innerHTML = openTasks.length ? openTasks.map(noteItemHTML).join('') : '<p class="empty">Keine offenen Aufgaben.</p>';
@@ -1031,6 +1171,11 @@
     if(!c) return esc(cohortName(id));
     return `<a href="#" class="ref-link" data-open-cohort="${id}">${esc(c.name)}</a>`;
   }
+  function partnerLinkHTML(id){
+    const pr = partners.find(x=>x.id===id);
+    if(!pr) return '';
+    return `<a href="#" class="ref-link" data-open-partner="${id}">${esc(pr.name)}</a>`;
+  }
 
   function renderParticipants(){
     const q = ($('#fltSearch').value||'').toLowerCase();
@@ -1047,15 +1192,17 @@
     }).sort((a,b)=>(a.nachname||'').localeCompare(b.nachname||''));
 
     const tbody = $('#participantsTable tbody');
-    if(!list.length){ tbody.innerHTML = `<tr><td colspan="5" class="empty">Keine Teilnehmerinnen gefunden.</td></tr>`; return; }
+    if(!list.length){ tbody.innerHTML = `<tr><td colspan="6" class="empty">Keine Teilnehmerinnen gefunden.</td></tr>`; return; }
     tbody.innerHTML = list.map(p=>{
       const st = STATUS[p.status] || {label:p.status, cls:'st-neutral'};
+      const ex = nextExamForCohort(cohorts.find(c=>c.id===p.cohortId));
       return `<tr data-id="${p.id}">
         <td>${esc(participantName(p))} ${p.demo?'<span class="demo-tag">Beispiel</span>':''}</td>
         <td>${cohortLinkHTML(p.cohortId)}</td>
         <td><span class="pill ${st.cls}">${esc(st.label)}</span></td>
         <td>${fmtDate(p.entryDate)}</td>
         <td>${esc(p.fundingBody||'—')}</td>
+        <td>${ex ? esc(ex.type)+' '+fmtDate(ex.date) : '—'}</td>
       </tr>`;
     }).join('');
   }
@@ -1082,11 +1229,21 @@
     $('#pDocsFieldset').hidden = !p;
     $('#pDocsHint').textContent = assetsCap ? 'Max. ca. 700 KB pro Datei (z. B. eine gescannte Einzelseite als PDF oder Foto).' : 'Dokumenten-Upload ist derzeit nicht verfügbar.';
     $('#btnUploadDoc').disabled = !assetsCap;
+    renderParticipantExamInfo();
     renderDocsList();
     renderHistoryList();
     renderCurriculumList();
     renderAttendanceSummary();
     $('#dlgParticipant').showModal();
+  }
+
+  // Zeigt die Prüfungstermine des im Formular aktuell gewählten Durchgangs an (aktualisiert sich
+  // live, wenn der Durchgang im Dropdown gewechselt wird — die Termine selbst werden im
+  // Durchgang-Dialog gepflegt, hier nur informativ angezeigt).
+  function renderParticipantExamInfo(){
+    const c = cohorts.find(x=>x.id===$('#pCohort').value);
+    const parts = EXAM_TYPES.map(t=> c && c[t.key] ? `${t.label}: ${fmtDate(c[t.key])}` : null).filter(Boolean);
+    $('#pExamInfo').textContent = parts.length ? 'Prüfungstermine (Durchgang): ' + parts.join(' · ') : 'Für den gewählten Durchgang sind noch keine Prüfungstermine eingetragen.';
   }
 
   function renderDocsList(){
@@ -1354,6 +1511,7 @@
     $('#cDlgTitle').textContent = c ? 'Durchgang bearbeiten' : 'Neuer Durchgang';
     $('#cName').value = c?.name||''; $('#cStart').value = c?.startDate||''; $('#cEnd').value = c?.endDate||'';
     $('#cStatus').value = c?.status||'aktiv'; $('#cNote').value = c?.note||'';
+    $('#cZwischenpruefung').value = c?.zwischenpruefungDatum||''; $('#cAbschlusspruefung').value = c?.abschlusspruefungDatum||'';
     $('#btnDeleteCohort').hidden = !c;
     $('#dlgCohort').showModal();
   }
@@ -1361,7 +1519,10 @@
   async function onSaveCohort(e){
     e.preventDefault();
     if(!$('#cName').value.trim()){ toast('Bitte eine Bezeichnung angeben.'); return; }
-    const data = {name: $('#cName').value.trim(), startDate: $('#cStart').value, endDate: $('#cEnd').value, status: $('#cStatus').value, note: $('#cNote').value.trim()};
+    const data = {
+      name: $('#cName').value.trim(), startDate: $('#cStart').value, endDate: $('#cEnd').value, status: $('#cStatus').value, note: $('#cNote').value.trim(),
+      zwischenpruefungDatum: $('#cZwischenpruefung').value || null, abschlusspruefungDatum: $('#cAbschlusspruefung').value || null
+    };
     if(!db){ $('#dlgCohort').close(); return; }
     try{
       if(editingCohortId) await db.collection('cohorts').doc(editingCohortId).update(data);
@@ -1391,6 +1552,7 @@
       <div>${esc(n.text)}</div>
       <div class="meta">
         ${p?`<span>👤 ${participantLinkHTML(p)}</span>`:''}
+        ${n.assignee?`<span>🧑‍💼 Zuständig: ${esc(n.assignee)}</span>`:''}
         ${n.due?`<span style="${overdue?'color:var(--danger);font-weight:700;':''}">fällig ${fmtDate(n.due)}</span>`:''}
         <span class="spacer"></span>
         <span>${esc(n.authorName||'')} · ${fmtDateTime(n.createdAt)}</span>
@@ -1422,14 +1584,14 @@
   }
 
   function openNoteDialog(participantId){
-    $('#nType').value='notiz'; $('#nParticipant').value = participantId||''; $('#nDue').value=''; $('#nText').value='';
+    $('#nType').value='notiz'; $('#nParticipant').value = participantId||''; $('#nAssignee').value = myName||''; $('#nDue').value=''; $('#nText').value='';
     $('#dlgNote').showModal();
   }
 
   async function onSaveNote(e){
     e.preventDefault();
     if(!$('#nText').value.trim()){ toast('Bitte einen Text eingeben.'); return; }
-    const data = {type: $('#nType').value, participantId: $('#nParticipant').value||null, text: $('#nText').value.trim(), due: $('#nDue').value||null, done:false, authorId: myId, authorName: myName, demo:false, createdAt: nowISO()};
+    const data = {type: $('#nType').value, participantId: $('#nParticipant').value||null, assignee: $('#nAssignee').value.trim()||null, text: $('#nText').value.trim(), due: $('#nDue').value||null, done:false, authorId: myId, authorName: myName, demo:false, createdAt: nowISO()};
     if(!db){ $('#dlgNote').close(); return; }
     try{ await db.collection('notes').add(data); toast('Gespeichert.'); $('#dlgNote').close(); }
     catch(err){ toast('Speichern fehlgeschlagen.'); }
@@ -1440,26 +1602,76 @@
     const p = m.participantId ? participants.find(x=>x.id===m.participantId) : null;
     const audLabel = {intern:'Intern', teilnehmerin:'Teilnehmerin', foerdermittelgeber:'Fördermittelgeber'}[m.audience]||m.audience;
     const audCls = {intern:'st-neutral', teilnehmerin:'st-info', foerdermittelgeber:'st-warn'}[m.audience]||'st-neutral';
+    const prLink = m.partnerId ? partnerLinkHTML(m.partnerId) : '';
     return `<div class="msg-item">
       <div class="row-between"><span class="pill ${audCls}">${esc(audLabel)}</span><span class="faint">${fmtDateTime(m.createdAt)}</span></div>
       <div>${esc(m.text)}</div>
-      <div class="meta">${p?`<span>👤 ${participantLinkHTML(p)}</span>`:''}<span class="spacer"></span><span>${esc(m.authorName||'')}</span>${m.demo?'<span class="demo-tag">Beispiel</span>':''}</div>
+      <div class="meta">${p?`<span>👤 ${participantLinkHTML(p)}</span>`:''}${prLink?`<span>🏢 ${prLink}</span>`:''}<span class="spacer"></span><span>${esc(m.authorName||'')}</span>${m.demo?'<span class="demo-tag">Beispiel</span>':''}</div>
     </div>`;
   }
   function renderMessages(){
     $('#messagesList').innerHTML = messages.length ? messages.map(msgItemHTML).join('') : '<p class="empty">Noch keine Einträge.</p>';
   }
   function openMessageDialog(participantId){
-    $('#mAudience').value='intern'; $('#mParticipant').value = participantId||''; $('#mText').value='';
+    $('#mAudience').value='intern'; $('#mParticipant').value = participantId||''; $('#mPartner').value=''; $('#mText').value='';
     $('#dlgMessage').showModal();
   }
   async function onSaveMessage(e){
     e.preventDefault();
     if(!$('#mText').value.trim()){ toast('Bitte einen Text eingeben.'); return; }
-    const data = {audience: $('#mAudience').value, participantId: $('#mParticipant').value||null, text: $('#mText').value.trim(), authorId: myId, authorName: myName, demo:false, createdAt: nowISO()};
+    const data = {audience: $('#mAudience').value, participantId: $('#mParticipant').value||null, partnerId: $('#mPartner').value||null, text: $('#mText').value.trim(), authorId: myId, authorName: myName, demo:false, createdAt: nowISO()};
     if(!db){ $('#dlgMessage').close(); return; }
     try{ await db.collection('messages').add(data); toast('Gespeichert.'); $('#dlgMessage').close(); }
     catch(err){ toast('Speichern fehlgeschlagen.'); }
+  }
+
+  // ---------- partner ----------
+  let editingPartnerId = null;
+  function renderPartners(){
+    const q = ($('#fltPartnerSearch').value||'').toLowerCase();
+    const typeF = $('#fltPartnerType').value;
+    const list = partners.filter(pr=>{
+      if(typeF && pr.type!==typeF) return false;
+      if(q){
+        const hay = [pr.name,pr.institution,pr.email].join(' ').toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    }).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    const tbody = $('#partnersTable tbody');
+    if(!list.length){ tbody.innerHTML = `<tr><td colspan="4" class="empty">Keine Partner gefunden.</td></tr>`; return; }
+    tbody.innerHTML = list.map(pr=>`<tr data-id="${pr.id}">
+        <td>${esc(pr.name)} ${pr.demo?'<span class="demo-tag">Beispiel</span>':''}</td>
+        <td>${esc(pr.institution||'—')}</td>
+        <td><span class="pill ${pr.type==='intern'?'st-neutral':'st-info'}">${pr.type==='intern'?'Intern':'Extern'}</span></td>
+        <td>${pr.email?`<a href="mailto:${esc(pr.email)}">${esc(pr.email)}</a>`:'—'}</td>
+      </tr>`).join('');
+  }
+  function openPartnerDialog(id){
+    editingPartnerId = id;
+    const pr = id ? partners.find(x=>x.id===id) : null;
+    $('#prDlgTitle').textContent = pr ? 'Partner bearbeiten' : 'Neuer Partner';
+    $('#prName').value = pr?.name||''; $('#prInstitution').value = pr?.institution||'';
+    $('#prType').value = pr?.type||'extern'; $('#prEmail').value = pr?.email||'';
+    $('#btnDeletePartner').hidden = !pr;
+    $('#dlgPartner').showModal();
+  }
+  async function onSavePartner(e){
+    e.preventDefault();
+    if(!$('#prName').value.trim()){ toast('Bitte einen Namen angeben.'); return; }
+    const data = {name: $('#prName').value.trim(), institution: $('#prInstitution').value.trim(), type: $('#prType').value, email: $('#prEmail').value.trim()};
+    if(!db){ $('#dlgPartner').close(); return; }
+    try{
+      if(editingPartnerId) await db.collection('partners').doc(editingPartnerId).update(data);
+      else { data.demo=false; data.createdAt = nowISO(); await db.collection('partners').add(data); }
+      toast('Gespeichert.'); $('#dlgPartner').close();
+    }catch(err){ toast('Speichern fehlgeschlagen.'); }
+  }
+  async function onDeletePartner(){
+    if(!editingPartnerId) return;
+    if(!confirm('Diesen Partner wirklich löschen?')) return;
+    try{ await db.collection('partners').doc(editingPartnerId).delete(); toast('Gelöscht.'); $('#dlgPartner').close(); }
+    catch(e){ toast('Löschen fehlgeschlagen.'); }
   }
 
   // ---------- settings ----------
