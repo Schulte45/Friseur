@@ -575,7 +575,6 @@
         </div>
         <div class="field"><label>Teilnehmerin (optional)</label><select class="select" id="nParticipant"><option value="">Allgemein</option></select></div>
         <div class="field"><label>Zuständig (optional)</label><input class="input" id="nAssignee" placeholder="z. B. Name der Kollegin"></div>
-        <div class="field" id="nDueWrap"><label>Fällig am (optional)</label><input class="input" type="date" id="nDue"></div>
       </div>
       <div class="field"><label>Text *</label><textarea class="textarea" id="nText" required></textarea></div>
     </div>
@@ -910,17 +909,51 @@
         templates: defaultTemplates(),
         curriculum: defaultCurriculum()
       });
-      const c1 = await db.collection('cohorts').add({name:'Durchgang 2025–2027', startDate:'2025-09-01', endDate:'2027-08-31', status:'aktiv', note:'', demo:true, createdAt: nowISO()});
-      const c2 = await db.collection('cohorts').add({name:'Durchgang 2024–2026', startDate:'2024-09-01', endDate:'2026-08-31', status:'aktiv', note:'', demo:true, createdAt: nowISO()});
       const mk = (data)=> db.collection('participants').add(Object.assign({
         documents:[], history:[], demo:true, createdAt: nowISO(), updatedAt: nowISO()
       }, data));
-      await mk({vorname:'(Beispiel) Sabine', nachname:'Muster', geburtsdatum:'1998-04-12', telefon:'', email:'', strasse:'', ort:'', cohortId:c1.id, entryType:'regulaer', entryDate:'2025-09-01', status:'aktiv', exitDate:'', fundingBody:'Agentur für Arbeit', aktenzeichen:'AA-10234'});
-      await mk({vorname:'(Beispiel) Elif', nachname:'Beispielhaft', geburtsdatum:'1995-11-02', telefon:'', email:'', strasse:'', ort:'', cohortId:c1.id, entryType:'quereinstieg', entryDate:'2026-01-15', status:'aktiv', exitDate:'', fundingBody:'Jobcenter', aktenzeichen:'JC-55219'});
-      await mk({vorname:'(Beispiel) Nora', nachname:'Testfall', geburtsdatum:'1997-07-23', telefon:'', email:'', strasse:'', ort:'', cohortId:c2.id, entryType:'regulaer', entryDate:'2024-09-01', status:'verlaengerung', exitDate:'', fundingBody:'Agentur für Arbeit', aktenzeichen:'AA-88213', history:[{date:'2026-07-01', type:'verlaengerung_start', note:'Praktische Prüfung nicht bestanden, Wiederholung vereinbart.'}]});
-      await mk({vorname:'(Beispiel) Carla', nachname:'Vorlage', geburtsdatum:'1993-02-18', telefon:'', email:'', strasse:'', ort:'', cohortId:c2.id, entryType:'regulaer', entryDate:'2024-09-01', status:'bestanden', exitDate:'2026-07-20', fundingBody:'Jobcenter', aktenzeichen:'JC-11002', history:[{date:'2026-07-20', type:'austritt_bestanden', note:'Abschlussprüfung bestanden.'}]});
-      await db.collection('notes').add({type:'aufgabe', participantId:null, text:'(Beispiel) Zertifikate für Durchgang 2024–2026 anfordern', due:'2026-10-01', done:false, authorName:'Beispiel-Ausbilderin', authorId:null, demo:true, createdAt: nowISO()});
-      await db.collection('messages').add({audience:'intern', participantId:null, text:'(Beispiel) Bitte alle Anwesenheitslisten bis Freitag einreichen.', authorName:'Beispiel-Ausbilderin', authorId:null, demo:true, createdAt: nowISO()});
+
+      // Zwei Beispiel-Durchgänge mit je 10 Teilnehmerinnen (davon 2 bzw. 3 in Verlängerung),
+      // damit neue Kolleginnen die App gleich mit realistischen Beispieldaten kennenlernen können.
+      const cohortDefs = [
+        {name:'Durchgang 2025–2027', startDate:'2025-09-01', endDate:'2027-08-31', zwischenpruefungDatum:'2026-12-05', abschlusspruefungDatum:'2027-06-15', verlaengerungCount:2, quereinstiegIndex:1, quereinstiegDate:'2026-01-15'},
+        {name:'Durchgang 2024–2026', startDate:'2024-09-01', endDate:'2026-08-31', zwischenpruefungDatum:'2025-11-05', abschlusspruefungDatum:'2026-10-15', verlaengerungCount:3, quereinstiegIndex:1, quereinstiegDate:'2025-01-15'}
+      ];
+      const vornamen = ['Sabine','Elif','Petra','Jana','Aylin','Mareike','Franziska','Kerstin','Simone','Yvonne',
+        'Nadine','Vanessa','Michelle','Julia','Anke','Silke','Larissa','Katharina','Denise','Melanie'];
+      const nachnamen = ['Muster','Beispielhaft','Testfall','Vorlage','Musterfrau','Probefall','Demofall','Schablone','Kandidatin','Platzhalter',
+        'Attrappe','Skizzenhaft','Rohfassung','Nachbildung','Simulationsfall','Prototypin','Mustergültig','Beispielsen','Datensatz','Demoversion'];
+      const geburtsdaten = ['1998-04-12','1995-11-02','1997-07-23','1993-02-18','1990-05-30','1996-09-09','1992-12-01','1999-03-27','1994-06-14','1991-08-05',
+        '1988-01-19','2000-10-22','1997-04-04','1993-07-30','1995-02-11','1990-11-17','1998-09-25','1992-06-08','1996-01-03','1994-12-29'];
+      let nameIdx = 0, aaCounter = 10201, jcCounter = 55301;
+
+      for(const cd of cohortDefs){
+        const cohortRef = await db.collection('cohorts').add({
+          name:cd.name, startDate:cd.startDate, endDate:cd.endDate, status:'aktiv', note:'',
+          zwischenpruefungDatum:cd.zwischenpruefungDatum, abschlusspruefungDatum:cd.abschlusspruefungDatum,
+          demo:true, createdAt: nowISO()
+        });
+        for(let i=0;i<10;i++){
+          const vorname = vornamen[nameIdx];
+          const nachname = nachnamen[nameIdx];
+          const geburtsdatum = geburtsdaten[nameIdx];
+          nameIdx++;
+          const inVerlaengerung = i < cd.verlaengerungCount;
+          const isQuereinstieg = i === cd.quereinstiegIndex;
+          const fundingBody = i % 2===0 ? 'Agentur für Arbeit' : 'Jobcenter';
+          const aktenzeichen = fundingBody==='Agentur für Arbeit' ? `AA-${aaCounter++}` : `JC-${jcCounter++}`;
+          await mk({
+            vorname:`(Beispiel) ${vorname}`, nachname, geburtsdatum, telefon:'', email:'', strasse:'', ort:'',
+            cohortId:cohortRef.id, entryType: isQuereinstieg ? 'quereinstieg' : 'regulaer',
+            entryDate: isQuereinstieg ? cd.quereinstiegDate : cd.startDate,
+            status: inVerlaengerung ? 'verlaengerung' : 'aktiv', exitDate:'', fundingBody, aktenzeichen,
+            history: inVerlaengerung ? [{date:cd.abschlusspruefungDatum||cd.endDate, type:'verlaengerung_start', note:'Prüfung nicht bestanden, Wiederholung vereinbart.'}] : []
+          });
+        }
+      }
+
+      await db.collection('notes').add({type:'aufgabe', participantId:null, assignee:null, text:'(Beispiel) Zertifikate für Durchgang 2024–2026 anfordern', done:false, authorName:'Beispiel-Ausbilderin', authorId:null, demo:true, createdAt: nowISO()});
+      await db.collection('messages').add({audience:'intern', participantId:null, partnerId:null, text:'(Beispiel) Bitte alle Anwesenheitslisten bis Freitag einreichen.', authorName:'Beispiel-Ausbilderin', authorId:null, demo:true, createdAt: nowISO()});
       toast('Beispieldaten wurden angelegt.');
     }catch(e){ console.warn('seed failed', e); }
   }
@@ -1543,7 +1576,6 @@
   // ---------- notes & tasks ----------
   function noteItemHTML(n){
     const p = n.participantId ? participants.find(x=>x.id===n.participantId) : null;
-    const overdue = n.type==='aufgabe' && !n.done && n.due && n.due < todayISO();
     return `<div class="note-item ${n.done?'done':''}" data-note="${n.id}">
       <div class="row-between">
         <span class="pill ${n.type==='aufgabe'?'st-warn':'st-neutral'}">${n.type==='aufgabe'?'Aufgabe':'Notiz'}</span>
@@ -1553,7 +1585,6 @@
       <div class="meta">
         ${p?`<span>👤 ${participantLinkHTML(p)}</span>`:''}
         ${n.assignee?`<span>🧑‍💼 Zuständig: ${esc(n.assignee)}</span>`:''}
-        ${n.due?`<span style="${overdue?'color:var(--danger);font-weight:700;':''}">fällig ${fmtDate(n.due)}</span>`:''}
         <span class="spacer"></span>
         <span>${esc(n.authorName||'')} · ${fmtDateTime(n.createdAt)}</span>
         ${n.demo?'<span class="demo-tag">Beispiel</span>':''}
@@ -1584,14 +1615,14 @@
   }
 
   function openNoteDialog(participantId){
-    $('#nType').value='notiz'; $('#nParticipant').value = participantId||''; $('#nAssignee').value = myName||''; $('#nDue').value=''; $('#nText').value='';
+    $('#nType').value='notiz'; $('#nParticipant').value = participantId||''; $('#nAssignee').value = myName||''; $('#nText').value='';
     $('#dlgNote').showModal();
   }
 
   async function onSaveNote(e){
     e.preventDefault();
     if(!$('#nText').value.trim()){ toast('Bitte einen Text eingeben.'); return; }
-    const data = {type: $('#nType').value, participantId: $('#nParticipant').value||null, assignee: $('#nAssignee').value.trim()||null, text: $('#nText').value.trim(), due: $('#nDue').value||null, done:false, authorId: myId, authorName: myName, demo:false, createdAt: nowISO()};
+    const data = {type: $('#nType').value, participantId: $('#nParticipant').value||null, assignee: $('#nAssignee').value.trim()||null, text: $('#nText').value.trim(), done:false, authorId: myId, authorName: myName, demo:false, createdAt: nowISO()};
     if(!db){ $('#dlgNote').close(); return; }
     try{ await db.collection('notes').add(data); toast('Gespeichert.'); $('#dlgNote').close(); }
     catch(err){ toast('Speichern fehlgeschlagen.'); }
