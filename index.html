@@ -163,6 +163,8 @@
   .avatar{width:22px; height:22px; border-radius:999px; flex:0 0 auto; object-fit:cover;}
   .doc-row{display:flex; align-items:center; gap:8px; border:1px solid var(--border); border-radius:8px; padding:7px 10px; font-size:12.5px;}
   .doc-row .cat{color:var(--text-dim);}
+  .ref-link{color:var(--accent); text-decoration:none; font-weight:600; cursor:pointer;}
+  .ref-link:hover{text-decoration:underline;}
   .curr-row{border:1px solid var(--border); border-radius:10px; padding:9px 11px;}
   .curr-title{font-size:13px; font-weight:600;}
   .att-btn{min-width:36px; font-weight:800;}
@@ -199,6 +201,7 @@
     #printArea, #printArea *{visibility:visible;}
     #printArea{position:absolute; left:0; top:0; width:100%; padding:0; background:#fff; color:#000;}
     .no-print{display:none !important;}
+    .ref-link{color:inherit; text-decoration:none; font-weight:inherit;}
   }
 </style>
 </head>
@@ -902,6 +905,19 @@
       if(tr) openParticipantDialog(tr.dataset.id);
     });
 
+    // Zentraler Klick-Handler für alle Teilnehmerin-/Durchgang-Links (.ref-link), egal wo sie
+    // im Programm auftauchen. Läuft in der Capture-Phase, damit ein Link INNERHALB einer
+    // anklickbaren Zeile (z.B. der Durchgang in der Teilnehmerinnen-Tabelle) nicht zusätzlich
+    // den Klick der Zeile selbst auslöst.
+    document.addEventListener('click', (e)=>{
+      const link = e.target.closest('[data-open-participant], [data-open-cohort]');
+      if(!link) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if(link.dataset.openParticipant) openParticipantDialog(link.dataset.openParticipant);
+      else if(link.dataset.openCohort) openCohortDialog(link.dataset.openCohort);
+    }, true);
+
     $('#frmParticipant').addEventListener('submit', onSaveParticipant);
     $('#frmCohort').addEventListener('submit', onSaveCohort);
     $('#frmNote').addEventListener('submit', onSaveNote);
@@ -988,7 +1004,7 @@
     $('#ovCohorts').innerHTML = active.length ? active.map(c=>{
       const cnt = participants.filter(p=>p.cohortId===c.id && ['aktiv','verlaengerung','pausiert'].includes(p.status)).length;
       return `<div class="row-between" style="padding:8px 0; border-bottom:1px solid var(--border);">
-        <div><strong>${esc(c.name)}</strong> <span class="faint">${fmtDate(c.startDate)} – ${fmtDate(c.endDate)}</span></div>
+        <div><strong>${cohortLinkHTML(c.id)}</strong> <span class="faint">${fmtDate(c.startDate)} – ${fmtDate(c.endDate)}</span></div>
         <span class="pill st-info">${cnt} Teilnehmerinnen</span>
       </div>`;
     }).join('') : '<p class="empty">Noch keine aktiven Durchgänge.</p>';
@@ -1004,6 +1020,17 @@
   // ---------- participants ----------
   function participantName(p){ return `${p.vorname||''} ${p.nachname||''}`.trim() || '(ohne Namen)'; }
   function cohortName(id){ const c = cohorts.find(c=>c.id===id); return c ? c.name : '—'; }
+  // Überall, wo eine Teilnehmerin oder ein Durchgang nur genannt wird (Notizen, Kommunikation,
+  // Übersicht, Statistik ...), verlinken diese beiden Helfer direkt auf den passenden Datensatz.
+  function participantLinkHTML(p){
+    if(!p) return '';
+    return `<a href="#" class="ref-link" data-open-participant="${p.id}">${esc(participantName(p))}</a>`;
+  }
+  function cohortLinkHTML(id){
+    const c = cohorts.find(c=>c.id===id);
+    if(!c) return esc(cohortName(id));
+    return `<a href="#" class="ref-link" data-open-cohort="${id}">${esc(c.name)}</a>`;
+  }
 
   function renderParticipants(){
     const q = ($('#fltSearch').value||'').toLowerCase();
@@ -1025,7 +1052,7 @@
       const st = STATUS[p.status] || {label:p.status, cls:'st-neutral'};
       return `<tr data-id="${p.id}">
         <td>${esc(participantName(p))} ${p.demo?'<span class="demo-tag">Beispiel</span>':''}</td>
-        <td>${esc(cohortName(p.cohortId))}</td>
+        <td>${cohortLinkHTML(p.cohortId)}</td>
         <td><span class="pill ${st.cls}">${esc(st.label)}</span></td>
         <td>${fmtDate(p.entryDate)}</td>
         <td>${esc(p.fundingBody||'—')}</td>
@@ -1192,7 +1219,7 @@
       const stats = computeAttendanceStats(p.id);
       return `<div class="card" style="padding:10px 14px;">
         <div class="row-between">
-          <div><strong>${esc(participantName(p))}</strong> <span class="faint">· Quote gesamt ${stats.rate==null?'—':stats.rate+'%'}</span></div>
+          <div><strong>${participantLinkHTML(p)}</strong> <span class="faint">· Quote gesamt ${stats.rate==null?'—':stats.rate+'%'}</span></div>
           <div class="row" style="gap:6px;" data-att-row="${p.id}">
             ${ATT_ORDER.map(c=>`<button type="button" class="btn btn-sm att-btn ${code===c?('active '+ATT_CODES[c].cls):''}" data-att-code="${c}" title="${esc(ATT_CODES[c].label)}">${c}</button>`).join('')}
           </div>
@@ -1363,7 +1390,7 @@
       </div>
       <div>${esc(n.text)}</div>
       <div class="meta">
-        ${p?`<span>👤 ${esc(participantName(p))}</span>`:''}
+        ${p?`<span>👤 ${participantLinkHTML(p)}</span>`:''}
         ${n.due?`<span style="${overdue?'color:var(--danger);font-weight:700;':''}">fällig ${fmtDate(n.due)}</span>`:''}
         <span class="spacer"></span>
         <span>${esc(n.authorName||'')} · ${fmtDateTime(n.createdAt)}</span>
@@ -1416,7 +1443,7 @@
     return `<div class="msg-item">
       <div class="row-between"><span class="pill ${audCls}">${esc(audLabel)}</span><span class="faint">${fmtDateTime(m.createdAt)}</span></div>
       <div>${esc(m.text)}</div>
-      <div class="meta">${p?`<span>👤 ${esc(participantName(p))}</span>`:''}<span class="spacer"></span><span>${esc(m.authorName||'')}</span>${m.demo?'<span class="demo-tag">Beispiel</span>':''}</div>
+      <div class="meta">${p?`<span>👤 ${participantLinkHTML(p)}</span>`:''}<span class="spacer"></span><span>${esc(m.authorName||'')}</span>${m.demo?'<span class="demo-tag">Beispiel</span>':''}</div>
     </div>`;
   }
   function renderMessages(){
@@ -1495,7 +1522,7 @@
       const cc = {}; STATUS_ORDER.forEach(k=>cc[k]=0);
       let total=0;
       participants.forEach(p=>{ if(p.cohortId===c.id){ if(cc[p.status]!=null) cc[p.status]++; total++; } });
-      return `<tr><td>${esc(c.name)}</td><td>${cc.aktiv}</td><td>${cc.verlaengerung}</td><td>${cc.pausiert}</td><td>${cc.bestanden}</td><td>${cc.abgebrochen}</td><td><strong>${total}</strong></td></tr>`;
+      return `<tr><td>${cohortLinkHTML(c.id)}</td><td>${cc.aktiv}</td><td>${cc.verlaengerung}</td><td>${cc.pausiert}</td><td>${cc.bestanden}</td><td>${cc.abgebrochen}</td><td><strong>${total}</strong></td></tr>`;
     }).join('');
     $('#statCohortTable').innerHTML = rows || '<tr><td colspan="7" class="empty">Keine Durchgänge angelegt.</td></tr>';
 
