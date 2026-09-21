@@ -65,6 +65,15 @@
   h1,h2,h3,h4{font-family:var(--font-display); font-weight:600; margin:0; text-wrap:balance; color:var(--text);}
   button, input, select, textarea{font-family:inherit; font-size:inherit; color:inherit;}
   table{font-variant-numeric:tabular-nums;}
+  /* #appShell hat sonst keine eigene Regel und ist damit ein ganz normaler Block-Container:
+     dadurch konnte .app (weiter unten) trotz flex:1/min-height:0 nicht auf die restliche
+     Bildschirmhöhe schrumpfen, wuchs stattdessen auf die volle Inhaltshöhe und wurde vom
+     "overflow:hidden" des <body> abgeschnitten — die Seite ließ sich dann gar nicht mehr
+     scrollen, sobald der Inhalt (z. B. mehr Teilnehmerinnen oder die Statistik-Karten)
+     höher als der Bildschirm wurde. #appShell muss selbst ein Flex-Container sein, damit
+     .app als Flex-Kind wirklich schrumpfen und intern scrollen kann.
+  */
+  #appShell{display:flex; flex-direction:column; flex:1; min-height:0;}
   .app{flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;}
   .app-inner{max-width:1180px; margin:0 auto; padding:0 16px 64px;}
   a{color:var(--accent-strong);}
@@ -450,7 +459,7 @@
               <option value="day">Tag</option>
               <option value="week">Woche</option>
               <option value="month" selected>Monat</option>
-              <option value="year">Jahr</option>
+              <option value="year">Ausbildungsjahr</option>
               <option value="custom">Zeitraum …</option>
             </select>
             <button type="button" class="btn btn-sm" id="statPeriodPrev" title="Zurück">◀</button>
@@ -902,6 +911,7 @@
       renderTopMeta();
       fillStaticSelects();
       if($('#dlgParticipant').open) renderCurriculumList();
+      if(!$('section[data-view="statistik"]').hidden) renderStats();
     }, e=>console.warn('settings', e));
 
     db.collection('attendance').onSnapshot(snap=>{
@@ -947,7 +957,7 @@
       const existing = await db.collection('cohorts').limit(1).get();
       if(!existing.empty) return;
       await db.doc('settings/general').set({
-        institutionName:'(Beispiel) Bildungsinstitut',
+        institutionName:'BWK BildungsWerk in Kreuzberg',
         programName:'Umschulung Friseurhandwerk',
         fundingBodies:['Agentur für Arbeit','Jobcenter'],
         templates: defaultTemplates(),
@@ -1121,7 +1131,7 @@
   }
 
   function renderTopMeta(){
-    $('#orgSub').textContent = (settings.institutionName ? settings.institutionName+' · ' : '') + 'Verwaltung der Ausbildungs-Durchgänge · papierlos';
+    $('#orgSub').textContent = (settings.institutionName ? settings.institutionName+' · ' : '') + 'Verwaltung der Ausbildungs-Durchgänge';
   }
 
   function fillCohortSelects(){
@@ -1207,7 +1217,7 @@
       {n: participants.length, l:'Teilnehmerinnen gesamt', allParticipants:true},
       {n: counts.verlaengerung, l:'davon in Verlängerung'},
       {n: inPrep, l:'In Prüfungsvorbereitung'},
-      {n: activeCohorts, l:'Laufende Durchgänge'},
+      {n: activeCohorts, l:'Aktuelle Jahrgänge'},
       {n: notes.filter(n=>n.type==='aufgabe' && !n.done).length, l:'Offene Aufgaben'}
     ];
     $('#ovStats').innerHTML = stats.map(s=>`<div class="stat-tile${s.allParticipants?' stat-tile-link':''}"${s.allParticipants?' data-all-participants="1"':''}><div class="n">${s.n}</div><div class="l">${esc(s.l)}</div></div>`).join('');
@@ -1809,8 +1819,12 @@
       return {from:monday, to:addDaysISO(monday,6)};
     }
     if(period.mode==='year'){
+      // Ausbildungsjahr statt Kalenderjahr: bundesweit läuft die Berufsausbildung regulär vom
+      // 1. August bis 31. Juli des Folgejahres (unabhängig vom genauen Berliner Schuljahresbeginn,
+      // der jedes Jahr um ein paar Tage verschiebt) — das ist der in der Praxis übliche Rahmen.
       const y = d.getUTCFullYear();
-      return {from:`${y}-01-01`, to:`${y}-12-31`};
+      const startYear = d.getUTCMonth() >= 7 ? y : y-1; // Monatsindex 7 = August
+      return {from:`${startYear}-08-01`, to:`${startYear+1}-07-31`};
     }
     // Monat (Standard)
     const first = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
@@ -1829,7 +1843,7 @@
     const r = periodRange(period);
     if(period.mode==='day') return fmtDate(r.from);
     if(period.mode==='week') return `KW ${isoWeekNumber(r.from)} (${fmtDate(r.from)} – ${fmtDate(r.to)})`;
-    if(period.mode==='year') return r.from.slice(0,4);
+    if(period.mode==='year'){ const startYear = Number(r.from.slice(0,4)); return `Ausbildungsjahr ${startYear}/${startYear+1}`; }
     if(period.mode==='custom') return `${fmtDate(r.from)} – ${fmtDate(r.to)}`;
     const d = new Date(r.from+'T00:00:00');
     return d.toLocaleDateString('de-DE', {month:'long', year:'numeric'});
@@ -1878,7 +1892,7 @@
     const quer = participants.filter(p=>p.entryType==='quereinstieg').length;
     $('#statTotals').innerHTML = [
       {n:participants.length, l:'Teilnehmerinnen gesamt'},
-      {n:cohorts.length, l:'Durchgänge gesamt'},
+      {n:cohorts.filter(c=>c.status==='aktiv').length, l:'Aktuelle Jahrgänge'},
       {n:quer, l:'Quereinstiege'},
       {n:notes.filter(n=>n.type==='aufgabe'&&!n.done).length, l:'Offene Aufgaben'}
     ].map(s=>`<div class="stat-tile"><div class="n">${s.n}</div><div class="l">${esc(s.l)}</div></div>`).join('');
