@@ -298,6 +298,13 @@
     <!-- TEILNEHMERINNEN -->
     <section data-view="teilnehmerinnen" hidden>
       <div class="card">
+        <div class="row-between no-print" style="margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+          <span class="faint">Neuer Jahrgang? Teilnehmerinnen gesammelt per Excel-Liste anlegen:</span>
+          <div class="row" style="gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-sm" id="btnDownloadImportTemplate">⬇ Excel-Vorlage</button>
+            <button type="button" class="btn btn-sm btn-primary" id="btnOpenImport">⬆ Teilnehmerinnen importieren</button>
+          </div>
+        </div>
         <div class="row">
           <div class="field" style="flex:2; min-width:180px;">
             <label>Suche</label>
@@ -711,6 +718,34 @@
   </div>
 </dialog>
 
+<!-- Teilnehmerinnen-Import (Excel) -->
+<dialog id="dlgImport" class="wide">
+  <div class="dlg-head"><h3>Teilnehmerinnen aus Excel importieren</h3><button type="button" class="btn btn-ghost icon-btn" data-close>✕</button></div>
+  <div class="dlg-body">
+    <p class="faint" style="margin-top:0;">Für den Start eines neuen Jahrgangs: Ausbilderinnen tragen alle Teilnehmerinnen in die Excel-Vorlage ein, hier hochladen — die App legt sie danach gesammelt an.</p>
+    <div class="field"><label>Ziel-Jahrgang *</label><select class="select" id="impCohort"><option value="">— bitte wählen —</option></select></div>
+    <div class="field">
+      <label>Ausgefüllte Excel-Datei</label>
+      <input class="input" type="file" id="impFile" accept=".xlsx,.xls">
+    </div>
+    <p class="faint">Noch keine Vorlage? <a href="#" id="impDownloadLink">Excel-Vorlage herunterladen</a>.</p>
+    <div id="impPreviewWrap" hidden>
+      <h3 style="margin-bottom:6px;">Vorschau</h3>
+      <p class="faint" id="impSummary" style="margin-top:0;"></p>
+      <div class="table-wrap" style="max-height:320px; overflow-y:auto;">
+        <table id="impPreviewTable">
+          <thead><tr><th>Zeile</th><th>Name</th><th>Geburtsdatum</th><th>Eintritt</th><th>Status</th><th>Kostenträger</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="dlg-foot">
+    <button type="button" class="btn" data-close>Abbrechen</button>
+    <button type="button" class="btn btn-primary" id="btnConfirmImport" disabled>Teilnehmerinnen anlegen</button>
+  </div>
+</dialog>
+
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
@@ -778,7 +813,66 @@
   const STATUS_ORDER = ['aktiv','verlaengerung','pausiert','bestanden','abgebrochen'];
   const STATUS_COLOR_VAR = {aktiv:'--info', verlaengerung:'--warning', pausiert:'--neutral', bestanden:'--success', abgebrochen:'--danger'};
   const ENTRY_LABEL = {regulaer:'Regulärer Start', quereinstieg:'Quereinstieg'};
-  const DOC_CATS = {formular:'Fördermittel-Formular', zertifikat:'Zertifikat', ausweis:'Persönliches Dokument', mahnung:'Mahnung / Mitteilung', sonstiges:'Sonstiges'};
+  const DOC_CATS = {formular:'Kostenübernahme', zertifikat:'Zertifikat', ausweis:'Persönliches Dokument', mahnung:'Mahnung / Mitteilung', sonstiges:'Sonstiges'};
+
+  // ---------- Teilnehmerinnen-Import (Excel) ----------
+  // Base64-Inhalt der Import-Vorlage (TN-Import-Vorlage.xlsx), damit der "Vorlage
+  // herunterladen"-Knopf ohne Server/Backend genau die gleiche Datei ausliefert, die auch
+  // separat an den Nutzer übergeben wurde. Erzeugt mit build_template.py (openpyxl).
+  const TN_IMPORT_TEMPLATE_B64 = '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';
+
+  // Spaltenüberschriften der Excel-Vorlage — müssen exakt zu build_template.py passen.
+  const IMPORT_COLS = {
+    vorname:'Vorname *', nachname:'Nachname *', geburtsdatum:'Geburtsdatum', telefon:'Telefon',
+    email:'E-Mail', strasse:'Straße, Hausnr.', ort:'PLZ / Ort', entryType:'Eintrittsart',
+    entryDate:'Eintrittsdatum', status:'Status', fundingBody:'Kostenträger / Fördermittelgeber',
+    aktenzeichen:'Aktenzeichen / Kundennummer'
+  };
+
+  // Erkennt sowohl "TT.MM.JJJJ" (von Hand eingetragen) als auch echte Excel-Datumszellen (von
+  // SheetJS mit cellDates:true als JS-Date geliefert, i.d.R. UTC-Mitternacht) und liefert immer
+  // ein ISO-Datum (YYYY-MM-DD), passend zu den <input type="date">-Feldern der App.
+  function parseFlexibleDate(val){
+    if(val==null || val==='') return '';
+    // Object.prototype.toString statt "instanceof Date": SheetJS kann je nach Ladeweg ein Date
+    // aus einem anderen Realm liefern, wo "instanceof Date" fälschlich false ergäbe.
+    if(Object.prototype.toString.call(val)==='[object Date]' && !isNaN(val)){
+      const y=val.getUTCFullYear(), m=String(val.getUTCMonth()+1).padStart(2,'0'), d=String(val.getUTCDate()).padStart(2,'0');
+      return `${y}-${m}-${d}`;
+    }
+    const s = String(val).trim();
+    let m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+    if(m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+    m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+    return '';
+  }
+
+  // Wandelt eine per XLSX.utils.sheet_to_json() gelesene Zeile (Spaltenname -> Wert) in ein
+  // Teilnehmerinnen-Datenobjekt um, oder liefert {error} bei fehlenden Pflichtfeldern /
+  // nicht erkanntem Status. Reine Funktion (keine DOM-/XLSX-Abhängigkeit) — daher gut testbar.
+  function parseImportRow(row){
+    const g = (key)=> { const v = row[IMPORT_COLS[key]]; return v==null ? '' : String(v).trim(); };
+    const vorname = g('vorname'), nachname = g('nachname');
+    if(!vorname || !nachname) return { error: 'Vor- und Nachname sind Pflicht.' };
+    const entryType = g('entryType').toLowerCase().includes('quer') ? 'quereinstieg' : 'regulaer';
+    let status = 'aktiv';
+    const statusRaw = g('status');
+    if(statusRaw){
+      const match = STATUS_ORDER.find(k=> STATUS[k].label.toLowerCase()===statusRaw.toLowerCase());
+      if(!match) return { error: `Unbekannter Status „${statusRaw}“.` };
+      status = match;
+    }
+    const entryDate = parseFlexibleDate(row[IMPORT_COLS.entryDate]) || todayISO();
+    const geburtsdatum = parseFlexibleDate(row[IMPORT_COLS.geburtsdatum]);
+    return {
+      data: {
+        vorname, nachname, geburtsdatum, telefon: g('telefon'), email: g('email'),
+        strasse: g('strasse'), ort: g('ort'), entryType, entryDate, status,
+        fundingBody: g('fundingBody'), aktenzeichen: g('aktenzeichen')
+      }
+    };
+  }
   const ATT_CODES = {A:{label:'Anwesend',cls:'st-success'}, V:{label:'Verspätet',cls:'st-warn'}, E:{label:'Entschuldigt',cls:'st-info'}, U:{label:'Unentschuldigt',cls:'st-danger'}, K:{label:'Krank',cls:'st-neutral'}};
   const ATT_ORDER = ['A','V','E','U','K'];
   const CURR_STATUS = {offen:{label:'Offen',cls:'st-neutral'}, in_arbeit:{label:'In Arbeit',cls:'st-warn'}, abgeschlossen:{label:'Abgeschlossen',cls:'st-success'}};
@@ -980,6 +1074,7 @@
       participants = snap.docs.map(d=>({id:d.id, ...d.data()}));
       hasDemoData = participants.some(p=>p.demo) || cohorts.some(c=>c.demo);
       $('#demoBanner').hidden = !hasDemoData;
+      reconcileArchivedFlags();
       renderAll();
     }, e=>console.warn('participants', e));
 
@@ -1082,6 +1177,12 @@
     $('#btnClearDemo').addEventListener('click', clearDemoData);
     $('#btnNewParticipant').addEventListener('click', ()=> openParticipantDialog(null));
     $('#btnNewCohort').addEventListener('click', ()=> openCohortDialog(null));
+    $('#btnOpenImport').addEventListener('click', openImportDialog);
+    $('#btnDownloadImportTemplate').addEventListener('click', downloadImportTemplate);
+    $('#impDownloadLink').addEventListener('click', (e)=>{ e.preventDefault(); downloadImportTemplate(); });
+    $('#impFile').addEventListener('change', onImportFileChange);
+    $('#impCohort').addEventListener('change', renderImportPreview);
+    $('#btnConfirmImport').addEventListener('click', onConfirmImport);
     $('#btnNewNote').addEventListener('click', ()=> openNoteDialog());
     $('#btnNewMessage').addEventListener('click', ()=> openMessageDialog());
     $('#btnNewPartner').addEventListener('click', ()=> openPartnerDialog(null));
@@ -1341,10 +1442,33 @@
   }
 
   // "Unterbrochen", "Bestanden" und "Abgebrochen" spielen im Tagesgeschäft keine Rolle mehr:
-  // TN mit diesem Status können manuell "ins Archiv verschoben" werden (Teilnehmerin-Dialog) und
+  // TN mit diesem Status gelten automatisch als archiviert (siehe onSaveParticipant) und
   // verschwinden dann aus der normalen Liste. Der Status-Filter kann sie weiterhin anzeigen —
-  // dann aber gezielt aus dem Archiv statt aus der Tagesliste (siehe renderParticipants).
+  // dann aber gezielt aus dem Archiv statt aus der Tagesliste (siehe renderParticipants),
+  // kombinierbar mit dem Jahrgang-Filter für ein jahrgangsbezogenes Archiv.
   const ARCHIVABLE_STATUSES = ['pausiert','bestanden','abgebrochen'];
+
+  // Selbstheilung: Datensätze, die vor Einführung der automatischen Archivierung angelegt oder
+  // zuletzt manuell (unter der alten Archiv-Logik) gespeichert wurden, können ein "archived", das
+  // nicht mehr zu ihrem aktuellen Status passt (z. B. Status "Bestanden" aber archived:false aus
+  // altem Beispiel-Seed). Bei jedem Laden der Teilnehmerinnen-Liste einmal automatisch korrigieren,
+  // damit "stets nur Aktive (+ markiert Verlängerte) in den Listen" auch für Alt-Datensätze gilt,
+  // ohne dass jede TN einmal manuell geöffnet und neu gespeichert werden muss.
+  const archiveReconciled = new Set();
+  function reconcileArchivedFlags(){
+    if(!db) return;
+    participants.forEach(p=>{
+      const shouldBeArchived = ARCHIVABLE_STATUSES.includes(p.status);
+      if(!!p.archived===shouldBeArchived) return;
+      if(archiveReconciled.has(p.id)) return;
+      archiveReconciled.add(p.id);
+      db.collection('participants').doc(p.id).update({
+        archived: shouldBeArchived,
+        archivedAt: shouldBeArchived ? (p.archivedAt || nowISO()) : null
+      }).catch(err=> console.warn('reconcileArchivedFlags', err));
+    });
+  }
+
   function renderParticipants(){
     const q = ($('#fltSearch').value||'').toLowerCase();
     const cohortF = $('#fltCohort').value;
@@ -1678,6 +1802,104 @@
     if(!confirm('Diese Teilnehmerin wirklich löschen?')) return;
     try{ await db.collection('participants').doc(editingParticipantId).delete(); toast('Gelöscht.'); $('#dlgParticipant').close(); }
     catch(e){ toast('Löschen fehlgeschlagen.'); }
+  }
+
+  // ---------- Teilnehmerinnen-Import (Dialog) ----------
+  let importRows = []; // [{rowNum, data} | {rowNum, error}]
+
+  function downloadImportTemplate(){
+    try{
+      const bin = atob(TN_IMPORT_TEMPLATE_B64);
+      const bytes = new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+      const blob = new Blob([bytes], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'TN-Import-Vorlage.xlsx';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=> URL.revokeObjectURL(url), 2000);
+    }catch(err){ console.warn(err); toast('Vorlage konnte nicht erzeugt werden.'); }
+  }
+
+  function openImportDialog(){
+    if(typeof XLSX==='undefined'){
+      toast('Die Excel-Bibliothek konnte nicht geladen werden (Internetverbindung prüfen).');
+    }
+    const opts = cohorts.filter(c=>c.status==='aktiv').slice().sort((a,b)=>(b.startDate||'').localeCompare(a.startDate||''))
+      .map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+    $('#impCohort').innerHTML = '<option value="">— bitte wählen —</option>' + opts;
+    $('#impFile').value = '';
+    $('#impPreviewWrap').hidden = true;
+    $('#impPreviewTable tbody').innerHTML = '';
+    $('#btnConfirmImport').disabled = true;
+    importRows = [];
+    $('#dlgImport').showModal();
+  }
+
+  function onImportFileChange(e){
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    if(typeof XLSX==='undefined'){ toast('Excel-Bibliothek nicht verfügbar — bitte Internetverbindung prüfen und Seite neu laden.'); return; }
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      try{
+        const wb = XLSX.read(new Uint8Array(ev.target.result), {type:'array', cellDates:true});
+        const sheetName = wb.SheetNames.find(n=> n.toLowerCase().includes('teilnehmer')) || wb.SheetNames[0];
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {defval:''});
+        processImportRows(rows);
+      }catch(err){ console.warn(err); toast('Datei konnte nicht gelesen werden. Ist es eine gültige Excel-Datei?'); }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function processImportRows(rows){
+    importRows = rows.map((row, idx)=>{
+      const vornameRaw = String(row[IMPORT_COLS.vorname]||'').trim();
+      const nachnameRaw = String(row[IMPORT_COLS.nachname]||'').trim();
+      if(!vornameRaw && !nachnameRaw) return null; // komplett leere Zeile überspringen
+      if(vornameRaw.startsWith('(Beispiel)')) return null; // Beispielzeile der Vorlage überspringen
+      return { rowNum: idx+2, ...parseImportRow(row) }; // +2: Zeile 1 ist die Kopfzeile
+    }).filter(Boolean);
+    renderImportPreview();
+  }
+
+  function renderImportPreview(){
+    const validRows = importRows.filter(r=>!r.error);
+    const errorCount = importRows.length - validRows.length;
+    $('#impPreviewWrap').hidden = importRows.length===0;
+    $('#impSummary').textContent = importRows.length
+      ? `${importRows.length} Zeile(n) erkannt — ${validRows.length} bereit zum Anlegen${errorCount? ', '+errorCount+' mit Fehler (werden übersprungen)':''}.`
+      : 'Keine Zeilen mit Daten gefunden.';
+    $('#impPreviewTable tbody').innerHTML = importRows.map(r=>{
+      if(r.error) return `<tr style="opacity:.7;"><td>${r.rowNum}</td><td colspan="4">—</td><td></td><td><span class="pill st-danger">${esc(r.error)}</span></td></tr>`;
+      const d = r.data;
+      return `<tr><td>${r.rowNum}</td><td>${esc(d.vorname)} ${esc(d.nachname)}</td><td>${fmtDate(d.geburtsdatum)||'—'}</td><td>${fmtDate(d.entryDate)||'—'}</td><td><span class="pill ${STATUS[d.status].cls}">${esc(STATUS[d.status].label)}</span></td><td>${esc(d.fundingBody||'—')}</td></tr>`;
+    }).join('');
+    $('#btnConfirmImport').disabled = validRows.length===0 || !$('#impCohort').value;
+  }
+
+  async function onConfirmImport(){
+    const cohortId = $('#impCohort').value;
+    if(!cohortId){ toast('Bitte zuerst einen Ziel-Jahrgang auswählen.'); return; }
+    const validRows = importRows.filter(r=>!r.error);
+    if(!validRows.length){ toast('Keine gültigen Zeilen zum Importieren.'); return; }
+    if(!db){ toast('Kein Live-Speicher in dieser Vorschau.'); return; }
+    if(!confirm(`${validRows.length} Teilnehmerin(nen) jetzt anlegen?`)) return;
+    $('#btnConfirmImport').disabled = true;
+    try{
+      await Promise.all(validRows.map(r=>{
+        const archived = ARCHIVABLE_STATUSES.includes(r.data.status);
+        const data = {
+          ...r.data, cohortId, exitDate:'', documents:[],
+          history:[{date: r.data.entryDate, type: r.data.entryType==='quereinstieg'?'quereinstieg':'eintritt', note:'Per Excel-Import angelegt.'}],
+          curriculum:{}, archived, archivedAt: archived ? nowISO() : null,
+          demo:false, createdAt: nowISO(), updatedAt: nowISO()
+        };
+        return db.collection('participants').add(data);
+      }));
+      toast(`${validRows.length} Teilnehmerin(nen) importiert.`);
+      $('#dlgImport').close();
+    }catch(err){ console.warn(err); toast('Import fehlgeschlagen.'); $('#btnConfirmImport').disabled = false; }
   }
 
   async function onUploadDoc(){
