@@ -339,6 +339,17 @@
           <div class="spacer"></div>
           <div class="row" id="attLegend" style="gap:6px; flex-wrap:wrap;"></div>
         </div>
+        <div class="row" style="gap:8px; align-items:center; flex-wrap:wrap; margin-top:12px;">
+          <span class="faint">Zusammenfassung für:</span>
+          <select class="select" id="attPeriodMode" style="width:auto;">
+            <option value="day" selected>Tag</option>
+            <option value="week">Woche</option>
+            <option value="month">Monat</option>
+            <option value="year">Ausbildungsjahr</option>
+            <option value="total">Gesamt</option>
+          </select>
+          <span class="faint" id="attPeriodLabel"></span>
+        </div>
       </div>
       <div class="grid-stats" id="attSummary"></div>
       <div id="attList" style="display:flex; flex-direction:column; gap:8px;"></div>
@@ -527,6 +538,10 @@
           <button type="button" class="btn btn-sm" data-quick="aktiv">→ Reaktivieren</button>
           <button type="button" class="btn btn-sm" data-quick="bestanden">✓ Bestanden (Austritt)</button>
           <button type="button" class="btn btn-sm" data-quick="abgebrochen">✕ Abgebrochen (Austritt)</button>
+        </div>
+        <div class="row" style="gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px;" id="pArchiveRow" hidden>
+          <button type="button" class="btn btn-sm btn-ghost" id="btnArchiveToggle"></button>
+          <span class="faint" id="pArchiveInfo"></span>
         </div>
         <div id="pHistory" style="margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
       </fieldset>
@@ -785,7 +800,7 @@
   let cohorts=[], participants=[], notes=[], messages=[], attendance=[], partners=[];
   let settings = {institutionName:'', programName:'Umschulung Friseurhandwerk', fundingBodies:['Agentur für Arbeit','Jobcenter'], templates: defaultTemplates(), curriculum: defaultCurriculum()};
   let hasDemoData=false;
-  let editingParticipantId=null, editingCohortId=null, editingDocs=[], editingHistory=[], editingCurriculum={};
+  let editingParticipantId=null, editingCohortId=null, editingDocs=[], editingHistory=[], editingCurriculum={}, editingArchived=false;
   let activeLetterParticipant=null;
   // Zeitraum-Auswahl für die Statistik: mode = 'day'|'week'|'month'|'year'|'custom';
   // anchor steuert Tag/Woche/Monat/Jahr, from/to den individuellen Zeitraum.
@@ -1057,6 +1072,7 @@
     $('#attPrevDay').addEventListener('click', ()=>{ $('#attDate').value = addDaysISO($('#attDate').value, -1); renderAttendanceTab(); });
     $('#attNextDay').addEventListener('click', ()=>{ $('#attDate').value = addDaysISO($('#attDate').value, 1); renderAttendanceTab(); });
     $('#attToday').addEventListener('click', ()=>{ $('#attDate').value = todayISO(); renderAttendanceTab(); });
+    $('#attPeriodMode').addEventListener('change', renderAttendanceTab);
 
     $('#statPeriodMode').addEventListener('change', onStatPeriodModeChange);
     $('#statPeriodPrev').addEventListener('click', ()=>{ statPeriod.anchor = shiftPeriodAnchor(statPeriod, -1); renderStats(); });
@@ -1066,6 +1082,8 @@
     $('#statPeriodTo').addEventListener('change', ()=>{ statPeriod.to = $('#statPeriodTo').value || statPeriod.from; if(statPeriod.to < statPeriod.from) statPeriod.from = statPeriod.to; renderStats(); });
 
     $('#pCohort').addEventListener('change', renderParticipantExamInfo);
+    $('#pStatus').addEventListener('change', renderArchiveControls);
+    $('#btnArchiveToggle').addEventListener('click', onArchiveToggleClick);
     $('#pCurriculumList').addEventListener('click', onCurriculumToggleClick);
     $('#pCurriculumList').addEventListener('change', onCurriculumFieldChange);
 
@@ -1145,7 +1163,7 @@
     $('#attCohort').innerHTML = opts;
     if(curAtt) $('#attCohort').value = curAtt;
     else if(cohorts.length) $('#attCohort').value = (cohorts.find(c=>c.status==='aktiv')||cohorts[0]).id;
-    const pOpts = participants.slice().sort((a,b)=>(a.nachname||'').localeCompare(b.nachname||'')).map(p=>`<option value="${p.id}">${esc(p.nachname)}, ${esc(p.vorname)}</option>`).join('');
+    const pOpts = participants.filter(p=>!p.archived).slice().sort((a,b)=>(a.nachname||'').localeCompare(b.nachname||'')).map(p=>`<option value="${p.id}">${esc(p.nachname)}, ${esc(p.vorname)}</option>`).join('');
     ['#noteFltParticipant','#nParticipant','#mParticipant'].forEach(sel=>{
       const el = $(sel); const cur = el.value; const placeholder = el.querySelector('option[value=""]').outerHTML;
       el.innerHTML = placeholder + pOpts;
@@ -1205,16 +1223,19 @@
 
   // ---------- overview ----------
   function renderOverview(){
+    // Archivierte TN (Bestanden/Abgebrochen/Unterbrochen, manuell ins Archiv verschoben) zählen
+    // nicht mehr im operativen Tagesgeschäft mit.
+    const operational = participants.filter(p=>!p.archived);
     const counts = {}; STATUS_ORDER.forEach(k=>counts[k]=0);
-    participants.forEach(p=> { if(counts[p.status]!=null) counts[p.status]++; });
+    operational.forEach(p=> { if(counts[p.status]!=null) counts[p.status]++; });
     const activeCohorts = cohorts.filter(c=>c.status==='aktiv').length;
-    const inPrep = participants.filter(p=>{
+    const inPrep = operational.filter(p=>{
       if(!['aktiv','verlaengerung'].includes(p.status)) return false;
       const ex = nextExamForCohort(cohorts.find(c=>c.id===p.cohortId));
       return ex && daysUntil(ex.date) <= EXAM_PREP_DAYS;
     }).length;
     const stats = [
-      {n: participants.length, l:'Teilnehmerinnen gesamt', allParticipants:true},
+      {n: operational.length, l:'Teilnehmerinnen gesamt', allParticipants:true},
       {n: counts.verlaengerung, l:'davon in Verlängerung'},
       {n: inPrep, l:'In Prüfungsvorbereitung'},
       {n: activeCohorts, l:'Aktuelle Jahrgänge'},
@@ -1230,7 +1251,7 @@
 
     const active = cohorts.filter(c=>c.status==='aktiv').sort((a,b)=>(b.startDate||'').localeCompare(a.startDate||''));
     $('#ovCohorts').innerHTML = active.length ? active.map(c=>{
-      const cnt = participants.filter(p=>p.cohortId===c.id && ['aktiv','verlaengerung','pausiert'].includes(p.status)).length;
+      const cnt = operational.filter(p=>p.cohortId===c.id && ['aktiv','verlaengerung','pausiert'].includes(p.status)).length;
       return `<div class="row-between" style="padding:8px 0; border-bottom:1px solid var(--border);">
         <div><strong>${cohortLinkHTML(c.id)}</strong> <span class="faint">${fmtDate(c.startDate)} – ${fmtDate(c.endDate)}</span></div>
         <span class="pill st-info">${cnt} Teilnehmerinnen</span>
@@ -1274,13 +1295,25 @@
     return `<a href="#" class="ref-link" data-open-partner="${id}">${esc(pr.name)}</a>`;
   }
 
+  // "Unterbrochen", "Bestanden" und "Abgebrochen" spielen im Tagesgeschäft keine Rolle mehr:
+  // TN mit diesem Status können manuell "ins Archiv verschoben" werden (Teilnehmerin-Dialog) und
+  // verschwinden dann aus der normalen Liste. Der Status-Filter kann sie weiterhin anzeigen —
+  // dann aber gezielt aus dem Archiv statt aus der Tagesliste (siehe renderParticipants).
+  const ARCHIVABLE_STATUSES = ['pausiert','bestanden','abgebrochen'];
   function renderParticipants(){
     const q = ($('#fltSearch').value||'').toLowerCase();
     const cohortF = $('#fltCohort').value;
     const statusF = $('#fltStatus').value;
     let list = participants.filter(p=>{
       if(cohortF && p.cohortId!==cohortF) return false;
-      if(statusF && p.status!==statusF) return false;
+      if(statusF){
+        if(p.status!==statusF) return false;
+        // Bei den drei archivierbaren Status: nur die tatsächlich archivierten TN zeigen (das IST
+        // hier die Archiv-Ansicht). Bei allen anderen Status: nur nicht-archivierte TN.
+        if(ARCHIVABLE_STATUSES.includes(statusF) ? !p.archived : p.archived) return false;
+      } else if(p.archived){
+        return false; // "Alle Status": archivierte TN gehören nicht ins normale Tagesgeschäft
+      }
       if(q){
         const hay = [p.vorname,p.nachname,p.ort,p.aktenzeichen,p.fundingBody].join(' ').toLowerCase();
         if(!hay.includes(q)) return false;
@@ -1294,7 +1327,7 @@
       const st = STATUS[p.status] || {label:p.status, cls:'st-neutral'};
       const ex = nextExamForCohort(cohorts.find(c=>c.id===p.cohortId));
       return `<tr data-id="${p.id}">
-        <td>${esc(participantName(p))} ${p.demo?'<span class="demo-tag">Beispiel</span>':''}</td>
+        <td>${esc(participantName(p))} ${p.demo?'<span class="demo-tag">Beispiel</span>':''} ${p.archived?'<span class="demo-tag" style="background:var(--surface-3); color:inherit;">Archiv</span>':''}</td>
         <td>${cohortLinkHTML(p.cohortId)}</td>
         <td><span class="pill ${st.cls}">${esc(st.label)}</span></td>
         <td>${fmtDate(p.entryDate)}</td>
@@ -1310,6 +1343,7 @@
     editingDocs = p && Array.isArray(p.documents) ? p.documents.slice() : [];
     editingHistory = p && Array.isArray(p.history) ? p.history.slice() : [];
     editingCurriculum = p && p.curriculum ? JSON.parse(JSON.stringify(p.curriculum)) : {};
+    editingArchived = p ? !!p.archived : false;
     $('#pDlgTitle').textContent = p ? participantName(p) : 'Neue Teilnehmerin';
     $('#pDlgSub').textContent = p ? cohortName(p.cohortId) : 'Persönliche Daten und Ausbildungsdetails erfassen';
     $('#pVorname').value = p?.vorname||''; $('#pNachname').value = p?.nachname||'';
@@ -1331,6 +1365,7 @@
     renderHistoryList();
     renderCurriculumList();
     renderAttendanceSummary();
+    renderArchiveControls();
     $('#dlgParticipant').showModal();
   }
 
@@ -1464,12 +1499,16 @@
   function renderAttendanceTab(){
     const cohortId = $('#attCohort').value;
     const date = $('#attDate').value || todayISO();
-    const list = participants.filter(p=> (!cohortId || p.cohortId===cohortId) && ['aktiv','verlaengerung','pausiert'].includes(p.status))
+    const periodMode = $('#attPeriodMode').value || 'day';
+    const list = participants.filter(p=> (!cohortId || p.cohortId===cohortId) && !p.archived && ['aktiv','verlaengerung','pausiert'].includes(p.status))
       .sort((a,b)=>(a.nachname||'').localeCompare(b.nachname||''));
-    const counts = {A:0,V:0,E:0,U:0,K:0,offen:0};
+    const ids = list.map(p=>p.id);
+    // Zählung für den exakt angezeigten Tag: steuert sowohl die "Nicht erfasst"-Kachel
+    // (ergibt nur für einen einzelnen Tag Sinn) als auch, im Modus "Tag", die Zusammenfassung oben.
+    const dayCounts = {A:0,V:0,E:0,U:0,K:0,offen:0};
     $('#attList').innerHTML = list.length ? list.map(p=>{
       const code = getAttCode(p.id, date);
-      if(code && counts[code]!=null) counts[code]++; else counts.offen++;
+      if(code && dayCounts[code]!=null) dayCounts[code]++; else dayCounts.offen++;
       const stats = computeAttendanceStats(p.id);
       return `<div class="card" style="padding:10px 14px;">
         <div class="row-between">
@@ -1480,9 +1519,27 @@
         </div>
       </div>`;
     }).join('') : '<p class="empty">Keine Teilnehmerinnen in diesem Durchgang.</p>';
-    $('#attSummary').innerHTML = [
-      {n:counts.A,l:'Anwesend'},{n:counts.V,l:'Verspätet'},{n:counts.E,l:'Entschuldigt'},{n:counts.U,l:'Unentschuldigt'},{n:counts.K,l:'Krank'},{n:counts.offen,l:'Nicht erfasst'}
-    ].map(s=>`<div class="stat-tile"><div class="n">${s.n}</div><div class="l">${esc(s.l)}</div></div>`).join('');
+
+    // Zusammenfassung oben: je nach gewählter Kategorie (Tag/Woche/Monat/Ausbildungsjahr/Gesamt)
+    // entweder nur der angezeigte Tag, ein um ihn herum berechneter Zeitraum, oder alles seit je her.
+    let summaryCounts, periodLabelText;
+    if(periodMode==='day'){
+      summaryCounts = dayCounts;
+      periodLabelText = fmtDate(date);
+    } else if(periodMode==='total'){
+      summaryCounts = attendanceCountsAllTime(ids);
+      periodLabelText = 'Gesamter Zeitraum';
+    } else {
+      const range = periodRange({mode:periodMode, anchor:date});
+      summaryCounts = attendanceCountsForRange(range.from, range.to, ids);
+      periodLabelText = periodLabel({mode:periodMode, anchor:date});
+    }
+    $('#attPeriodLabel').textContent = periodLabelText;
+    const tiles = [
+      {n:summaryCounts.A,l:'Anwesend'},{n:summaryCounts.V,l:'Verspätet'},{n:summaryCounts.E,l:'Entschuldigt'},{n:summaryCounts.U,l:'Unentschuldigt'},{n:summaryCounts.K,l:'Krank'}
+    ];
+    if(periodMode==='day') tiles.push({n:dayCounts.offen, l:'Nicht erfasst'});
+    $('#attSummary').innerHTML = tiles.map(s=>`<div class="stat-tile"><div class="n">${s.n}</div><div class="l">${esc(s.l)}</div></div>`).join('');
   }
   function onAttendanceClick(e){
     const btn = e.target.closest('[data-att-code]');
@@ -1515,7 +1572,30 @@
     const typeMap = {verlaengerung:'verlaengerung_start', pausiert:'pausiert', aktiv:'aktiv_reaktiviert', bestanden:'austritt_bestanden', abgebrochen:'austritt_abgebrochen'};
     editingHistory.push({date: todayISO(), type: typeMap[newStatus]||newStatus, note: note||''});
     renderHistoryList();
+    // Wer wieder aktiv gesetzt wird, kann nicht gleichzeitig archiviert bleiben.
+    if(newStatus==='aktiv' && editingArchived){ editingArchived = false; }
+    renderArchiveControls();
     toast(`Status auf „${label}“ gesetzt — bitte speichern nicht vergessen.`);
+  }
+  // "Unterbrochen", "Bestanden" und "Abgebrochen" können manuell archiviert werden — sie
+  // verschwinden dann aus der normalen Teilnehmerinnen-Liste (siehe renderParticipants) und sind
+  // nur noch gezielt über den Status-Filter auffindbar. Alles läuft über den normalen
+  // "Speichern"-Knopf, genau wie die Schnell-Status-Buttons oben.
+  function renderArchiveControls(){
+    const status = $('#pStatus').value;
+    const archivable = ARCHIVABLE_STATUSES.includes(status);
+    $('#pArchiveRow').hidden = !archivable && !editingArchived;
+    if(editingArchived){
+      $('#btnArchiveToggle').textContent = '↩ Aus Archiv zurückholen';
+      $('#pArchiveInfo').textContent = 'Archiviert — erscheint nicht in der normalen Liste. Wird beim Speichern zurückgeholt.';
+    } else {
+      $('#btnArchiveToggle').textContent = '🗄 Ins Archiv verschieben';
+      $('#pArchiveInfo').textContent = 'Wird beim Speichern aus der normalen Teilnehmerinnen-Liste entfernt (über den Status-Filter weiterhin auffindbar).';
+    }
+  }
+  function onArchiveToggleClick(){
+    editingArchived = !editingArchived;
+    renderArchiveControls();
   }
 
   async function onSaveParticipant(e){
@@ -1532,7 +1612,10 @@
       // Datei (Base64) liegt separat in "documentBlobs", damit der Teilnehmer-Datensatz klein bleibt
       // (Firestore erlaubt max. 1 MB pro Dokument).
       documents: editingDocs.map(d=>({assetId:d.assetId, mime:d.mime||'', label:d.label, category:d.category, uploadedAt:d.uploadedAt, uploadedBy:d.uploadedBy})),
-      history: editingHistory, curriculum: editingCurriculum, updatedAt: nowISO()
+      history: editingHistory, curriculum: editingCurriculum,
+      archived: editingArchived,
+      archivedAt: editingArchived ? ((editingParticipantId && participants.find(p=>p.id===editingParticipantId)?.archivedAt) || nowISO()) : null,
+      updatedAt: nowISO()
     };
     if(!db){ toast('Kein Live-Speicher in dieser Vorschau.'); $('#dlgParticipant').close(); return; }
     try{
@@ -1848,18 +1931,31 @@
     const d = new Date(r.from+'T00:00:00');
     return d.toLocaleDateString('de-DE', {month:'long', year:'numeric'});
   }
-  // Zählt Anwesenheits-Codes über alle Teilnehmerinnen hinweg innerhalb [from,to],
-  // unabhängig davon, wie viele Monats-Dokumente der Zeitraum überspannt.
-  function attendanceCountsForRange(from, to){
+  // Zählt Anwesenheits-Codes innerhalb [from,to], unabhängig davon, wie viele Monats-Dokumente
+  // der Zeitraum überspannt. Mit participantIds eingeschränkt auf bestimmte Teilnehmerinnen
+  // (z. B. den aktuell gefilterten Durchgang in der Anwesenheit), sonst über alle hinweg (Statistik).
+  function attendanceCountsForRange(from, to, participantIds){
+    const idSet = participantIds ? new Set(participantIds) : null;
     const counts = {A:0,V:0,E:0,U:0,K:0};
     const fromMonth = monthKeyOf(from), toMonth = monthKeyOf(to);
     attendance.forEach(doc=>{
+      if(idSet && !idSet.has(doc.participantId)) return;
       if(!doc.month || doc.month < fromMonth || doc.month > toMonth) return;
       Object.entries(doc.days||{}).forEach(([day,code])=>{
         if(!code || counts[code]==null) return;
         const iso = doc.month + '-' + day;
         if(iso >= from && iso <= to) counts[code]++;
       });
+    });
+    return counts;
+  }
+  // Zählt Anwesenheits-Codes ohne Datumsgrenze ("Gesamt") für die angegebenen Teilnehmerinnen.
+  function attendanceCountsAllTime(participantIds){
+    const idSet = participantIds ? new Set(participantIds) : null;
+    const counts = {A:0,V:0,E:0,U:0,K:0};
+    attendance.forEach(doc=>{
+      if(idSet && !idSet.has(doc.participantId)) return;
+      Object.values(doc.days||{}).forEach(code=>{ if(code && counts[code]!=null) counts[code]++; });
     });
     return counts;
   }
@@ -1887,13 +1983,15 @@
   }
   function renderStats(){
     $('#statTitle').textContent = 'Gesamtübersicht — ' + (settings.institutionName || settings.programName);
+    // Archivierte TN (Bestanden/Abgebrochen/Unterbrochen) gehören nicht mehr zum Tagesgeschäft und
+    // fließen daher nicht in die Gesamtübersicht/den Status-Chart ein — sie erscheinen weiterhin,
+    // Jahrgangsbezogen, in der Tabelle "Nach Durchgang" weiter unten (die bleibt unverändert).
+    const operational = participants.filter(p=>!p.archived);
     const counts = {}; STATUS_ORDER.forEach(k=>counts[k]=0);
-    participants.forEach(p=>{ if(counts[p.status]!=null) counts[p.status]++; });
-    const quer = participants.filter(p=>p.entryType==='quereinstieg').length;
+    operational.forEach(p=>{ if(counts[p.status]!=null) counts[p.status]++; });
     $('#statTotals').innerHTML = [
-      {n:participants.length, l:'Teilnehmerinnen gesamt'},
+      {n:operational.length, l:'Teilnehmerinnen gesamt'},
       {n:cohorts.filter(c=>c.status==='aktiv').length, l:'Aktuelle Jahrgänge'},
-      {n:quer, l:'Quereinstiege'},
       {n:notes.filter(n=>n.type==='aufgabe'&&!n.done).length, l:'Offene Aufgaben'}
     ].map(s=>`<div class="stat-tile"><div class="n">${s.n}</div><div class="l">${esc(s.l)}</div></div>`).join('');
 
