@@ -7,6 +7,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<!-- Für den Excel-Import (Teilnehmerinnen-Liste einlesen) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
     --bwk:#1A1A2E; --bwk2:#2D2D44; --bwk3:#3D3D5C;
@@ -540,7 +542,7 @@
           <button type="button" class="btn btn-sm" data-quick="abgebrochen">✕ Abgebrochen (Austritt)</button>
         </div>
         <div class="row" style="gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px;" id="pArchiveRow" hidden>
-          <button type="button" class="btn btn-sm btn-ghost" id="btnArchiveToggle"></button>
+          <span class="pill st-neutral">🗄 Archiviert</span>
           <span class="faint" id="pArchiveInfo"></span>
         </div>
         <div id="pHistory" style="margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
@@ -832,7 +834,7 @@
   let cohorts=[], participants=[], notes=[], messages=[], attendance=[], partners=[];
   let settings = {institutionName:'', programName:'Umschulung Friseurhandwerk', fundingBodies:['Agentur für Arbeit','Jobcenter'], templates: defaultTemplates(), curriculum: defaultCurriculum()};
   let hasDemoData=false;
-  let editingParticipantId=null, editingCohortId=null, editingDocs=[], editingHistory=[], editingCurriculum={}, editingArchived=false;
+  let editingParticipantId=null, editingCohortId=null, editingDocs=[], editingHistory=[], editingCurriculum={};
   let activeLetterParticipant=null;
   // Zeitraum-Auswahl für die Statistik: mode = 'day'|'week'|'month'|'year'|'custom';
   // anchor steuert Tag/Woche/Monat/Jahr, from/to den individuellen Zeitraum.
@@ -1115,7 +1117,6 @@
 
     $('#pCohort').addEventListener('change', renderParticipantExamInfo);
     $('#pStatus').addEventListener('change', renderArchiveControls);
-    $('#btnArchiveToggle').addEventListener('click', onArchiveToggleClick);
     $('#pCurriculumList').addEventListener('click', onCurriculumToggleClick);
     $('#pCurriculumList').addEventListener('change', onCurriculumFieldChange);
 
@@ -1387,7 +1388,6 @@
     editingDocs = p && Array.isArray(p.documents) ? p.documents.slice() : [];
     editingHistory = p && Array.isArray(p.history) ? p.history.slice() : [];
     editingCurriculum = p && p.curriculum ? JSON.parse(JSON.stringify(p.curriculum)) : {};
-    editingArchived = p ? !!p.archived : false;
     $('#pDlgTitle').textContent = p ? participantName(p) : 'Neue Teilnehmerin';
     $('#pDlgSub').textContent = p ? cohortName(p.cohortId) : 'Persönliche Daten und Ausbildungsdetails erfassen';
     $('#pVorname').value = p?.vorname||''; $('#pNachname').value = p?.nachname||'';
@@ -1616,30 +1616,23 @@
     const typeMap = {verlaengerung:'verlaengerung_start', pausiert:'pausiert', aktiv:'aktiv_reaktiviert', bestanden:'austritt_bestanden', abgebrochen:'austritt_abgebrochen'};
     editingHistory.push({date: todayISO(), type: typeMap[newStatus]||newStatus, note: note||''});
     renderHistoryList();
-    // Wer wieder aktiv gesetzt wird, kann nicht gleichzeitig archiviert bleiben.
-    if(newStatus==='aktiv' && editingArchived){ editingArchived = false; }
     renderArchiveControls();
     toast(`Status auf „${label}“ gesetzt — bitte speichern nicht vergessen.`);
   }
-  // "Unterbrochen", "Bestanden" und "Abgebrochen" können manuell archiviert werden — sie
-  // verschwinden dann aus der normalen Teilnehmerinnen-Liste (siehe renderParticipants) und sind
-  // nur noch gezielt über den Status-Filter auffindbar. Alles läuft über den normalen
-  // "Speichern"-Knopf, genau wie die Schnell-Status-Buttons oben.
+  // "Unterbrochen", "Bestanden" und "Abgebrochen" werden automatisch archiviert, rein anhand des
+  // Status — kein manueller Schritt nötig. Sie verschwinden dadurch aus den normalen Listen
+  // (Teilnehmerinnen "Alle Status", Anwesenheit, Auswahllisten, Übersicht/Statistik-Zählungen)
+  // und sind nur noch gezielt über den Status-Filter auffindbar. Um eine TN zurückzuholen, genügt
+  // es, den Status wieder auf Aktiv/Verlängerung zu setzen (z. B. per "→ Reaktivieren") und zu
+  // speichern — siehe onSaveParticipant, wo "archived" bei jedem Speichern neu aus dem Status
+  // abgeleitet wird.
   function renderArchiveControls(){
     const status = $('#pStatus').value;
     const archivable = ARCHIVABLE_STATUSES.includes(status);
-    $('#pArchiveRow').hidden = !archivable && !editingArchived;
-    if(editingArchived){
-      $('#btnArchiveToggle').textContent = '↩ Aus Archiv zurückholen';
-      $('#pArchiveInfo').textContent = 'Archiviert — erscheint nicht in der normalen Liste. Wird beim Speichern zurückgeholt.';
-    } else {
-      $('#btnArchiveToggle').textContent = '🗄 Ins Archiv verschieben';
-      $('#pArchiveInfo').textContent = 'Wird beim Speichern aus der normalen Teilnehmerinnen-Liste entfernt (über den Status-Filter weiterhin auffindbar).';
-    }
-  }
-  function onArchiveToggleClick(){
-    editingArchived = !editingArchived;
-    renderArchiveControls();
+    $('#pArchiveRow').hidden = !archivable;
+    $('#pArchiveInfo').textContent = archivable
+      ? `Erscheint wegen des Status „${STATUS[status]?.label||status}“ nicht mehr in den normalen Listen, nur noch über den Status-Filter. Status wieder auf Aktiv/Verlängerung setzen, um die TN zurückzuholen.`
+      : '';
   }
 
   async function onSaveParticipant(e){
@@ -1657,8 +1650,13 @@
       // (Firestore erlaubt max. 1 MB pro Dokument).
       documents: editingDocs.map(d=>({assetId:d.assetId, mime:d.mime||'', label:d.label, category:d.category, uploadedAt:d.uploadedAt, uploadedBy:d.uploadedBy})),
       history: editingHistory, curriculum: editingCurriculum,
-      archived: editingArchived,
-      archivedAt: editingArchived ? ((editingParticipantId && participants.find(p=>p.id===editingParticipantId)?.archivedAt) || nowISO()) : null,
+      // "archived" wird nicht mehr manuell gesetzt, sondern stets automatisch aus dem Status
+      // abgeleitet (siehe renderArchiveControls) — TN mit Status Unterbrochen/Bestanden/
+      // Abgebrochen verschwinden dadurch immer und ohne Zusatzschritt aus den normalen Listen.
+      archived: ARCHIVABLE_STATUSES.includes($('#pStatus').value),
+      archivedAt: ARCHIVABLE_STATUSES.includes($('#pStatus').value)
+        ? ((editingParticipantId && participants.find(p=>p.id===editingParticipantId)?.archivedAt) || nowISO())
+        : null,
       updatedAt: nowISO()
     };
     if(!db){ toast('Kein Live-Speicher in dieser Vorschau.'); $('#dlgParticipant').close(); return; }
