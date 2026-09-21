@@ -9,6 +9,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <!-- Für den Excel-Import (Teilnehmerinnen-Liste einlesen) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- Für den automatischen Mahnungs-Versand ohne mailto (EmailJS verschickt aus dem Browser heraus
+     über das von der Abteilung selbst verbundene Postfach; offizielles Browser-SDK per CDN, kein
+     eigener Server/Backend nötig) -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <!-- Für den Word-Brief-Import bei Mahnungen (PizZip + docxtemplater, lokal mit esbuild zu einer Datei gebündelt, damit kein externer CDN-Aufruf nötig ist) -->
 <script>
 (()=>{var ph=Object.create;var Pu=Object.defineProperty;var hh=Object.getOwnPropertyDescriptor;var dh=Object.getOwnPropertyNames;var vh=Object.getPrototypeOf,gh=Object.prototype.hasOwnProperty;var q=(e,r)=>()=>{try{return r||e((r={exports:{}}).exports,r),r.exports}catch(t){throw r=0,t}};var mh=(e,r,t,n)=>{if(r&&typeof r=="object"||typeof r=="function")for(let i of dh(r))!gh.call(e,i)&&i!==t&&Pu(e,i,{get:()=>r[i],enumerable:!(n=hh(r,i))||n.enumerable});return e};var Bu=(e,r,t)=>(t=e!=null?ph(vh(e)):{},mh(r||!e||!e.__esModule?Pu(t,"default",{value:e,enumerable:!0}):t,e));var ha=q(mi=>{"use strict";var Nr="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";mi.encode=function(e){for(var r="",t,n,i,u,s,c,f,p=0;p<e.length;)t=e.charCodeAt(p++),n=e.charCodeAt(p++),i=e.charCodeAt(p++),u=t>>2,s=(t&3)<<4|n>>4,c=(n&15)<<2|i>>6,f=i&63,isNaN(n)?c=f=64:isNaN(i)&&(f=64),r=r+Nr.charAt(u)+Nr.charAt(s)+Nr.charAt(c)+Nr.charAt(f);return r};mi.decode=function(e){var r="",t,n,i,u,s,c,f,p=0;for(e=e.replace(/[^A-Za-z0-9\+\/\=]/g,"");p<e.length;)u=Nr.indexOf(e.charAt(p++)),s=Nr.indexOf(e.charAt(p++)),c=Nr.indexOf(e.charAt(p++)),f=Nr.indexOf(e.charAt(p++)),t=u<<2|s>>4,n=(s&15)<<4|c>>2,i=(c&3)<<6|f,r+=String.fromCharCode(t),c!==64&&(r+=String.fromCharCode(n)),f!==64&&(r+=String.fromCharCode(i));return r}});var Kr=q(nr=>{"use strict";nr.base64=!0;nr.array=!0;nr.string=!0;nr.arraybuffer=typeof ArrayBuffer!="undefined"&&typeof Uint8Array!="undefined";nr.nodebuffer=typeof Buffer!="undefined";nr.uint8array=typeof Uint8Array!="undefined";if(typeof ArrayBuffer=="undefined")nr.blob=!1;else{yi=new ArrayBuffer(0);try{nr.blob=new Blob([yi],{type:"application/zip"}).size===0}catch(e){try{Ru=window.BlobBuilder||window.WebKitBlobBuilder||window.MozBlobBuilder||window.MSBlobBuilder,Ei=new Ru,Ei.append(yi),nr.blob=Ei.getBlob("application/zip").size===0}catch(r){nr.blob=!1}}}var yi,Ru,Ei});var ku=q((da,Fu)=>{(function(e,r){typeof da=="object"&&typeof Fu!="undefined"?r(da):typeof define=="function"&&define.amd?define(["exports"],r):r((e=typeof globalThis!="undefined"?globalThis:e||self).pako={})})(da,(function(e){"use strict";function r(a){for(var l=a.length;--l>=0;)a[l]=0}var t=256,n=286,i=30,u=15,s=new Uint8Array([0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0]),c=new Uint8Array([0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13]),f=new Uint8Array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,7]),p=new Uint8Array([16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15]),h=new Array(576);r(h);var m=new Array(60);r(m);var b=new Array(512);r(b);var w=new Array(256);r(w);var C=new Array(29);r(C);var S,_,O,P=new Array(i);function k(a,l,o,v,d){this.static_tree=a,this.extra_bits=l,this.extra_base=o,this.elems=v,this.max_length=d,this.has_stree=a&&a.length}function B(a,l){this.dyn_tree=a,this.max_code=0,this.stat_desc=l}r(P);var U=function(a){return a<256?b[a]:b[256+(a>>>7)]},j=function(a,l){a.pending_buf[a.pending++]=255&l,a.pending_buf[a.pending++]=l>>>8&255},X=function(a,l,o){a.bi_valid>16-o?(a.bi_buf|=l<<a.bi_valid&65535,j(a,a.bi_buf),a.bi_buf=l>>16-a.bi_valid,a.bi_valid+=o-16):(a.bi_buf|=l<<a.bi_valid&65535,a.bi_valid+=o)},R=function(a,l,o){X(a,o[2*l],o[2*l+1])},Z=function(a,l){var o=0;do o|=1&a,a>>>=1,o<<=1;while(--l>0);return o>>>1},fe=function(a,l,o){var v,d,g=new Array(16),A=0;for(v=1;v<=u;v++)A=A+o[v-1]<<1,g[v]=A;for(d=0;d<=l;d++){var E=a[2*d+1];E!==0&&(a[2*d]=Z(g[E]++,E))}},le=function(a){var l;for(l=0;l<n;l++)a.dyn_ltree[2*l]=0;for(l=0;l<i;l++)a.dyn_dtree[2*l]=0;for(l=0;l<19;l++)a.bl_tree[2*l]=0;a.dyn_ltree[512]=1,a.opt_len=a.static_len=0,a.sym_next=a.matches=0},pe=function(a){a.bi_valid>8?j(a,a.bi_buf):a.bi_valid>0&&(a.pending_buf[a.pending++]=a.bi_buf),a.bi_buf=0,a.bi_valid=0},ke=function(a,l,o,v){var d=2*l,g=2*o;return a[d]<a[g]||a[d]===a[g]&&v[l]<=v[o]},ce=function(a,l,o){for(var v=a.heap[o],d=o<<1;d<=a.heap_len&&(d<a.heap_len&&ke(l,a.heap[d+1],a.heap[d],a.depth)&&d++,!ke(l,v,a.heap[d],a.depth));)a.heap[o]=a.heap[d],o=d,d<<=1;a.heap[o]=v},ut=function(a,l,o){var v,d,g,A,E=0;if(a.sym_next!==0)do v=255&a.pending_buf[a.sym_buf+E++],v+=(255&a.pending_buf[a.sym_buf+E++])<<8,d=a.pending_buf[a.sym_buf+E++],v===0?R(a,d,l):(g=w[d],R(a,g+t+1,l),(A=s[g])!==0&&(d-=C[g],X(a,d,A)),v--,g=U(v),R(a,g,o),(A=c[g])!==0&&(v-=P[g],X(a,v,A)));while(E<a.sym_next);R(a,256,l)},_e=function(a,l){var o,v,d,g=l.dyn_tree,A=l.stat_desc.static_tree,E=l.stat_desc.has_stree,D=l.stat_desc.elems,y=-1;for(a.heap_len=0,a.heap_max=573,o=0;o<D;o++)g[2*o]!==0?(a.heap[++a.heap_len]=y=o,a.depth[o]=0):g[2*o+1]=0;for(;a.heap_len<2;)g[2*(d=a.heap[++a.heap_len]=y<2?++y:0)]=1,a.depth[d]=0,a.opt_len--,E&&(a.static_len-=A[2*d+1]);for(l.max_code=y,o=a.heap_len>>1;o>=1;o--)ce(a,g,o);d=D;do o=a.heap[1],a.heap[1]=a.heap[a.heap_len--],ce(a,g,1),v=a.heap[1],a.heap[--a.heap_max]=o,a.heap[--a.heap_max]=v,g[2*d]=g[2*o]+g[2*v],a.depth[d]=(a.depth[o]>=a.depth[v]?a.depth[o]:a.depth[v])+1,g[2*o+1]=g[2*v+1]=d,a.heap[1]=d++,ce(a,g,1);while(a.heap_len>=2);a.heap[--a.heap_max]=a.heap[1],(function(x,re){var L,T,F,ee,K,te,I=re.dyn_tree,N=re.max_code,H=re.stat_desc.static_tree,ve=re.stat_desc.has_stree,z=re.stat_desc.extra_bits,ie=re.stat_desc.extra_base,ne=re.stat_desc.max_length,G=0;for(ee=0;ee<=u;ee++)x.bl_count[ee]=0;for(I[2*x.heap[x.heap_max]+1]=0,L=x.heap_max+1;L<573;L++)(ee=I[2*I[2*(T=x.heap[L])+1]+1]+1)>ne&&(ee=ne,G++),I[2*T+1]=ee,T>N||(x.bl_count[ee]++,K=0,T>=ie&&(K=z[T-ie]),te=I[2*T],x.opt_len+=te*(ee+K),ve&&(x.static_len+=te*(H[2*T+1]+K)));if(G!==0){do{for(ee=ne-1;x.bl_count[ee]===0;)ee--;x.bl_count[ee]--,x.bl_count[ee+1]+=2,x.bl_count[ne]--,G-=2}while(G>0);for(ee=ne;ee!==0;ee--)for(T=x.bl_count[ee];T!==0;)(F=x.heap[--L])>N||(I[2*F+1]!==ee&&(x.opt_len+=(ee-I[2*F+1])*I[2*F],I[2*F+1]=ee),T--)}})(a,l),fe(g,y,a.bl_count)},Vt=function(a,l,o){var v,d,g=-1,A=l[1],E=0,D=7,y=4;for(A===0&&(D=138,y=3),l[2*(o+1)+1]=65535,v=0;v<=o;v++)d=A,A=l[2*(v+1)+1],++E<D&&d===A||(E<y?a.bl_tree[2*d]+=E:d!==0?(d!==g&&a.bl_tree[2*d]++,a.bl_tree[32]++):E<=10?a.bl_tree[34]++:a.bl_tree[36]++,E=0,g=d,A===0?(D=138,y=3):d===A?(D=6,y=3):(D=7,y=4))},Jn=function(a,l,o){var v,d,g=-1,A=l[1],E=0,D=7,y=4;for(A===0&&(D=138,y=3),v=0;v<=o;v++)if(d=A,A=l[2*(v+1)+1],!(++E<D&&d===A)){if(E<y)do R(a,d,a.bl_tree);while(--E!=0);else d!==0?(d!==g&&(R(a,d,a.bl_tree),E--),R(a,16,a.bl_tree),X(a,E-3,2)):E<=10?(R(a,17,a.bl_tree),X(a,E-3,3)):(R(a,18,a.bl_tree),X(a,E-11,7));E=0,g=d,A===0?(D=138,y=3):d===A?(D=6,y=3):(D=7,y=4)}},st=!1,Ht=function(a,l,o,v){X(a,0+(v?1:0),3),pe(a),j(a,o),j(a,~o),o&&a.pending_buf.set(a.window.subarray(l,l+o),a.pending),a.pending+=o},ae=function(a,l,o,v){var d,g,A=0;a.level>0?(a.strm.data_type===2&&(a.strm.data_type=(function(E){var D,y=4093624447;for(D=0;D<=31;D++,y>>>=1)if(1&y&&E.dyn_ltree[2*D]!==0)return 0;if(E.dyn_ltree[18]!==0||E.dyn_ltree[20]!==0||E.dyn_ltree[26]!==0)return 1;for(D=32;D<t;D++)if(E.dyn_ltree[2*D]!==0)return 1;return 0})(a)),_e(a,a.l_desc),_e(a,a.d_desc),A=(function(E){var D;for(Vt(E,E.dyn_ltree,E.l_desc.max_code),Vt(E,E.dyn_dtree,E.d_desc.max_code),_e(E,E.bl_desc),D=18;D>=3&&E.bl_tree[2*p[D]+1]===0;D--);return E.opt_len+=3*(D+1)+5+5+4,D})(a),d=a.opt_len+3+7>>>3,(g=a.static_len+3+7>>>3)<=d&&(d=g)):d=g=o+5,o+4<=d&&l!==-1?Ht(a,l,o,v):a.strategy===4||g===d?(X(a,2+(v?1:0),3),ut(a,h,m)):(X(a,4+(v?1:0),3),(function(E,D,y,x){var re;for(X(E,D-257,5),X(E,y-1,5),X(E,x-4,4),re=0;re<x;re++)X(E,E.bl_tree[2*p[re]+1],3);Jn(E,E.dyn_ltree,D-1),Jn(E,E.dyn_dtree,y-1)})(a,a.l_desc.max_code+1,a.d_desc.max_code+1,A+1),ut(a,a.dyn_ltree,a.dyn_dtree)),le(a),v&&pe(a)},Se={_tr_init:function(a){st||((function(){var l,o,v,d,g,A=new Array(16);for(v=0,d=0;d<28;d++)for(C[d]=v,l=0;l<1<<s[d];l++)w[v++]=d;for(w[v-1]=d,g=0,d=0;d<16;d++)for(P[d]=g,l=0;l<1<<c[d];l++)b[g++]=d;for(g>>=7;d<i;d++)for(P[d]=g<<7,l=0;l<1<<c[d]-7;l++)b[256+g++]=d;for(o=0;o<=u;o++)A[o]=0;for(l=0;l<=143;)h[2*l+1]=8,l++,A[8]++;for(;l<=255;)h[2*l+1]=9,l++,A[9]++;for(;l<=279;)h[2*l+1]=7,l++,A[7]++;for(;l<=287;)h[2*l+1]=8,l++,A[8]++;for(fe(h,287,A),l=0;l<i;l++)m[2*l+1]=5,m[2*l]=Z(l,5);S=new k(h,s,257,n,u),_=new k(m,c,0,i,u),O=new k(new Array(0),f,0,19,7)})(),st=!0),a.l_desc=new B(a.dyn_ltree,S),a.d_desc=new B(a.dyn_dtree,_),a.bl_desc=new B(a.bl_tree,O),a.bi_buf=0,a.bi_valid=0,le(a)},_tr_stored_block:Ht,_tr_flush_block:ae,_tr_tally:function(a,l,o){return a.pending_buf[a.sym_buf+a.sym_next++]=l,a.pending_buf[a.sym_buf+a.sym_next++]=l>>8,a.pending_buf[a.sym_buf+a.sym_next++]=o,l===0?a.dyn_ltree[2*o]++:(a.matches++,l--,a.dyn_ltree[2*(w[o]+t+1)]++,a.dyn_dtree[2*U(l)]++),a.sym_next===a.sym_end},_tr_align:function(a){X(a,2,3),R(a,256,h),(function(l){l.bi_valid===16?(j(l,l.bi_buf),l.bi_buf=0,l.bi_valid=0):l.bi_valid>=8&&(l.pending_buf[l.pending++]=255&l.bi_buf,l.bi_buf>>=8,l.bi_valid-=8)})(a)}},ur=function(a,l,o,v){for(var d=65535&a|0,g=a>>>16&65535|0,A=0;o!==0;){o-=A=o>2e3?2e3:o;do g=g+(d=d+l[v++]|0)|0;while(--A);d%=65521,g%=65521}return d|g<<16|0},lt=new Uint32Array((function(){for(var a,l=[],o=0;o<256;o++){a=o;for(var v=0;v<8;v++)a=1&a?3988292384^a>>>1:a>>>1;l[o]=a}return l})()),Oe=function(a,l,o,v){var d=lt,g=v+o;a^=-1;for(var A=v;A<g;A++)a=a>>>8^d[255&(a^l[A])];return-1^a},jr={2:"need dictionary",1:"stream end",0:"","-1":"file error","-2":"stream error","-3":"data error","-4":"insufficient memory","-5":"buffer error","-6":"incompatible version"},V={Z_NO_FLUSH:0,Z_PARTIAL_FLUSH:1,Z_SYNC_FLUSH:2,Z_FULL_FLUSH:3,Z_FINISH:4,Z_BLOCK:5,Z_TREES:6,Z_OK:0,Z_STREAM_END:1,Z_NEED_DICT:2,Z_ERRNO:-1,Z_STREAM_ERROR:-2,Z_DATA_ERROR:-3,Z_MEM_ERROR:-4,Z_BUF_ERROR:-5,Z_NO_COMPRESSION:0,Z_BEST_SPEED:1,Z_BEST_COMPRESSION:9,Z_DEFAULT_COMPRESSION:-1,Z_FILTERED:1,Z_HUFFMAN_ONLY:2,Z_RLE:3,Z_FIXED:4,Z_DEFAULT_STRATEGY:0,Z_BINARY:0,Z_TEXT:1,Z_UNKNOWN:2,Z_DEFLATED:8},Cp=Se._tr_init,ri=Se._tr_stored_block,_p=Se._tr_flush_block,Tr=Se._tr_tally,Sp=Se._tr_align,Cr=V.Z_NO_FLUSH,Op=V.Z_PARTIAL_FLUSH,Np=V.Z_FULL_FLUSH,Ke=V.Z_FINISH,Wo=V.Z_BLOCK,Ne=V.Z_OK,Ko=V.Z_STREAM_END,sr=V.Z_STREAM_ERROR,Ip=V.Z_DATA_ERROR,ti=V.Z_BUF_ERROR,Pp=V.Z_DEFAULT_COMPRESSION,Bp=V.Z_FILTERED,$n=V.Z_HUFFMAN_ONLY,Rp=V.Z_RLE,Fp=V.Z_FIXED,kp=V.Z_DEFAULT_STRATEGY,Lp=V.Z_UNKNOWN,ea=V.Z_DEFLATED,Xr=258,lr=262,ct=42,Vr=113,Zt=666,Hr=function(a,l){return a.msg=jr[l],l},Qo=function(a){return 2*a-(a>4?9:0)},_r=function(a){for(var l=a.length;--l>=0;)a[l]=0},Mp=function(a){var l,o,v,d=a.w_size;v=l=a.hash_size;do o=a.head[--v],a.head[v]=o>=d?o-d:0;while(--l);v=l=d;do o=a.prev[--v],a.prev[v]=o>=d?o-d:0;while(--l)},ni=function(a,l,o){return(l<<a.hash_shift^o)&a.hash_mask},Zr=function(a,l){var o;if(a.legacy_hash)o=a.ins_h=ni(a,a.ins_h,a.window[l+3-1]);else{var v=a.window,d=v[l]|v[l+1]<<8|v[l+2]<<16|v[l+3]<<24;o=a.ins_h=Math.imul(d,66521)+66521>>>16&a.hash_mask}var g=a.prev[l&a.w_mask]=a.head[o];return a.head[o]=l,g},He=function(a){var l=a.state,o=l.pending;o>a.avail_out&&(o=a.avail_out),o!==0&&(a.output.set(l.pending_buf.subarray(l.pending_out,l.pending_out+o),a.next_out),a.next_out+=o,l.pending_out+=o,a.total_out+=o,a.avail_out-=o,l.pending-=o,l.pending===0&&(l.pending_out=0))},Ze=function(a,l){_p(a,a.block_start>=0?a.block_start:-1,a.strstart-a.block_start,l),a.block_start=a.strstart,He(a.strm)},se=function(a,l){a.pending_buf[a.pending++]=l},Gt=function(a,l){a.pending_buf[a.pending++]=l>>>8&255,a.pending_buf[a.pending++]=255&l},ai=function(a,l,o,v){var d=a.avail_in;return d>v&&(d=v),d===0?0:(a.avail_in-=d,l.set(a.input.subarray(a.next_in,a.next_in+d),o),a.state.wrap===1?a.adler=ur(a.adler,l,d,o):a.state.wrap===2&&(a.adler=Oe(a.adler,l,d,o)),a.next_in+=d,a.total_in+=d,d)},Jo=function(a,l){var o,v,d=a.max_chain_length,g=a.strstart,A=a.prev_length,E=a.nice_match,D=a.strstart>a.w_size-lr?a.strstart-(a.w_size-lr):0,y=a.window,x=a.w_mask,re=a.prev,L=a.strstart+Xr,T=y[g+A-1],F=y[g+A];a.prev_length>=a.good_match&&(d>>=2),E>a.lookahead&&(E=a.lookahead);do if(y[(o=l)+A]===F&&y[o+A-1]===T&&y[o]===y[g]&&y[++o]===y[g+1]){g+=2,o++;do;while(y[++g]===y[++o]&&y[++g]===y[++o]&&y[++g]===y[++o]&&y[++g]===y[++o]&&y[++g]===y[++o]&&y[++g]===y[++o]&&y[++g]===y[++o]&&y[++g]===y[++o]&&g<L);if(v=Xr-(L-g),g=L-Xr,v>A){if(a.match_start=l,A=v,v>=E)break;T=y[g+A-1],F=y[g+A]}}while((l=re[l&x])>D&&--d!=0);return A<=a.lookahead?A:a.lookahead},ft=function(a){var l,o,v,d=a.w_size;do{if(o=a.window_size-a.lookahead-a.strstart,a.strstart>=d+(d-lr)&&(a.window.set(a.window.subarray(d,d+d-o),0),a.match_start-=d,a.strstart-=d,a.block_start-=d,a.insert>a.strstart&&(a.insert=a.strstart),Mp(a),o+=d),a.strm.avail_in===0)break;if(l=ai(a.strm,a.window,a.strstart+a.lookahead,o),a.lookahead+=l,a.legacy_hash){if(a.lookahead+a.insert>=3)for(v=a.strstart-a.insert,a.ins_h=a.window[v],a.ins_h=ni(a,a.ins_h,a.window[v+1]);a.insert&&(Zr(a,v),v++,a.insert--,!(a.lookahead+a.insert<3)););}else if(a.lookahead+a.insert>3)for(v=a.strstart-a.insert;a.insert&&(Zr(a,v),v++,a.insert--,!(a.lookahead+a.insert<=3)););}while(a.lookahead<lr&&a.strm.avail_in!==0)},$o=function(a,l){var o,v,d,g=a.pending_buf_size-5>a.w_size?a.w_size:a.pending_buf_size-5,A=0,E=a.strm.avail_in;do{if(o=65535,d=a.bi_valid+42>>3,a.strm.avail_out<d||(d=a.strm.avail_out-d,o>(v=a.strstart-a.block_start)+a.strm.avail_in&&(o=v+a.strm.avail_in),o>d&&(o=d),o<g&&(o===0&&l!==Ke||l===Cr||o!==v+a.strm.avail_in)))break;A=l===Ke&&o===v+a.strm.avail_in?1:0,ri(a,0,0,A),a.pending_buf[a.pending-4]=o,a.pending_buf[a.pending-3]=o>>8,a.pending_buf[a.pending-2]=~o,a.pending_buf[a.pending-1]=~o>>8,He(a.strm),v&&(v>o&&(v=o),a.strm.output.set(a.window.subarray(a.block_start,a.block_start+v),a.strm.next_out),a.strm.next_out+=v,a.strm.avail_out-=v,a.strm.total_out+=v,a.block_start+=v,o-=v),o&&(ai(a.strm,a.strm.output,a.strm.next_out,o),a.strm.next_out+=o,a.strm.avail_out-=o,a.strm.total_out+=o)}while(A===0);return(E-=a.strm.avail_in)&&(E>=a.w_size?(a.matches=2,a.window.set(a.strm.input.subarray(a.strm.next_in-a.w_size,a.strm.next_in),0),a.strstart=a.w_size,a.insert=a.strstart):(a.window_size-a.strstart<=E&&(a.strstart-=a.w_size,a.window.set(a.window.subarray(a.w_size,a.w_size+a.strstart),0),a.matches<2&&a.matches++,a.insert>a.strstart&&(a.insert=a.strstart)),a.window.set(a.strm.input.subarray(a.strm.next_in-E,a.strm.next_in),a.strstart),a.strstart+=E,a.insert+=E>a.w_size-a.insert?a.w_size-a.insert:E),a.block_start=a.strstart),a.high_water<a.strstart&&(a.high_water=a.strstart),A?4:l!==Cr&&l!==Ke&&a.strm.avail_in===0&&a.strstart===a.block_start?2:(d=a.window_size-a.strstart,a.strm.avail_in>d&&a.block_start>=a.w_size&&(a.block_start-=a.w_size,a.strstart-=a.w_size,a.window.set(a.window.subarray(a.w_size,a.w_size+a.strstart),0),a.matches<2&&a.matches++,d+=a.w_size,a.insert>a.strstart&&(a.insert=a.strstart)),d>a.strm.avail_in&&(d=a.strm.avail_in),d&&(ai(a.strm,a.window,a.strstart,d),a.strstart+=d,a.insert+=d>a.w_size-a.insert?a.w_size-a.insert:d),a.high_water<a.strstart&&(a.high_water=a.strstart),d=a.bi_valid+42>>3,g=(d=a.pending_buf_size-d>65535?65535:a.pending_buf_size-d)>a.w_size?a.w_size:d,((v=a.strstart-a.block_start)>=g||(v||l===Ke)&&l!==Cr&&a.strm.avail_in===0&&v<=d)&&(o=v>d?d:v,A=l===Ke&&a.strm.avail_in===0&&o===v?1:0,ri(a,a.block_start,o,A),a.block_start+=o,He(a.strm)),A?3:1)},ii=function(a,l){for(var o,v;;){if(a.lookahead<lr){if(ft(a),a.lookahead<lr&&l===Cr)return 1;if(a.lookahead===0)break}if(o=0,a.lookahead>=3&&(o=Zr(a,a.strstart)),o!==0&&a.strstart-o<=a.w_size-lr&&(a.match_length=Jo(a,o)),a.match_length>=3)if(v=Tr(a,a.strstart-a.match_start,a.match_length-3),a.lookahead-=a.match_length,a.match_length<=a.max_lazy_match&&a.lookahead>=3){a.match_length--;do a.strstart++,o=Zr(a,a.strstart);while(--a.match_length!=0);a.strstart++}else a.strstart+=a.match_length,a.match_length=0,a.legacy_hash&&(a.ins_h=a.window[a.strstart],a.ins_h=ni(a,a.ins_h,a.window[a.strstart+1]));else v=Tr(a,0,a.window[a.strstart]),a.lookahead--,a.strstart++;if(v&&(Ze(a,!1),a.strm.avail_out===0))return 1}return a.insert=a.strstart<2?a.strstart:2,l===Ke?(Ze(a,!0),a.strm.avail_out===0?3:4):a.sym_next&&(Ze(a,!1),a.strm.avail_out===0)?1:2},pt=function(a,l){for(var o,v,d;;){if(a.lookahead<lr){if(ft(a),a.lookahead<lr&&l===Cr)return 1;if(a.lookahead===0)break}if(o=0,a.lookahead>=3&&(o=Zr(a,a.strstart)),a.prev_length=a.match_length,a.prev_match=a.match_start,a.match_length=2,o!==0&&a.prev_length<a.max_lazy_match&&a.strstart-o<=a.w_size-lr&&(a.match_length=Jo(a,o),a.match_length<=5&&(a.strategy===Bp||a.match_length===3&&a.strstart-a.match_start>4096)&&(a.match_length=2)),a.prev_length>=3&&a.match_length<=a.prev_length){d=a.strstart+a.lookahead-3,v=Tr(a,a.strstart-1-a.prev_match,a.prev_length-3),a.lookahead-=a.prev_length-1,a.prev_length-=2;do++a.strstart<=d&&(o=Zr(a,a.strstart));while(--a.prev_length!=0);if(a.match_available=0,a.match_length=2,a.strstart++,v&&(Ze(a,!1),a.strm.avail_out===0))return 1}else if(a.match_available){if((v=Tr(a,0,a.window[a.strstart-1]))&&Ze(a,!1),a.strstart++,a.lookahead--,a.strm.avail_out===0)return 1}else a.match_available=1,a.strstart++,a.lookahead--}return a.match_available&&(v=Tr(a,0,a.window[a.strstart-1]),a.match_available=0),a.insert=a.strstart<2?a.strstart:2,l===Ke?(Ze(a,!0),a.strm.avail_out===0?3:4):a.sym_next&&(Ze(a,!1),a.strm.avail_out===0)?1:2};function cr(a,l,o,v,d){this.good_length=a,this.max_lazy=l,this.nice_length=o,this.max_chain=v,this.func=d}var Yt=[new cr(0,0,0,0,$o),new cr(4,4,8,4,ii),new cr(4,5,16,8,ii),new cr(4,6,32,32,ii),new cr(4,4,16,16,pt),new cr(8,16,32,32,pt),new cr(8,16,128,128,pt),new cr(8,32,128,256,pt),new cr(32,128,258,1024,pt),new cr(32,258,258,4096,pt)];function qp(){this.strm=null,this.status=0,this.pending_buf=null,this.pending_buf_size=0,this.pending_out=0,this.pending=0,this.wrap=0,this.gzhead=null,this.gzindex=0,this.method=ea,this.last_flush=-1,this.w_size=0,this.w_bits=0,this.w_mask=0,this.window=null,this.window_size=0,this.prev=null,this.head=null,this.ins_h=0,this.legacy_hash=0,this.hash_size=0,this.hash_bits=0,this.hash_mask=0,this.hash_shift=0,this.block_start=0,this.match_length=0,this.prev_match=0,this.match_available=0,this.strstart=0,this.match_start=0,this.lookahead=0,this.prev_length=0,this.max_chain_length=0,this.max_lazy_match=0,this.level=0,this.strategy=0,this.good_match=0,this.nice_match=0,this.dyn_ltree=new Uint16Array(1146),this.dyn_dtree=new Uint16Array(122),this.bl_tree=new Uint16Array(78),_r(this.dyn_ltree),_r(this.dyn_dtree),_r(this.bl_tree),this.l_desc=null,this.d_desc=null,this.bl_desc=null,this.bl_count=new Uint16Array(16),this.heap=new Uint16Array(573),_r(this.heap),this.heap_len=0,this.heap_max=0,this.depth=new Uint16Array(573),_r(this.depth),this.sym_buf=0,this.lit_bufsize=0,this.sym_next=0,this.sym_end=0,this.opt_len=0,this.static_len=0,this.matches=0,this.insert=0,this.bi_buf=0,this.bi_valid=0}var Wt=function(a){if(!a)return 1;var l=a.state;return!l||l.strm!==a||l.status!==ct&&l.status!==57&&l.status!==69&&l.status!==73&&l.status!==91&&l.status!==103&&l.status!==Vr&&l.status!==Zt?1:0},eu=function(a){if(Wt(a))return Hr(a,sr);a.total_in=a.total_out=0,a.data_type=Lp;var l=a.state;return l.pending=0,l.pending_out=0,l.wrap<0&&(l.wrap=-l.wrap),l.status=l.wrap===2?57:l.wrap?ct:Vr,a.adler=l.wrap===2?0:1,l.last_flush=-2,Cp(l),Ne},ru=function(a){var l,o=eu(a);return o===Ne&&((l=a.state).window_size=2*l.w_size,_r(l.head),l.max_lazy_match=Yt[l.level].max_lazy,l.good_match=Yt[l.level].good_length,l.nice_match=Yt[l.level].nice_length,l.max_chain_length=Yt[l.level].max_chain,l.strstart=0,l.block_start=0,l.lookahead=0,l.insert=0,l.match_length=l.prev_length=2,l.match_available=0,l.ins_h=0),o},tu=function(a,l,o,v,d,g,A){if(!a)return sr;var E=1;if(l===Pp&&(l=6),v<0?(E=0,v=-v):v>15&&(E=2,v-=16),d<1||d>9||o!==ea||v<8||v>15||l<0||l>9||g<0||g>Fp||v===8&&E!==1)return Hr(a,sr);v===8&&(v=9);var D=new qp;return a.state=D,D.strm=a,D.status=ct,D.wrap=E,D.gzhead=null,D.w_bits=v,D.w_size=1<<D.w_bits,D.w_mask=D.w_size-1,D.legacy_hash=A?1:0,D.hash_bits=d+7,!D.legacy_hash&&D.hash_bits<15&&(D.hash_bits=15),D.hash_size=1<<D.hash_bits,D.hash_mask=D.hash_size-1,D.hash_shift=~~((D.hash_bits+3-1)/3),D.window=new Uint8Array(2*D.w_size),D.head=new Uint16Array(D.hash_size),D.prev=new Uint16Array(D.w_size),D.lit_bufsize=1<<d+6,D.pending_buf_size=4*D.lit_bufsize,D.pending_buf=new Uint8Array(D.pending_buf_size),D.sym_buf=D.lit_bufsize,D.sym_end=3*(D.lit_bufsize-1),D.level=l,D.strategy=g,D.method=o,ru(a)},Kt={deflateInit:function(a,l){return tu(a,l,ea,15,8,kp)},deflateInit2:tu,deflateReset:ru,deflateResetKeep:eu,deflateSetHeader:function(a,l){return Wt(a)||a.state.wrap!==2?sr:(a.state.gzhead=l,Ne)},deflate:function(a,l){if(Wt(a)||l>Wo||l<0)return a?Hr(a,sr):sr;var o=a.state;if(!a.output||a.avail_in!==0&&!a.input||o.status===Zt&&l!==Ke)return Hr(a,a.avail_out===0?ti:sr);var v=o.last_flush;if(o.last_flush=l,o.pending!==0){if(He(a),a.avail_out===0)return o.last_flush=-1,Ne}else if(a.avail_in===0&&Qo(l)<=Qo(v)&&l!==Ke)return Hr(a,ti);if(o.status===Zt&&a.avail_in!==0)return Hr(a,ti);if(o.status===ct&&o.wrap===0&&(o.status=Vr),o.status===ct){var d=ea+(o.w_bits-8<<4)<<8;if(d|=(o.strategy>=$n||o.level<2?0:o.level<6?1:o.level===6?2:3)<<6,o.strstart!==0&&(d|=32),Gt(o,d+=31-d%31),o.strstart!==0&&(Gt(o,a.adler>>>16),Gt(o,65535&a.adler)),a.adler=1,o.status=Vr,He(a),o.pending!==0)return o.last_flush=-1,Ne}if(o.status===57){if(a.adler=0,se(o,31),se(o,139),se(o,8),o.gzhead)se(o,(o.gzhead.text?1:0)+(o.gzhead.hcrc?2:0)+(o.gzhead.extra?4:0)+(o.gzhead.name?8:0)+(o.gzhead.comment?16:0)),se(o,255&o.gzhead.time),se(o,o.gzhead.time>>8&255),se(o,o.gzhead.time>>16&255),se(o,o.gzhead.time>>24&255),se(o,o.level===9?2:o.strategy>=$n||o.level<2?4:0),se(o,255&o.gzhead.os),o.gzhead.extra&&o.gzhead.extra.length&&(se(o,255&o.gzhead.extra.length),se(o,o.gzhead.extra.length>>8&255)),o.gzhead.hcrc&&(a.adler=Oe(a.adler,o.pending_buf,o.pending,0)),o.gzindex=0,o.status=69;else if(se(o,0),se(o,0),se(o,0),se(o,0),se(o,0),se(o,o.level===9?2:o.strategy>=$n||o.level<2?4:0),se(o,3),o.status=Vr,He(a),o.pending!==0)return o.last_flush=-1,Ne}if(o.status===69){if(o.gzhead.extra){for(var g=o.pending,A=(65535&o.gzhead.extra.length)-o.gzindex;o.pending+A>o.pending_buf_size;){var E=o.pending_buf_size-o.pending;if(o.pending_buf.set(o.gzhead.extra.subarray(o.gzindex,o.gzindex+E),o.pending),o.pending=o.pending_buf_size,o.gzhead.hcrc&&o.pending>g&&(a.adler=Oe(a.adler,o.pending_buf,o.pending-g,g)),o.gzindex+=E,He(a),o.pending!==0)return o.last_flush=-1,Ne;g=0,A-=E}var D=new Uint8Array(o.gzhead.extra);o.pending_buf.set(D.subarray(o.gzindex,o.gzindex+A),o.pending),o.pending+=A,o.gzhead.hcrc&&o.pending>g&&(a.adler=Oe(a.adler,o.pending_buf,o.pending-g,g)),o.gzindex=0}o.status=73}if(o.status===73){if(o.gzhead.name){var y,x=o.pending;do{if(o.pending===o.pending_buf_size){if(o.gzhead.hcrc&&o.pending>x&&(a.adler=Oe(a.adler,o.pending_buf,o.pending-x,x)),He(a),o.pending!==0)return o.last_flush=-1,Ne;x=0}y=o.gzindex<o.gzhead.name.length?255&o.gzhead.name.charCodeAt(o.gzindex++):0,se(o,y)}while(y!==0);o.gzhead.hcrc&&o.pending>x&&(a.adler=Oe(a.adler,o.pending_buf,o.pending-x,x)),o.gzindex=0}o.status=91}if(o.status===91){if(o.gzhead.comment){var re,L=o.pending;do{if(o.pending===o.pending_buf_size){if(o.gzhead.hcrc&&o.pending>L&&(a.adler=Oe(a.adler,o.pending_buf,o.pending-L,L)),He(a),o.pending!==0)return o.last_flush=-1,Ne;L=0}re=o.gzindex<o.gzhead.comment.length?255&o.gzhead.comment.charCodeAt(o.gzindex++):0,se(o,re)}while(re!==0);o.gzhead.hcrc&&o.pending>L&&(a.adler=Oe(a.adler,o.pending_buf,o.pending-L,L))}o.status=103}if(o.status===103){if(o.gzhead.hcrc){if(o.pending+2>o.pending_buf_size&&(He(a),o.pending!==0))return o.last_flush=-1,Ne;se(o,255&a.adler),se(o,a.adler>>8&255),a.adler=0}if(o.status=Vr,He(a),o.pending!==0)return o.last_flush=-1,Ne}if(a.avail_in!==0||o.lookahead!==0||l!==Cr&&o.status!==Zt){var T=o.level===0?$o(o,l):o.strategy===$n?(function(F,ee){for(var K;;){if(F.lookahead===0&&(ft(F),F.lookahead===0)){if(ee===Cr)return 1;break}if(F.match_length=0,K=Tr(F,0,F.window[F.strstart]),F.lookahead--,F.strstart++,K&&(Ze(F,!1),F.strm.avail_out===0))return 1}return F.insert=0,ee===Ke?(Ze(F,!0),F.strm.avail_out===0?3:4):F.sym_next&&(Ze(F,!1),F.strm.avail_out===0)?1:2})(o,l):o.strategy===Rp?(function(F,ee){for(var K,te,I,N,H=F.window;;){if(F.lookahead<=Xr){if(ft(F),F.lookahead<=Xr&&ee===Cr)return 1;if(F.lookahead===0)break}if(F.match_length=0,F.lookahead>=3&&F.strstart>0&&(te=H[I=F.strstart-1])===H[++I]&&te===H[++I]&&te===H[++I]){N=F.strstart+Xr;do;while(te===H[++I]&&te===H[++I]&&te===H[++I]&&te===H[++I]&&te===H[++I]&&te===H[++I]&&te===H[++I]&&te===H[++I]&&I<N);F.match_length=Xr-(N-I),F.match_length>F.lookahead&&(F.match_length=F.lookahead)}if(F.match_length>=3?(K=Tr(F,1,F.match_length-3),F.lookahead-=F.match_length,F.strstart+=F.match_length,F.match_length=0):(K=Tr(F,0,F.window[F.strstart]),F.lookahead--,F.strstart++),K&&(Ze(F,!1),F.strm.avail_out===0))return 1}return F.insert=0,ee===Ke?(Ze(F,!0),F.strm.avail_out===0?3:4):F.sym_next&&(Ze(F,!1),F.strm.avail_out===0)?1:2})(o,l):Yt[o.level].func(o,l);if(T!==3&&T!==4||(o.status=Zt),T===1||T===3)return a.avail_out===0&&(o.last_flush=-1),Ne;if(T===2&&(l===Op?Sp(o):l!==Wo&&(ri(o,0,0,!1),l===Np&&(_r(o.head),o.lookahead===0&&(o.strstart=0,o.block_start=0,o.insert=0))),He(a),a.avail_out===0))return o.last_flush=-1,Ne}return l!==Ke?Ne:o.wrap<=0?Ko:(o.wrap===2?(se(o,255&a.adler),se(o,a.adler>>8&255),se(o,a.adler>>16&255),se(o,a.adler>>24&255),se(o,255&a.total_in),se(o,a.total_in>>8&255),se(o,a.total_in>>16&255),se(o,a.total_in>>24&255)):(Gt(o,a.adler>>>16),Gt(o,65535&a.adler)),He(a),o.wrap>0&&(o.wrap=-o.wrap),o.pending!==0?Ne:Ko)},deflateEnd:function(a){if(Wt(a))return sr;var l=a.state.status;return a.state=null,l===Vr?Hr(a,Ip):Ne},deflateSetDictionary:function(a,l){var o=l.length;if(Wt(a))return sr;var v=a.state,d=v.wrap;if(d===2||d===1&&v.status!==ct||v.lookahead)return sr;if(d===1&&(a.adler=ur(a.adler,l,o,0)),v.wrap=0,o>=v.w_size){d===0&&(_r(v.head),v.strstart=0,v.block_start=0,v.insert=0);var g=new Uint8Array(v.w_size);g.set(l.subarray(o-v.w_size,o),0),l=g,o=v.w_size}var A=a.avail_in,E=a.next_in,D=a.input;for(a.avail_in=o,a.next_in=0,a.input=l,ft(v);v.lookahead>=3;){var y=v.strstart,x=v.lookahead-2;do Zr(v,y),y++;while(--x);v.strstart=y,v.lookahead=2,ft(v)}return v.strstart+=v.lookahead,v.block_start=v.strstart,v.insert=v.lookahead,v.lookahead=0,v.match_length=v.prev_length=2,v.match_available=0,a.next_in=E,a.input=D,a.avail_in=A,v.wrap=d,Ne},deflateInfo:"pako deflate (from Nodeca project)"};function oi(a){return oi=typeof Symbol=="function"&&typeof Symbol.iterator=="symbol"?function(l){return typeof l}:function(l){return l&&typeof Symbol=="function"&&l.constructor===Symbol&&l!==Symbol.prototype?"symbol":typeof l},oi(a)}var Up=function(a,l){return Object.prototype.hasOwnProperty.call(a,l)},nu=function(a){for(var l=Array.prototype.slice.call(arguments,1);l.length;){var o=l.shift();if(o){if(oi(o)!=="object")throw new TypeError(o+"must be non-object");for(var v in o)Up(o,v)&&(a[v]=o[v])}}return a},au=function(a){for(var l=0,o=0,v=a.length;o<v;o++)l+=a[o].length;for(var d=new Uint8Array(l),g=0,A=0,E=a.length;g<E;g++){var D=a[g];d.set(D,A),A+=D.length}return d},iu=!0;try{String.fromCharCode.apply(null,new Uint8Array(1))}catch(a){iu=!1}for(var Qt=new Uint8Array(256),Sr=0;Sr<256;Sr++)Qt[Sr]=Sr>=252?6:Sr>=248?5:Sr>=240?4:Sr>=224?3:Sr>=192?2:1;Qt[254]=Qt[255]=1;var ui=function(a){if(typeof TextEncoder=="function"&&TextEncoder.prototype.encode)return new TextEncoder().encode(a);var l,o,v,d,g,A=a.length,E=0;for(d=0;d<A;d++)(64512&(o=a.charCodeAt(d)))==55296&&d+1<A&&(64512&(v=a.charCodeAt(d+1)))==56320&&(o=65536+(o-55296<<10)+(v-56320),d++),E+=o<128?1:o<2048?2:o<65536?3:4;for(l=new Uint8Array(E),g=0,d=0;g<E;d++)(64512&(o=a.charCodeAt(d)))==55296&&d+1<A&&(64512&(v=a.charCodeAt(d+1)))==56320&&(o=65536+(o-55296<<10)+(v-56320),d++),o<128?l[g++]=o:o<2048?(l[g++]=192|o>>>6,l[g++]=128|63&o):o<65536?(l[g++]=224|o>>>12,l[g++]=128|o>>>6&63,l[g++]=128|63&o):(l[g++]=240|o>>>18,l[g++]=128|o>>>12&63,l[g++]=128|o>>>6&63,l[g++]=128|63&o);return l},zp=function(a,l){var o,v,d=l||a.length;if(typeof TextDecoder=="function"&&TextDecoder.prototype.decode)return new TextDecoder().decode(a.subarray(0,l));var g=new Array(2*d);for(v=0,o=0;o<d;){var A=a[o++];if(A<128)g[v++]=A;else{var E=Qt[A];if(E>4)g[v++]=65533,o+=E-1;else{for(A&=E===2?31:E===3?15:7;E>1&&o<d;)A=A<<6|63&a[o++],E--;E>1?g[v++]=65533:A<65536?g[v++]=A:(A-=65536,g[v++]=55296|A>>10&1023,g[v++]=56320|1023&A)}}}return(function(D,y){if(y<65534&&D.subarray&&iu)return String.fromCharCode.apply(null,D.length===y?D:D.subarray(0,y));for(var x="",re=0;re<y;re++)x+=String.fromCharCode(D[re]);return x})(g,v)},jp=function(a,l){(l=l||a.length)>a.length&&(l=a.length);for(var o=l-1;o>=0&&(192&a[o])==128;)o--;return o<0||o===0?l:o+Qt[a[o]]>l?o:l},ou=function(){this.input=null,this.next_in=0,this.avail_in=0,this.total_in=0,this.output=null,this.next_out=0,this.avail_out=0,this.total_out=0,this.msg="",this.state=null,this.data_type=2,this.adler=0},uu=Object.prototype.toString,Xp=V.Z_NO_FLUSH,Vp=V.Z_SYNC_FLUSH,Hp=V.Z_FULL_FLUSH,Zp=V.Z_FINISH,ra=V.Z_OK,Gp=V.Z_STREAM_END,Yp={level:V.Z_DEFAULT_COMPRESSION,method:V.Z_DEFLATED,chunkSize:16384,windowBits:15,memLevel:8,strategy:V.Z_DEFAULT_STRATEGY,legacyHash:!0};function Jt(a){this.options=nu({},Yp,a||{});var l=this.options;l.raw&&l.windowBits>0?l.windowBits=-l.windowBits:l.gzip&&l.windowBits>0&&l.windowBits<16&&(l.windowBits+=16),this.err=0,this.msg="",this.ended=!1,this.chunks=[],this.strm=new ou,this.strm.avail_out=0;var o=Kt.deflateInit2(this.strm,l.level,l.method,l.windowBits,l.memLevel,l.strategy,l.legacyHash);if(o!==ra)throw new Error(jr[o]);if(l.header&&Kt.deflateSetHeader(this.strm,l.header),l.dictionary){var v;if(v=typeof l.dictionary=="string"?ui(l.dictionary):uu.call(l.dictionary)==="[object ArrayBuffer]"?new Uint8Array(l.dictionary):l.dictionary,(o=Kt.deflateSetDictionary(this.strm,v))!==ra)throw new Error(jr[o]);this._dict_set=!0}}function si(a,l){var o=new Jt(l);if(o.push(a,!0),o.err)throw o.msg||jr[o.err];return o.result}Jt.prototype.push=function(a,l){var o,v,d=this.strm,g=this.options.chunkSize;if(this.ended)return!1;for(v=l===~~l?l:l===!0?Zp:Xp,typeof a=="string"?d.input=ui(a):uu.call(a)==="[object ArrayBuffer]"?d.input=new Uint8Array(a):d.input=a,d.next_in=0,d.avail_in=d.input.length;;)if(d.avail_out===0&&(d.output=new Uint8Array(g),d.next_out=0,d.avail_out=g),(v===Vp||v===Hp)&&d.avail_out<=6)this.onData(d.output.subarray(0,d.next_out)),d.avail_out=0;else{if((o=Kt.deflate(d,v))===Gp)return d.next_out>0&&this.onData(d.output.subarray(0,d.next_out)),o=Kt.deflateEnd(this.strm),this.onEnd(o),this.ended=!0,o===ra;if(d.avail_out!==0){if(v>0&&d.next_out>0)this.onData(d.output.subarray(0,d.next_out)),d.avail_out=0;else if(d.avail_in===0)break}else this.onData(d.output)}return!0},Jt.prototype.onData=function(a){this.chunks.push(a)},Jt.prototype.onEnd=function(a){a===ra&&(this.result=au(this.chunks)),this.chunks=[],this.err=a,this.msg=this.strm.msg};var ta={Deflate:Jt,deflate:si,deflateRaw:function(a,l){return(l=l||{}).raw=!0,si(a,l)},gzip:function(a,l){return(l=l||{}).gzip=!0,si(a,l)},constants:V},na=16209,Wp=function(a,l){var o,v,d,g,A,E,D,y,x,re,L,T,F,ee,K,te,I,N,H,ve,z,ie,ne,G,J=a.state;o=a.next_in,ne=a.input,v=o+(a.avail_in-5),d=a.next_out,G=a.output,g=d-(l-a.avail_out),A=d+(a.avail_out-257),E=J.dmax,D=J.wsize,y=J.whave,x=J.wnext,re=J.window,L=J.hold,T=J.bits,F=J.lencode,ee=J.distcode,K=(1<<J.lenbits)-1,te=(1<<J.distbits)-1;e:do{T<15&&(L+=ne[o++]<<T,T+=8,L+=ne[o++]<<T,T+=8),I=F[L&K];r:for(;;){if(L>>>=N=I>>>24,T-=N,(N=I>>>16&255)===0)G[d++]=65535&I;else{if(!(16&N)){if((64&N)==0){I=F[(65535&I)+(L&(1<<N)-1)];continue r}if(32&N){J.mode=16191;break e}a.msg="invalid literal/length code",J.mode=na;break e}H=65535&I,(N&=15)&&(T<N&&(L+=ne[o++]<<T,T+=8),H+=L&(1<<N)-1,L>>>=N,T-=N),T<15&&(L+=ne[o++]<<T,T+=8,L+=ne[o++]<<T,T+=8),I=ee[L&te];t:for(;;){if(L>>>=N=I>>>24,T-=N,!(16&(N=I>>>16&255))){if((64&N)==0){I=ee[(65535&I)+(L&(1<<N)-1)];continue t}a.msg="invalid distance code",J.mode=na;break e}if(ve=65535&I,T<(N&=15)&&(L+=ne[o++]<<T,(T+=8)<N&&(L+=ne[o++]<<T,T+=8)),(ve+=L&(1<<N)-1)>E){a.msg="invalid distance too far back",J.mode=na;break e}if(L>>>=N,T-=N,ve>(N=d-g)){if((N=ve-N)>y&&J.sane){a.msg="invalid distance too far back",J.mode=na;break e}if(z=0,ie=re,x===0){if(z+=D-N,N<H){H-=N;do G[d++]=re[z++];while(--N);z=d-ve,ie=G}}else if(x<N){if(z+=D+x-N,(N-=x)<H){H-=N;do G[d++]=re[z++];while(--N);if(z=0,x<H){H-=N=x;do G[d++]=re[z++];while(--N);z=d-ve,ie=G}}}else if(z+=x-N,N<H){H-=N;do G[d++]=re[z++];while(--N);z=d-ve,ie=G}for(;H>2;)G[d++]=ie[z++],G[d++]=ie[z++],G[d++]=ie[z++],H-=3;H&&(G[d++]=ie[z++],H>1&&(G[d++]=ie[z++]))}else{z=d-ve;do G[d++]=G[z++],G[d++]=G[z++],G[d++]=G[z++],H-=3;while(H>2);H&&(G[d++]=G[z++],H>1&&(G[d++]=G[z++]))}break}}break}}while(o<v&&d<A);o-=H=T>>3,L&=(1<<(T-=H<<3))-1,a.next_in=o,a.next_out=d,a.avail_in=o<v?v-o+5:5-(o-v),a.avail_out=d<A?A-d+257:257-(d-A),J.hold=L,J.bits=T},aa=15,Kp=new Uint16Array([3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258,0,0]),Qp=new Uint8Array([16,16,16,16,16,16,16,16,17,17,17,17,18,18,18,18,19,19,19,19,20,20,20,20,21,21,21,21,16,199,75]),Jp=new Uint16Array([1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,0,0]),$p=new Uint8Array([16,16,16,16,17,17,18,18,19,19,20,20,21,21,22,22,23,23,24,24,25,25,26,26,27,27,28,28,29,29,64,64]),$t=function(a,l,o,v,d,g,A,E){var D,y,x,re,L,T,F,ee,K,te=E.bits,I=0,N=0,H=0,ve=0,z=0,ie=0,ne=0,G=0,J=0,de=0,Wr=null,Or=new Uint16Array(16),fa=new Uint16Array(16),pa=null;for(I=0;I<=aa;I++)Or[I]=0;for(N=0;N<v;N++)Or[l[o+N]]++;for(z=te,ve=aa;ve>=1&&Or[ve]===0;ve--);if(z>ve&&(z=ve),ve===0)return d[g++]=20971520,d[g++]=20971520,E.bits=1,0;for(H=1;H<ve&&Or[H]===0;H++);for(z<H&&(z=H),G=1,I=1;I<=aa;I++)if(G<<=1,(G-=Or[I])<0)return-1;if(G>0&&(a===0||ve!==1))return-1;for(fa[1]=0,I=1;I<aa;I++)fa[I+1]=fa[I]+Or[I];for(N=0;N<v;N++)l[o+N]!==0&&(A[fa[l[o+N]]++]=N);if(a===0?(Wr=pa=A,T=20):a===1?(Wr=Kp,pa=Qp,T=257):(Wr=Jp,pa=$p,T=0),de=0,N=0,I=H,L=g,ie=z,ne=0,x=-1,re=(J=1<<z)-1,a===1&&J>852||a===2&&J>592)return 1;for(;;){F=I-ne,A[N]+1<T?(ee=0,K=A[N]):A[N]>=T?(ee=pa[A[N]-T],K=Wr[A[N]-T]):(ee=96,K=0),D=1<<I-ne,H=y=1<<ie;do d[L+(de>>ne)+(y-=D)]=F<<24|ee<<16|K|0;while(y!==0);for(D=1<<I-1;de&D;)D>>=1;if(D!==0?(de&=D-1,de+=D):de=0,N++,--Or[I]==0){if(I===ve)break;I=l[o+A[N]]}if(I>z&&(de&re)!==x){for(ne===0&&(ne=z),L+=H,G=1<<(ie=I-ne);ie+ne<ve&&!((G-=Or[ie+ne])<=0);)ie++,G<<=1;if(J+=1<<ie,a===1&&J>852||a===2&&J>592)return 1;d[x=de&re]=z<<24|ie<<16|L-g|0}}return de!==0&&(d[L+de]=I-ne<<24|64<<16|0),E.bits=z,0},su=V.Z_FINISH,eh=V.Z_BLOCK,ia=V.Z_TREES,Gr=V.Z_OK,rh=V.Z_STREAM_END,th=V.Z_NEED_DICT,tr=V.Z_STREAM_ERROR,lu=V.Z_DATA_ERROR,cu=V.Z_MEM_ERROR,nh=V.Z_BUF_ERROR,fu=V.Z_DEFLATED,oa=16180,ua=16190,yr=16191,li=16192,ci=16194,sa=16199,la=16200,fi=16206,me=16209,pu=function(a){return(a>>>24&255)+(a>>>8&65280)+((65280&a)<<8)+((255&a)<<24)};function ah(){this.strm=null,this.mode=0,this.last=!1,this.wrap=0,this.havedict=!1,this.flags=0,this.dmax=0,this.check=0,this.total=0,this.head=null,this.wbits=0,this.wsize=0,this.whave=0,this.wnext=0,this.window=null,this.hold=0,this.bits=0,this.length=0,this.offset=0,this.extra=0,this.lencode=null,this.distcode=null,this.lenbits=0,this.distbits=0,this.ncode=0,this.nlen=0,this.ndist=0,this.have=0,this.next=null,this.lens=new Uint16Array(320),this.work=new Uint16Array(288),this.lendyn=null,this.distdyn=null,this.sane=0,this.back=0,this.was=0}var pi,hi,Yr=function(a){if(!a)return 1;var l=a.state;return!l||l.strm!==a||l.mode<oa||l.mode>16211?1:0},hu=function(a){if(Yr(a))return tr;var l=a.state;return a.total_in=a.total_out=l.total=0,a.msg="",l.wrap&&(a.adler=1&l.wrap),l.mode=oa,l.last=0,l.havedict=0,l.flags=-1,l.dmax=32768,l.head=null,l.hold=0,l.bits=0,l.lencode=l.lendyn=new Int32Array(852),l.distcode=l.distdyn=new Int32Array(592),l.sane=1,l.back=-1,Gr},du=function(a){if(Yr(a))return tr;var l=a.state;return l.wsize=0,l.whave=0,l.wnext=0,hu(a)},vu=function(a,l){var o;if(Yr(a))return tr;var v=a.state;return l<0?(o=0,l=-l):(o=5+(l>>4),l<48&&(l&=15)),l&&(l<8||l>15)?tr:(v.window!==null&&v.wbits!==l&&(v.window=null),v.wrap=o,v.wbits=l,du(a))},gu=function(a,l){if(!a)return tr;var o=new ah;a.state=o,o.strm=a,o.window=null,o.mode=oa;var v=vu(a,l);return v!==Gr&&(a.state=null),v},mu=!0,ih=function(a){if(mu){pi=new Int32Array(512),hi=new Int32Array(32);for(var l=0;l<144;)a.lens[l++]=8;for(;l<256;)a.lens[l++]=9;for(;l<280;)a.lens[l++]=7;for(;l<288;)a.lens[l++]=8;for($t(1,a.lens,0,288,pi,0,a.work,{bits:9}),l=0;l<32;)a.lens[l++]=5;$t(2,a.lens,0,32,hi,0,a.work,{bits:5}),mu=!1}a.lencode=pi,a.lenbits=9,a.distcode=hi,a.distbits=5},yu=function(a,l,o,v){var d,g=a.state;return g.window===null&&(g.window=new Uint8Array(1<<g.wbits)),g.wsize===0&&(g.wsize=1<<g.wbits,g.wnext=0,g.whave=0),v>=g.wsize?(g.window.set(l.subarray(o-g.wsize,o),0),g.wnext=0,g.whave=g.wsize):((d=g.wsize-g.wnext)>v&&(d=v),g.window.set(l.subarray(o-v,o-v+d),g.wnext),(v-=d)?(g.window.set(l.subarray(o-v,o),0),g.wnext=v,g.whave=g.wsize):(g.wnext+=d,g.wnext===g.wsize&&(g.wnext=0),g.whave<g.wsize&&(g.whave+=d))),0},fr={inflateReset:du,inflateReset2:vu,inflateResetKeep:hu,inflateInit:function(a){return gu(a,15)},inflateInit2:gu,inflate:function(a,l){var o,v,d,g,A,E,D,y,x,re,L,T,F,ee,K,te,I,N,H,ve,z,ie,ne,G,J=0,de=new Uint8Array(4),Wr=new Uint8Array([16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15]);if(Yr(a)||!a.output||!a.input&&a.avail_in!==0)return tr;(o=a.state).mode===yr&&(o.mode=li),A=a.next_out,d=a.output,D=a.avail_out,g=a.next_in,v=a.input,E=a.avail_in,y=o.hold,x=o.bits,re=E,L=D,ie=Gr;e:for(;;)switch(o.mode){case oa:if(o.wrap===0){o.mode=li;break}for(;x<16;){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}if(2&o.wrap&&y===35615){o.wbits===0&&(o.wbits=15),o.check=0,de[0]=255&y,de[1]=y>>>8&255,o.check=Oe(o.check,de,2,0),y=0,x=0,o.mode=16181;break}if(o.head&&(o.head.done=!1),!(1&o.wrap)||(((255&y)<<8)+(y>>8))%31){a.msg="incorrect header check",o.mode=me;break}if((15&y)!==fu){a.msg="unknown compression method",o.mode=me;break}if(x-=4,z=8+(15&(y>>>=4)),o.wbits===0&&(o.wbits=z),z>15||z>o.wbits){a.msg="invalid window size",o.mode=me;break}o.dmax=1<<o.wbits,o.flags=0,a.adler=o.check=1,o.mode=512&y?16189:yr,y=0,x=0;break;case 16181:for(;x<16;){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}if(o.flags=y,(255&o.flags)!==fu){a.msg="unknown compression method",o.mode=me;break}if(57344&o.flags){a.msg="unknown header flags set",o.mode=me;break}o.head&&(o.head.text=y>>8&1),512&o.flags&&4&o.wrap&&(de[0]=255&y,de[1]=y>>>8&255,o.check=Oe(o.check,de,2,0)),y=0,x=0,o.mode=16182;case 16182:for(;x<32;){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}o.head&&(o.head.time=y),512&o.flags&&4&o.wrap&&(de[0]=255&y,de[1]=y>>>8&255,de[2]=y>>>16&255,de[3]=y>>>24&255,o.check=Oe(o.check,de,4,0)),y=0,x=0,o.mode=16183;case 16183:for(;x<16;){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}o.head&&(o.head.xflags=255&y,o.head.os=y>>8),512&o.flags&&4&o.wrap&&(de[0]=255&y,de[1]=y>>>8&255,o.check=Oe(o.check,de,2,0)),y=0,x=0,o.mode=16184;case 16184:if(1024&o.flags){for(;x<16;){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}o.length=y,o.head&&(o.head.extra_len=y),512&o.flags&&4&o.wrap&&(de[0]=255&y,de[1]=y>>>8&255,o.check=Oe(o.check,de,2,0)),y=0,x=0}else o.head&&(o.head.extra=null);o.mode=16185;case 16185:if(1024&o.flags&&((T=o.length)>E&&(T=E),T&&(o.head&&(z=o.head.extra_len-o.length,o.head.extra||(o.head.extra=new Uint8Array(o.head.extra_len)),o.head.extra.set(v.subarray(g,g+T),z)),512&o.flags&&4&o.wrap&&(o.check=Oe(o.check,v,T,g)),E-=T,g+=T,o.length-=T),o.length))break e;o.length=0,o.mode=16186;case 16186:if(2048&o.flags){if(E===0)break e;T=0;do z=v[g+T++],o.head&&z&&o.length<65536&&(o.head.name+=String.fromCharCode(z));while(z&&T<E);if(512&o.flags&&4&o.wrap&&(o.check=Oe(o.check,v,T,g)),E-=T,g+=T,z)break e}else o.head&&(o.head.name=null);o.length=0,o.mode=16187;case 16187:if(4096&o.flags){if(E===0)break e;T=0;do z=v[g+T++],o.head&&z&&o.length<65536&&(o.head.comment+=String.fromCharCode(z));while(z&&T<E);if(512&o.flags&&4&o.wrap&&(o.check=Oe(o.check,v,T,g)),E-=T,g+=T,z)break e}else o.head&&(o.head.comment=null);o.mode=16188;case 16188:if(512&o.flags){for(;x<16;){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}if(4&o.wrap&&y!==(65535&o.check)){a.msg="header crc mismatch",o.mode=me;break}y=0,x=0}o.head&&(o.head.hcrc=o.flags>>9&1,o.head.done=!0),a.adler=o.check=0,o.mode=yr;break;case 16189:for(;x<32;){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}a.adler=o.check=pu(y),y=0,x=0,o.mode=ua;case ua:if(o.havedict===0)return a.next_out=A,a.avail_out=D,a.next_in=g,a.avail_in=E,o.hold=y,o.bits=x,th;a.adler=o.check=1,o.mode=yr;case yr:if(l===eh||l===ia)break e;case li:if(o.last){y>>>=7&x,x-=7&x,o.mode=fi;break}for(;x<3;){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}switch(o.last=1&y,x-=1,3&(y>>>=1)){case 0:o.mode=16193;break;case 1:if(ih(o),o.mode=sa,l===ia){y>>>=2,x-=2;break e}break;case 2:o.mode=16196;break;case 3:a.msg="invalid block type",o.mode=me}y>>>=2,x-=2;break;case 16193:for(y>>>=7&x,x-=7&x;x<32;){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}if((65535&y)!=(y>>>16^65535)){a.msg="invalid stored block lengths",o.mode=me;break}if(o.length=65535&y,y=0,x=0,o.mode=ci,l===ia)break e;case ci:o.mode=16195;case 16195:if(T=o.length){if(T>E&&(T=E),T>D&&(T=D),T===0)break e;d.set(v.subarray(g,g+T),A),E-=T,g+=T,D-=T,A+=T,o.length-=T;break}o.mode=yr;break;case 16196:for(;x<14;){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}if(o.nlen=257+(31&y),y>>>=5,x-=5,o.ndist=1+(31&y),y>>>=5,x-=5,o.ncode=4+(15&y),y>>>=4,x-=4,o.nlen>286||o.ndist>30){a.msg="too many length or distance symbols",o.mode=me;break}o.have=0,o.mode=16197;case 16197:for(;o.have<o.ncode;){for(;x<3;){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}o.lens[Wr[o.have++]]=7&y,y>>>=3,x-=3}for(;o.have<19;)o.lens[Wr[o.have++]]=0;if(o.lencode=o.lendyn,o.lenbits=7,ne={bits:o.lenbits},ie=$t(0,o.lens,0,19,o.lencode,0,o.work,ne),o.lenbits=ne.bits,ie){a.msg="invalid code lengths set",o.mode=me;break}o.have=0,o.mode=16198;case 16198:for(;o.have<o.nlen+o.ndist;){for(;te=(J=o.lencode[y&(1<<o.lenbits)-1])>>>16&255,I=65535&J,!((K=J>>>24)<=x);){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}if(I<16)y>>>=K,x-=K,o.lens[o.have++]=I;else{if(I===16){for(G=K+2;x<G;){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}if(y>>>=K,x-=K,o.have===0){a.msg="invalid bit length repeat",o.mode=me;break}z=o.lens[o.have-1],T=3+(3&y),y>>>=2,x-=2}else if(I===17){for(G=K+3;x<G;){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}x-=K,z=0,T=3+(7&(y>>>=K)),y>>>=3,x-=3}else{for(G=K+7;x<G;){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}x-=K,z=0,T=11+(127&(y>>>=K)),y>>>=7,x-=7}if(o.have+T>o.nlen+o.ndist){a.msg="invalid bit length repeat",o.mode=me;break}for(;T--;)o.lens[o.have++]=z}}if(o.mode===me)break;if(o.lens[256]===0){a.msg="invalid code -- missing end-of-block",o.mode=me;break}if(o.lenbits=9,ne={bits:o.lenbits},ie=$t(1,o.lens,0,o.nlen,o.lencode,0,o.work,ne),o.lenbits=ne.bits,ie){a.msg="invalid literal/lengths set",o.mode=me;break}if(o.distbits=6,o.distcode=o.distdyn,ne={bits:o.distbits},ie=$t(2,o.lens,o.nlen,o.ndist,o.distcode,0,o.work,ne),o.distbits=ne.bits,ie){a.msg="invalid distances set",o.mode=me;break}if(o.mode=sa,l===ia)break e;case sa:o.mode=la;case la:if(E>=6&&D>=258){a.next_out=A,a.avail_out=D,a.next_in=g,a.avail_in=E,o.hold=y,o.bits=x,Wp(a,L),A=a.next_out,d=a.output,D=a.avail_out,g=a.next_in,v=a.input,E=a.avail_in,y=o.hold,x=o.bits,o.mode===yr&&(o.back=-1);break}for(o.back=0;te=(J=o.lencode[y&(1<<o.lenbits)-1])>>>16&255,I=65535&J,!((K=J>>>24)<=x);){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}if(te&&(240&te)==0){for(N=K,H=te,ve=I;te=(J=o.lencode[ve+((y&(1<<N+H)-1)>>N)])>>>16&255,I=65535&J,!(N+(K=J>>>24)<=x);){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}y>>>=N,x-=N,o.back+=N}if(y>>>=K,x-=K,o.back+=K,o.length=I,te===0){o.mode=16205;break}if(32&te){o.back=-1,o.mode=yr;break}if(64&te){a.msg="invalid literal/length code",o.mode=me;break}o.extra=15&te,o.mode=16201;case 16201:if(o.extra){for(G=o.extra;x<G;){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}o.length+=y&(1<<o.extra)-1,y>>>=o.extra,x-=o.extra,o.back+=o.extra}o.was=o.length,o.mode=16202;case 16202:for(;te=(J=o.distcode[y&(1<<o.distbits)-1])>>>16&255,I=65535&J,!((K=J>>>24)<=x);){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}if((240&te)==0){for(N=K,H=te,ve=I;te=(J=o.distcode[ve+((y&(1<<N+H)-1)>>N)])>>>16&255,I=65535&J,!(N+(K=J>>>24)<=x);){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}y>>>=N,x-=N,o.back+=N}if(y>>>=K,x-=K,o.back+=K,64&te){a.msg="invalid distance code",o.mode=me;break}o.offset=I,o.extra=15&te,o.mode=16203;case 16203:if(o.extra){for(G=o.extra;x<G;){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}o.offset+=y&(1<<o.extra)-1,y>>>=o.extra,x-=o.extra,o.back+=o.extra}if(o.offset>o.dmax){a.msg="invalid distance too far back",o.mode=me;break}o.mode=16204;case 16204:if(D===0)break e;if(T=L-D,o.offset>T){if((T=o.offset-T)>o.whave&&o.sane){a.msg="invalid distance too far back",o.mode=me;break}T>o.wnext?(T-=o.wnext,F=o.wsize-T):F=o.wnext-T,T>o.length&&(T=o.length),ee=o.window}else ee=d,F=A-o.offset,T=o.length;T>D&&(T=D),D-=T,o.length-=T;do d[A++]=ee[F++];while(--T);o.length===0&&(o.mode=la);break;case 16205:if(D===0)break e;d[A++]=o.length,D--,o.mode=la;break;case fi:if(o.wrap){for(;x<32;){if(E===0)break e;E--,y|=v[g++]<<x,x+=8}if(L-=D,a.total_out+=L,o.total+=L,4&o.wrap&&L&&(a.adler=o.check=o.flags?Oe(o.check,d,L,A-L):ur(o.check,d,L,A-L)),L=D,4&o.wrap&&(o.flags?y:pu(y))!==o.check){a.msg="incorrect data check",o.mode=me;break}y=0,x=0}o.mode=16207;case 16207:if(o.wrap&&o.flags){for(;x<32;){if(E===0)break e;E--,y+=v[g++]<<x,x+=8}if(4&o.wrap&&y!==(4294967295&o.total)){a.msg="incorrect length check",o.mode=me;break}y=0,x=0}o.mode=16208;case 16208:ie=rh;break e;case me:ie=lu;break e;case 16210:return cu;default:return tr}return a.next_out=A,a.avail_out=D,a.next_in=g,a.avail_in=E,o.hold=y,o.bits=x,(o.wsize||L!==a.avail_out&&o.mode<me&&(o.mode<fi||l!==su))&&yu(a,a.output,a.next_out,L-a.avail_out),re-=a.avail_in,L-=a.avail_out,a.total_in+=re,a.total_out+=L,o.total+=L,4&o.wrap&&L&&(a.adler=o.check=o.flags?Oe(o.check,d,L,a.next_out-L):ur(o.check,d,L,a.next_out-L)),a.data_type=o.bits+(o.last?64:0)+(o.mode===yr?128:0)+(o.mode===sa||o.mode===ci?256:0),(re===0&&L===0||l===su)&&ie===Gr&&(ie=nh),ie},inflateEnd:function(a){if(Yr(a))return tr;var l=a.state;return l.window&&(l.window=null),a.state=null,Gr},inflateGetHeader:function(a,l){if(Yr(a))return tr;var o=a.state;return(2&o.wrap)==0?tr:(o.head=l,l.done=!1,Gr)},inflateSetDictionary:function(a,l){var o,v=l.length;return Yr(a)||(o=a.state).wrap!==0&&o.mode!==ua?tr:o.mode===ua&&ur(1,l,v,0)!==o.check?lu:yu(a,l,v,v)?(o.mode=16210,cu):(o.havedict=1,Gr)},inflateInfo:"pako inflate (from Nodeca project)"},oh=function(){this.text=0,this.time=0,this.xflags=0,this.os=0,this.extra=null,this.extra_len=0,this.name="",this.comment="",this.hcrc=0,this.done=!1},Eu=Object.prototype.toString,uh=V.Z_NO_FLUSH,bu=V.Z_FINISH,ht=V.Z_OK,di=V.Z_STREAM_END,vi=V.Z_NEED_DICT,sh=V.Z_STREAM_ERROR,xu=V.Z_DATA_ERROR,lh=V.Z_MEM_ERROR,wu=V.Z_BUF_ERROR,ch={chunkSize:65536,windowBits:15,to:""};function en(a){this.options=nu({},ch,a||{});var l=this.options;l.raw&&l.windowBits>=0&&l.windowBits<16&&(l.windowBits=-l.windowBits,l.windowBits===0&&(l.windowBits=-15)),!(l.windowBits>=0&&l.windowBits<16)||a&&a.windowBits||(l.windowBits+=32),l.windowBits>15&&l.windowBits<48&&(15&l.windowBits)==0&&(l.windowBits|=15),this.err=0,this.msg="",this.ended=!1,this.chunks=[],this.strm=new ou,this.strm.avail_out=0;var o=fr.inflateInit2(this.strm,l.windowBits);if(o!==ht)throw new Error(jr[o]);if(this.header=new oh,fr.inflateGetHeader(this.strm,this.header),l.dictionary&&(typeof l.dictionary=="string"?l.dictionary=ui(l.dictionary):Eu.call(l.dictionary)==="[object ArrayBuffer]"&&(l.dictionary=new Uint8Array(l.dictionary)),l.raw&&(o=fr.inflateSetDictionary(this.strm,l.dictionary))!==ht))throw new Error(jr[o])}function gi(a,l){var o=new en(l);if(o.push(a,!0),o.err)throw o.msg||jr[o.err];return o.result}en.prototype.push=function(a,l){var o,v,d,g=this.strm,A=this.options.chunkSize,E=this.options.dictionary;if(this.ended)return!1;for(v=l===~~l?l:l===!0?bu:uh,Eu.call(a)==="[object ArrayBuffer]"?g.input=new Uint8Array(a):g.input=a,g.next_in=0,g.avail_in=g.input.length;;){for(g.avail_out===0&&(g.output=new Uint8Array(A),g.next_out=0,g.avail_out=A),(o=fr.inflate(g,v))===vi&&E&&((o=fr.inflateSetDictionary(g,E))===ht?o=fr.inflate(g,v):o===xu&&(o=vi));g.avail_in>0&&o===di&&2&g.state.wrap&&g.state.flags!==0&&g.input[g.next_in]!==0;)fr.inflateReset(g),o=fr.inflate(g,v);switch(o){case sh:case xu:case vi:case lh:return this.onEnd(o),this.ended=!0,!1}if(d=g.avail_out,g.next_out&&(g.avail_out===0||o===di||v>0))if(this.options.to==="string"){var D=jp(g.output,g.next_out),y=g.next_out-D,x=zp(g.output,D);g.next_out=y,g.avail_out=A-y,y&&g.output.set(g.output.subarray(D,D+y),0),this.onData(x)}else this.onData(g.output.length===g.next_out?g.output:g.output.subarray(0,g.next_out)),g.avail_out=0,g.next_out=0;if(o!==ht&&o!==wu||d!==0){if(o===di)return o=fr.inflateEnd(this.strm),this.onEnd(o),this.ended=!0,!0;if(g.avail_in===0){if(v===bu)return o=fr.inflateEnd(this.strm),this.onEnd(o===ht?wu:o),this.ended=!0,!1;break}}}return!0},en.prototype.onData=function(a){this.chunks.push(a)},en.prototype.onEnd=function(a){a===ht&&(this.options.to==="string"?this.result=this.chunks.join(""):this.result=au(this.chunks)),this.chunks=[],this.err=a,this.msg=this.strm.msg};var ca={Inflate:en,inflate:gi,inflateRaw:function(a,l){return(l=l||{}).raw=!0,gi(a,l)},ungzip:gi,constants:V},Du=ta.Deflate,Au=ta.deflate,Tu=ta.deflateRaw,Cu=ta.gzip,_u=ca.Inflate,Su=ca.inflate,Ou=ca.inflateRaw,Nu=ca.ungzip,Iu=V,fh={Deflate:Du,deflate:Au,deflateRaw:Tu,gzip:Cu,Inflate:_u,inflate:Su,inflateRaw:Ou,ungzip:Nu,constants:Iu};e.Deflate=Du,e.Inflate=_u,e.constants=Iu,e.default=fh,e.deflate=Au,e.deflateRaw=Tu,e.gzip=Cu,e.inflate=Su,e.inflateRaw=Ou,e.ungzip=Nu,Object.defineProperty(e,"__esModule",{value:!0})}))});var qu=q(dt=>{"use strict";var Lu=typeof Uint8Array!="undefined"&&typeof Uint16Array!="undefined"&&typeof Uint32Array!="undefined",Mu=ku();dt.uncompressInputType=Lu?"uint8array":"array";dt.compressInputType=Lu?"uint8array":"array";dt.magic="\b\0";dt.compress=function(e,r){return Mu.deflateRaw(e,{level:r.level||-1})};dt.uncompress=function(e){return Mu.inflateRaw(e)}});var va=q(bi=>{"use strict";bi.STORE={magic:"\0\0",compress:function(r){return r},uncompress:function(r){return r},compressInputType:null,uncompressInputType:null};bi.DEFLATE=qu()});var ga=q((v1,xi)=>{"use strict";xi.exports=function(e,r){return typeof e=="number"?Buffer.alloc(e):Buffer.from(e,r)};xi.exports.test=function(e){return Buffer.isBuffer(e)}});var Qe=q(Ie=>{"use strict";function Ea(e){"@babel/helpers - typeof";return Ea=typeof Symbol=="function"&&typeof Symbol.iterator=="symbol"?function(r){return typeof r}:function(r){return r&&typeof Symbol=="function"&&r.constructor===Symbol&&r!==Symbol.prototype?"symbol":typeof r},Ea(e)}var ya=Kr(),ma=va(),vt=ga();Ie.string2binary=function(e){for(var r="",t=0;t<e.length;t++)r+=String.fromCharCode(e.charCodeAt(t)&255);return r};Ie.arrayBuffer2Blob=function(e,r){Ie.checkSupport("blob"),r=r||"application/zip";try{return new Blob([e],{type:r})}catch(i){try{var t=window.BlobBuilder||window.WebKitBlobBuilder||window.MozBlobBuilder||window.MSBlobBuilder,n=new t;return n.append(e),n.getBlob(r)}catch(u){throw new Error("Bug : can't construct the Blob.")}}};function rn(e){return e}function wi(e,r){for(var t=0;t<e.length;++t)r[t]=e.charCodeAt(t)&255;return r}function tn(e){var r=65536,t=[],n=e.length,i=Ie.getTypeOf(e),u=0,s=!0;try{switch(i){case"uint8array":String.fromCharCode.apply(null,new Uint8Array(0));break;case"nodebuffer":String.fromCharCode.apply(null,vt(0));break}}catch(p){s=!1}if(!s){for(var c="",f=0;f<e.length;f++)c+=String.fromCharCode(e[f]);return c}for(;u<n&&r>1;)try{i==="array"||i==="nodebuffer"?t.push(String.fromCharCode.apply(null,e.slice(u,Math.min(u+r,n)))):t.push(String.fromCharCode.apply(null,e.subarray(u,Math.min(u+r,n)))),u+=r}catch(p){r=Math.floor(r/2)}return t.join("")}Ie.applyFromCharCode=tn;function ba(e,r){for(var t=0;t<e.length;t++)r[t]=e[t];return r}var Ir={};Ir.string={string:rn,array:function(r){return wi(r,new Array(r.length))},arraybuffer:function(r){return Ir.string.uint8array(r).buffer},uint8array:function(r){return wi(r,new Uint8Array(r.length))},nodebuffer:function(r){return wi(r,vt(r.length))}};Ir.array={string:tn,array:rn,arraybuffer:function(r){return new Uint8Array(r).buffer},uint8array:function(r){return new Uint8Array(r)},nodebuffer:function(r){return vt(r)}};Ir.arraybuffer={string:function(r){return tn(new Uint8Array(r))},array:function(r){return ba(new Uint8Array(r),new Array(r.byteLength))},arraybuffer:rn,uint8array:function(r){return new Uint8Array(r)},nodebuffer:function(r){return vt(new Uint8Array(r))}};Ir.uint8array={string:tn,array:function(r){return ba(r,new Array(r.length))},arraybuffer:function(r){return r.buffer},uint8array:rn,nodebuffer:function(r){return vt(r)}};Ir.nodebuffer={string:tn,array:function(r){return ba(r,new Array(r.length))},arraybuffer:function(r){return Ir.nodebuffer.uint8array(r).buffer},uint8array:function(r){return ba(r,new Uint8Array(r.length))},nodebuffer:rn};Ie.transformTo=function(e,r){if(r||(r=""),!e)return r;Ie.checkSupport(e);var t=Ie.getTypeOf(r),n=Ir[t][e](r);return n};Ie.getTypeOf=function(e){if(e!=null){if(typeof e=="string")return"string";var r=Object.prototype.toString.call(e);if(r==="[object Array]")return"array";if(ya.nodebuffer&&vt.test(e))return"nodebuffer";if(ya.uint8array&&r==="[object Uint8Array]")return"uint8array";if(ya.arraybuffer&&r==="[object ArrayBuffer]")return"arraybuffer";if(r==="[object Promise]")throw new Error("Cannot read data from a promise, you probably are running new PizZip(data) with a promise");if(Ea(e)==="object"&&typeof e.file=="function")throw new Error("Cannot read data from a pizzip instance, you probably are running new PizZip(zip) with a zipinstance");if(r==="[object Date]")throw new Error("Cannot read data from a Date, you probably are running new PizZip(data) with a date");if(Ea(e)==="object"&&e.crc32==null)throw new Error("Unsupported data given to new PizZip(data) (object given)")}};Ie.checkSupport=function(e){var r=ya[e.toLowerCase()];if(!r)throw new Error(e+" is not supported by this browser")};Ie.MAX_VALUE_16BITS=65535;Ie.MAX_VALUE_32BITS=-1;Ie.pretty=function(e){var r="",t,n;for(n=0;n<(e||"").length;n++)t=e.charCodeAt(n),r+="\\x"+(t<16?"0":"")+t.toString(16).toUpperCase();return r};Ie.findCompression=function(e){for(var r in ma)if(ma.hasOwnProperty(r)&&ma[r].magic===e)return ma[r];return null};Ie.isRegExp=function(e){return Object.prototype.toString.call(e)==="[object RegExp]"};Ie.extend=function(){var e={},r,t;for(r=0;r<arguments.length;r++)for(t in arguments[r])arguments[r].hasOwnProperty(t)&&typeof e[t]=="undefined"&&(e[t]=arguments[r][t]);return e}});var zu=q((m1,Uu)=>{"use strict";var yh=Qe(),Eh=[0,1996959894,3993919788,2567524794,124634137,1886057615,3915621685,2657392035,249268274,2044508324,3772115230,2547177864,162941995,2125561021,3887607047,2428444049,498536548,1789927666,4089016648,2227061214,450548861,1843258603,4107580753,2211677639,325883990,1684777152,4251122042,2321926636,335633487,1661365465,4195302755,2366115317,997073096,1281953886,3579855332,2724688242,1006888145,1258607687,3524101629,2768942443,901097722,1119000684,3686517206,2898065728,853044451,1172266101,3705015759,2882616665,651767980,1373503546,3369554304,3218104598,565507253,1454621731,3485111705,3099436303,671266974,1594198024,3322730930,2970347812,795835527,1483230225,3244367275,3060149565,1994146192,31158534,2563907772,4023717930,1907459465,112637215,2680153253,3904427059,2013776290,251722036,2517215374,3775830040,2137656763,141376813,2439277719,3865271297,1802195444,476864866,2238001368,4066508878,1812370925,453092731,2181625025,4111451223,1706088902,314042704,2344532202,4240017532,1658658271,366619977,2362670323,4224994405,1303535960,984961486,2747007092,3569037538,1256170817,1037604311,2765210733,3554079995,1131014506,879679996,2909243462,3663771856,1141124467,855842277,2852801631,3708648649,1342533948,654459306,3188396048,3373015174,1466479909,544179635,3110523913,3462522015,1591671054,702138776,2966460450,3352799412,1504918807,783551873,3082640443,3233442989,3988292384,2596254646,62317068,1957810842,3939845945,2647816111,81470997,1943803523,3814918930,2489596804,225274430,2053790376,3826175755,2466906013,167816743,2097651377,4027552580,2265490386,503444072,1762050814,4150417245,2154129355,426522225,1852507879,4275313526,2312317920,282753626,1742555852,4189708143,2394877945,397917763,1622183637,3604390888,2714866558,953729732,1340076626,3518719985,2797360999,1068828381,1219638859,3624741850,2936675148,906185462,1090812512,3747672003,2825379669,829329135,1181335161,3412177804,3160834842,628085408,1382605366,3423369109,3138078467,570562233,1426400815,3317316542,2998733608,733239954,1555261956,3268935591,3050360625,752459403,1541320221,2607071920,3965973030,1969922972,40735498,2617837225,3943577151,1913087877,83908371,2512341634,3803740692,2075208622,213261112,2463272603,3855990285,2094854071,198958881,2262029012,4057260610,1759359992,534414190,2176718541,4139329115,1873836001,414664567,2282248934,4279200368,1711684554,285281116,2405801727,4167216745,1634467795,376229701,2685067896,3608007406,1308918612,956543938,2808555105,3495958263,1231636301,1047427035,2932959818,3654703836,1088359270,936918e3,2847714899,3736837829,1202900863,817233897,3183342108,3401237130,1404277552,615818150,3134207493,3453421203,1423857449,601450431,3009837614,3294710456,1567103746,711928724,3020668471,3272380065,1510334235,755167117];Uu.exports=function(r,t){if(typeof r=="undefined"||!r.length)return 0;var n=yh.getTypeOf(r)!=="string";typeof t=="undefined"&&(t=0);var i=0,u=0,s=0;t^=-1;for(var c=0,f=r.length;c<f;c++)s=n?r[c]:r.charCodeAt(c),u=(t^s)&255,i=Eh[u],t=t>>>8^i;return t^-1}});var Di=q(Qr=>{"use strict";Qr.LOCAL_FILE_HEADER="PK";Qr.CENTRAL_FILE_HEADER="PK";Qr.CENTRAL_DIRECTORY_END="PK";Qr.ZIP64_CENTRAL_DIRECTORY_LOCATOR="PK\x07";Qr.ZIP64_CENTRAL_DIRECTORY_END="PK";Qr.DATA_DESCRIPTOR="PK\x07\b"});var Ai=q(ar=>{"use strict";ar.base64=!1;ar.binary=!1;ar.dir=!1;ar.createFolders=!1;ar.date=null;ar.compression=null;ar.compressionOptions=null;ar.comment=null;ar.unixPermissions=null;ar.dosPermissions=null});var Ti=q((b1,Xu)=>{"use strict";function ju(){this.compressedSize=0,this.uncompressedSize=0,this.crc32=0,this.compressionMethod=null,this.compressedContent=null}ju.prototype={getContent:function(){return null},getCompressedContent:function(){return null}};Xu.exports=ju});var Si=q(_i=>{"use strict";var Ci=Qe(),nn=Kr(),bh=ga(),an=new Array(256);for(Er=0;Er<256;Er++)an[Er]=Er>=252?6:Er>=248?5:Er>=240?4:Er>=224?3:Er>=192?2:1;var Er;an[254]=an[254]=1;function xh(e){var r,t,n,i,u,s=0,c=e.length;for(i=0;i<c;i++)t=e.charCodeAt(i),(t&64512)===55296&&i+1<c&&(n=e.charCodeAt(i+1),(n&64512)===56320&&(t=65536+(t-55296<<10)+(n-56320),i++)),s+=t<128?1:t<2048?2:t<65536?3:4;for(nn.uint8array?r=new Uint8Array(s):r=new Array(s),u=0,i=0;u<s;i++)t=e.charCodeAt(i),(t&64512)===55296&&i+1<c&&(n=e.charCodeAt(i+1),(n&64512)===56320&&(t=65536+(t-55296<<10)+(n-56320),i++)),t<128?r[u++]=t:t<2048?(r[u++]=192|t>>>6,r[u++]=128|t&63):t<65536?(r[u++]=224|t>>>12,r[u++]=128|t>>>6&63,r[u++]=128|t&63):(r[u++]=240|t>>>18,r[u++]=128|t>>>12&63,r[u++]=128|t>>>6&63,r[u++]=128|t&63);return r}function wh(e,r){var t;for(r=r||e.length,r>e.length&&(r=e.length),t=r-1;t>=0&&(e[t]&192)===128;)t--;return t<0||t===0?r:t+an[e[t]]>r?t:r}function Vu(e){var r,t,n,i,u=e.length,s=new Array(u*2);for(t=0,r=0;r<u;){if(n=e[r++],n<128){s[t++]=n;continue}if(i=an[n],i>4){s[t++]=65533,r+=i-1;continue}for(n&=i===2?31:i===3?15:7;i>1&&r<u;)n=n<<6|e[r++]&63,i--;if(i>1){s[t++]=65533;continue}n<65536?s[t++]=n:(n-=65536,s[t++]=55296|n>>10&1023,s[t++]=56320|n&1023)}return s.length!==t&&(s.subarray?s=s.subarray(0,t):s.length=t),Ci.applyFromCharCode(s)}_i.utf8encode=function(r){return nn.nodebuffer?bh(r,"utf-8"):xh(r)};_i.utf8decode=function(r){if(nn.nodebuffer)return Ci.transformTo("nodebuffer",r).toString("utf-8");r=Ci.transformTo(nn.uint8array?"uint8array":"array",r);for(var t=[],n=r.length,i=65536,u=0;u<n;){var s=wh(r,Math.min(u+i,n));nn.uint8array?t.push(Vu(r.subarray(u,s))):t.push(Vu(r.slice(u,s))),u=s}return t.join("")}});var Gu=q((w1,Zu)=>{"use strict";var Dh=Qe();function Hu(){this.data=[]}Hu.prototype={append:function(r){r=Dh.transformTo("string",r),this.data.push(r)},finalize:function(){return this.data.join("")}};Zu.exports=Hu});var Ku=q((D1,Wu)=>{"use strict";var Ah=Qe();function Yu(e){this.data=new Uint8Array(e),this.index=0}Yu.prototype={append:function(r){r.length!==0&&(r=Ah.transformTo("uint8array",r),this.data.set(r,this.index),this.index+=r.length)},finalize:function(){return this.data}};Wu.exports=Yu});var Fi=q((A1,as)=>{"use strict";function Th(e,r){var t=typeof Symbol!="undefined"&&e[Symbol.iterator]||e["@@iterator"];if(!t){if(Array.isArray(e)||(t=Ch(e))||r&&e&&typeof e.length=="number"){t&&(e=t);var n=0,i=function(){};return{s:i,n:function(){return n>=e.length?{done:!0}:{done:!1,value:e[n++]}},e:function(p){throw p},f:i}}throw new TypeError(`Invalid attempt to iterate non-iterable instance.
@@ -286,6 +290,7 @@ pako/dist/pako.es5.min.js:
     <nav class="tabs no-print" role="tablist" id="tabs">
       <button class="tab" role="tab" data-tab="uebersicht">Übersicht</button>
       <button class="tab" role="tab" data-tab="teilnehmerinnen">Teilnehmerinnen</button>
+      <button class="tab" role="tab" data-tab="archiv">Archiv</button>
       <button class="tab" role="tab" data-tab="anwesenheit">Anwesenheit</button>
       <button class="tab" role="tab" data-tab="durchgaenge">Jahrgänge</button>
       <button class="tab" role="tab" data-tab="notizen">Notizen &amp; Aufgaben</button>
@@ -353,6 +358,33 @@ pako/dist/pako.es5.min.js:
       <div class="table-wrap">
         <table id="participantsTable">
           <thead><tr><th>Name</th><th>Jahrgang</th><th>Status</th><th>Eintritt</th><th>Kostenträger</th><th>Nächste Prüfung</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ARCHIV -->
+    <section data-view="archiv" hidden>
+      <div class="card">
+        <p class="faint" style="margin-top:0;">Teilnehmerinnen landen hier automatisch, sobald ihr Status auf Unterbrochen, Bestanden oder Abgebrochen gesetzt wird. Über den Datensatz (anklicken) kann eine TN jederzeit wieder aktiviert werden.</p>
+        <div class="row">
+          <div class="field" style="flex:2; min-width:180px;">
+            <label>Suche</label>
+            <input class="input" id="arcSearch" placeholder="Name, Ort, Aktenzeichen …">
+          </div>
+          <div class="field" style="min-width:170px;">
+            <label>Jahrgang</label>
+            <select class="select" id="arcCohort"><option value="">Alle Jahrgänge</option></select>
+          </div>
+          <div class="field" style="min-width:170px;">
+            <label>Status</label>
+            <select class="select" id="arcStatus"><option value="">Alle archivierten Status</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="archiveTable">
+          <thead><tr><th>Name</th><th>Jahrgang</th><th>Status</th><th>Archiviert seit</th><th>Kostenträger</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -533,7 +565,8 @@ pako/dist/pako.es5.min.js:
     <section data-view="mahnungen" hidden>
       <div class="card">
         <h3>Automatische Mahnungen bei Fehltagen</h3>
-        <p class="faint">Zählt Entschuldigt + Unentschuldigt zusammen, über den gesamten bisherigen Jahrgang der Teilnehmerin. Wird eine Schwelle erreicht, kann die App einen fertig ausgefüllten E-Mail-Entwurf öffnen — je Mahnstufe entweder mit Freigabe durch eine Ausbilderin oder automatisch beim Öffnen dieses Reiters. Der tatsächliche Versand (Klick auf „Senden“) bleibt dabei immer im E-Mail-Programm der jeweiligen Person; ein Versand ganz ohne geöffnete App ist auf einer reinen GitHub-Pages-Seite ohne eigenen Server technisch nicht möglich.</p>
+        <p class="faint">Jede Mahnstufe zählt entweder alle Fehltage (Krank + Entschuldigt + Unentschuldigt) oder nur unentschuldigte Fehltage, über den gesamten bisherigen Jahrgang der Teilnehmerin. „Anwesend“ und „Verspätet“ zählen nie als Fehltag. Wird eine Schwelle erreicht, erzeugt die App die fertige E-Mail mit allen Daten der Teilnehmerin — je Mahnstufe entweder erst nach Freigabe durch eine Ausbilderin oder automatisch beim Öffnen dieses Reiters.</p>
+        <p class="faint" id="mahnSendModeInfo" style="margin-top:6px;"></p>
         <div class="row" style="gap:10px; align-items:flex-end; flex-wrap:wrap; margin-top:10px;">
           <div class="field" style="flex:1; min-width:260px;">
             <label>Absender-E-Mail (für Antworten der Teilnehmerinnen)</label>
@@ -541,7 +574,22 @@ pako/dist/pako.es5.min.js:
           </div>
           <button type="button" class="btn" id="btnSaveMahnAbsender">Speichern</button>
         </div>
-        <p class="faint" style="margin-top:6px;">Wichtig: Ein „mailto“-Link kann nicht festlegen, von welchem Konto aus tatsächlich gesendet wird — das entscheidet immer das E-Mail-Programm der Person, die auf „Senden“ klickt. Diese Adresse wird nach bestem Bemühen als Antwort-an-Adresse übernommen (funktioniert nicht bei jedem E-Mail-Programm) und steht zusätzlich als Platzhalter <code>{absender}</code> für den Brieftext zur Verfügung, damit sie z. B. in der Unterschrift erscheint.</p>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <h3>Automatischer Versand über EmailJS (ohne Freigabe-Klick reicht nicht mehr das E-Mail-Programm)</h3>
+        <p class="faint">Ohne diese Einrichtung öffnet ein Klick auf „Freigeben“ nur einen E-Mail-Entwurf, den noch jemand von Hand abschicken muss. Mit EmailJS verschickt die App die Mahnung direkt über euer eigenes, dort verbundenes Postfach — ein Klick auf „Freigeben“ reicht, kein weiterer manueller Schritt.</p>
+        <ol class="faint" style="margin:6px 0 0; padding-left:18px;">
+          <li>Kostenloses Konto auf <strong>emailjs.com</strong> anlegen (macht die Abteilung selbst — kann ich nicht für euch tun) und dort euer Postfach (z. B. Outlook/Gmail) als „Email Service“ verbinden.</li>
+          <li>Im EmailJS-Dashboard eine „Email Template“ anlegen mit den Feldern <code>{{to_email}}</code> (Empfänger), <code>{{subject}}</code> (Betreff) und <code>{{message}}</code> (Brieftext) sowie optional <code>{{reply_to}}</code> als Antwort-an-Adresse.</li>
+          <li>Service-ID, Template-ID und Public Key unten eintragen und speichern.</li>
+        </ol>
+        <div class="form-grid" style="margin-top:10px;">
+          <div class="field"><label>Service ID</label><input class="input" id="mahnEmailjsService" placeholder="service_xxxxxxx"></div>
+          <div class="field"><label>Template ID</label><input class="input" id="mahnEmailjsTemplate" placeholder="template_xxxxxxx"></div>
+          <div class="field"><label>Public Key</label><input class="input" id="mahnEmailjsKey" placeholder="z. B. ab12CDEfghIJ34kl"></div>
+        </div>
+        <button type="button" class="btn" id="btnSaveEmailjsConfig" style="margin-top:8px;">Speichern</button>
       </div>
 
       <div class="card" style="margin-top:14px;">
@@ -554,7 +602,10 @@ pako/dist/pako.es5.min.js:
       <div class="card" style="margin-top:14px;">
         <div class="row-between">
           <h3>Mahnstufen</h3>
-          <button type="button" class="btn btn-primary btn-sm" id="btnNewMahnstufe">+ Neue Mahnstufe</button>
+          <div class="row" style="gap:8px;">
+            <button type="button" class="btn btn-sm" id="btnSetupDefaultMahnstufen">Standard-Stufen einrichten (Stufe 1 + 2)</button>
+            <button type="button" class="btn btn-primary btn-sm" id="btnNewMahnstufe">+ Neue Mahnstufe</button>
+          </div>
         </div>
         <div id="mahnstufenList" style="margin-top:10px;"></div>
       </div>
@@ -579,6 +630,13 @@ pako/dist/pako.es5.min.js:
         <div class="form-grid">
           <div class="field"><label>Vorname *</label><input class="input" id="pVorname" required></div>
           <div class="field"><label>Nachname *</label><input class="input" id="pNachname" required></div>
+          <div class="field"><label>Anrede</label>
+            <select class="select" id="pAnrede">
+              <option value="frau">Frau</option>
+              <option value="herr">Herr</option>
+              <option value="neutral">Neutral (Vor- + Nachname)</option>
+            </select>
+          </div>
           <div class="field"><label>Geburtsdatum</label><input class="input" type="date" id="pGeburtsdatum"></div>
           <div class="field"><label>Telefon</label><input class="input" id="pTelefon"></div>
           <div class="field"><label>E-Mail</label><input class="input" type="email" id="pEmail"></div>
@@ -787,19 +845,31 @@ pako/dist/pako.es5.min.js:
     <div class="dlg-head"><h3 id="mahnDlgTitle">Neue Mahnstufe</h3><button type="button" class="btn btn-ghost icon-btn" data-close>✕</button></div>
     <div class="dlg-body">
       <div class="field"><label>Bezeichnung *</label><input class="input" id="mahnTitle" placeholder="z. B. Stufe 2 – Hinweis: Ausbildungsziel gefährdet" required></div>
-      <div class="field"><label>Schwellenwert (Fehltage, entschuldigt + unentschuldigt) *</label><input class="input" type="number" min="1" step="1" id="mahnThreshold" required></div>
+      <div class="field"><label>Schwellenwert (Fehltage) *</label><input class="input" type="number" min="1" step="1" id="mahnThreshold" required></div>
+      <div class="field"><label>Reihenfolge (1 = früheste Stufe, z. B. Hinweis vor Abmahnung)</label><input class="input" type="number" min="1" step="1" id="mahnStage" placeholder="z. B. 1"></div>
+      <div class="field">
+        <label>Fehltage zählen als</label>
+        <select class="select" id="mahnCountMode">
+          <option value="alle">Alle Fehltage (Krank + Entschuldigt + Unentschuldigt)</option>
+          <option value="unentschuldigt">Nur unentschuldigte Fehltage</option>
+        </select>
+      </div>
       <div class="field">
         <label>Versand</label>
         <select class="select" id="mahnMode">
           <option value="freigabe">Erst nach Freigabe durch eine Ausbilderin</option>
-          <option value="auto">Automatisch (E-Mail-Entwurf öffnet direkt)</option>
+          <option value="auto">Automatisch (sobald die Schwelle erreicht ist)</option>
         </select>
+      </div>
+      <div class="form-grid">
+        <div class="field"><label>Frist 1 in Tagen ab Versand (z. B. Rückmeldung/Stellungnahme)</label><input class="input" type="number" min="0" step="1" id="mahnFrist1" placeholder="z. B. 10"></div>
+        <div class="field"><label>Frist 2 in Tagen ab Versand (optional, z. B. Gesprächstermin)</label><input class="input" type="number" min="0" step="1" id="mahnFrist2" placeholder="optional"></div>
       </div>
       <div class="field">
         <label>Brieftext (Klartext, direkt als E-Mail-Text)</label>
-        <textarea class="textarea" id="mahnBody" style="min-height:160px;" placeholder="Sehr geehrte/r {vorname} {nachname}, ..."></textarea>
+        <textarea class="textarea" id="mahnBody" style="min-height:160px;" placeholder="{anrede}, ..."></textarea>
       </div>
-      <p class="faint" style="margin:4px 0 0;">Platzhalter: <code>{vorname}</code> <code>{nachname}</code> <code>{jahrgang}</code> <code>{fehltage}</code> <code>{datum}</code> <code>{absender}</code> — werden automatisch durch die Daten der jeweiligen Teilnehmerin ersetzt.</p>
+      <p class="faint" style="margin:4px 0 0;">Platzhalter: <code>{anrede}</code> <code>{teilnehmerin}</code> <code>{vorname}</code> <code>{nachname}</code> <code>{jahrgang}</code> <code>{grenzwert}</code> <code>{fehltage}</code> <code>{fehltage_gesamt}</code> <code>{fehltage_krank}</code> <code>{fehltage_entschuldigt}</code> <code>{fehltage_unentschuldigt}</code> <code>{tage_liste}</code> <code>{zeitraum_von}</code> <code>{zeitraum_bis}</code> <code>{datum}</code> <code>{frist1}</code> <code>{frist2}</code> <code>{kostentraeger}</code> <code>{aktenzeichen_zeile}</code> <code>{vorschreiben_satz}</code> <code>{absender}</code> — werden automatisch durch die Daten der jeweiligen Teilnehmerin ersetzt. <code>{vorschreiben_satz}</code> ergänzt automatisch den Hinweis auf ein bereits gesendetes früheres Schreiben (siehe „Reihenfolge“ oben) und bleibt sonst leer.</p>
 
       <div class="field" style="margin-top:14px;">
         <label>Oder: formatierte Word-Vorlage hochladen (Briefkopf, Fettdruck usw. bleiben erhalten)</label>
@@ -924,7 +994,7 @@ pako/dist/pako.es5.min.js:
 
   // Spaltenüberschriften der Excel-Vorlage — müssen exakt zu build_template.py passen.
   const IMPORT_COLS = {
-    vorname:'Vorname *', nachname:'Nachname *', geburtsdatum:'Geburtsdatum', telefon:'Telefon',
+    vorname:'Vorname *', nachname:'Nachname *', anrede:'Anrede', geburtsdatum:'Geburtsdatum', telefon:'Telefon',
     email:'E-Mail', strasse:'Straße, Hausnr.', ort:'PLZ / Ort', entryType:'Eintrittsart',
     entryDate:'Eintrittsdatum', status:'Status', fundingBody:'Kostenträger / Fördermittelgeber',
     aktenzeichen:'Aktenzeichen / Kundennummer'
@@ -966,9 +1036,14 @@ pako/dist/pako.es5.min.js:
     }
     const entryDate = parseFlexibleDate(row[IMPORT_COLS.entryDate]) || todayISO();
     const geburtsdatum = parseFlexibleDate(row[IMPORT_COLS.geburtsdatum]);
+    // "Anrede"-Spalte ist optional (ältere Vorlagen-Downloads kennen sie noch nicht) — fehlt sie,
+    // wird wie bisher von "Frau" ausgegangen (Rückwärtskompatibilität mit der reinen
+    // Teilnehmerinnen-Vorlage).
+    const anredeRaw = g('anrede').toLowerCase();
+    const anrede = anredeRaw.startsWith('herr') ? 'herr' : anredeRaw.startsWith('neutral') ? 'neutral' : 'frau';
     return {
       data: {
-        vorname, nachname, geburtsdatum, telefon: g('telefon'), email: g('email'),
+        vorname, nachname, anrede, geburtsdatum, telefon: g('telefon'), email: g('email'),
         strasse: g('strasse'), ort: g('ort'), entryType, entryDate, status,
         fundingBody: g('fundingBody'), aktenzeichen: g('aktenzeichen')
       }
@@ -1027,7 +1102,7 @@ pako/dist/pako.es5.min.js:
 
   let db=null, assetsCap=null, userCap=null, myId=null, myName='Ich';
   let cohorts=[], participants=[], notes=[], messages=[], attendance=[], partners=[];
-  let settings = {institutionName:'', programName:'Umschulung Friseurhandwerk', fundingBodies:['Agentur für Arbeit','Jobcenter'], templates: defaultTemplates(), curriculum: defaultCurriculum(), mahnstufen: [], mahnungAbsender: ''};
+  let settings = {institutionName:'', programName:'Umschulung Friseurhandwerk', fundingBodies:['Agentur für Arbeit','Jobcenter'], templates: defaultTemplates(), curriculum: defaultCurriculum(), mahnstufen: [], mahnungAbsender: '', emailjs: {serviceId:'', templateId:'', publicKey:''}};
   let hasDemoData=false;
   let editingParticipantId=null, editingCohortId=null, editingDocs=[], editingHistory=[], editingCurriculum={};
   // Word-Vorlage, die gerade im Mahnstufe-Dialog hochgeladen/ausgewählt ist: {assetId, mime, filename} oder null.
@@ -1153,6 +1228,7 @@ pako/dist/pako.es5.min.js:
         }
         settings.mahnstufen = Array.isArray(d.mahnstufen) ? d.mahnstufen : settings.mahnstufen;
         settings.mahnungAbsender = d.mahnungAbsender || settings.mahnungAbsender;
+        settings.emailjs = d.emailjs && typeof d.emailjs==='object' ? d.emailjs : settings.emailjs;
       } else {
         seedIfEmpty();
       }
@@ -1214,7 +1290,8 @@ pako/dist/pako.es5.min.js:
         templates: defaultTemplates(),
         curriculum: defaultCurriculum(),
         mahnstufen: [],
-        mahnungAbsender: ''
+        mahnungAbsender: '',
+        emailjs: {serviceId:'', templateId:'', publicKey:''}
       });
       const mk = (data)=> db.collection('participants').add(Object.assign({
         documents:[], history:[], demo:true, createdAt: nowISO(), updatedAt: nowISO()
@@ -1297,6 +1374,8 @@ pako/dist/pako.es5.min.js:
     $('#frmMahnstufe').addEventListener('submit', onSaveMahnstufe);
     $('#btnDeleteMahnstufe').addEventListener('click', onDeleteMahnstufe);
     $('#btnSaveMahnAbsender').addEventListener('click', onSaveMahnAbsender);
+    $('#btnSaveEmailjsConfig').addEventListener('click', onSaveEmailjsConfig);
+    $('#btnSetupDefaultMahnstufen').addEventListener('click', onSetupDefaultMahnstufen);
     $('#mahnDocxFile').addEventListener('change', onMahnDocxFileChange);
     $('#btnRemoveMahnDocx').addEventListener('click', onRemoveMahnDocx);
     document.addEventListener('click', (e)=>{
@@ -1321,6 +1400,13 @@ pako/dist/pako.es5.min.js:
     $('#fltSearch').addEventListener('input', renderParticipants);
     $('#fltCohort').addEventListener('change', renderParticipants);
     $('#fltStatus').addEventListener('change', renderParticipants);
+    $('#arcSearch').addEventListener('input', renderArchiv);
+    $('#arcCohort').addEventListener('change', renderArchiv);
+    $('#arcStatus').addEventListener('change', renderArchiv);
+    $('#archiveTable tbody').addEventListener('click', (e)=>{
+      const tr = e.target.closest('tr[data-id]');
+      if(tr) openParticipantDialog(tr.dataset.id);
+    });
     $('#noteFltParticipant').addEventListener('change', renderNotes);
     $('#noteFltType').addEventListener('change', renderNotes);
     $('#noteFltDone').addEventListener('change', renderNotes);
@@ -1393,6 +1479,7 @@ pako/dist/pako.es5.min.js:
     });
     STATUS_ORDER.forEach(k=> $('#pStatus').insertAdjacentHTML('beforeend', `<option value="${k}">${esc(STATUS[k].label)}</option>`));
     $('#fltStatus').insertAdjacentHTML('beforeend', STATUS_ORDER.map(k=>`<option value="${k}">${esc(STATUS[k].label)}</option>`).join(''));
+    $('#arcStatus').insertAdjacentHTML('beforeend', ARCHIVABLE_STATUSES.map(k=>`<option value="${k}">${esc(STATUS[k].label)}</option>`).join(''));
     $('#noteFltType');
   }
 
@@ -1419,6 +1506,9 @@ pako/dist/pako.es5.min.js:
     const cur1 = $('#fltCohort').value, cur2 = $('#pCohort').value, cur3 = $('#noteFltParticipant');
     $('#fltCohort').innerHTML = '<option value="">Alle Jahrgänge</option>'+opts;
     $('#fltCohort').value = cur1;
+    const curArc = $('#arcCohort').value;
+    $('#arcCohort').innerHTML = '<option value="">Alle Jahrgänge</option>'+opts;
+    $('#arcCohort').value = curArc;
     $('#pCohort').innerHTML = opts;
     if(cur2) $('#pCohort').value = cur2;
     const curAtt = $('#attCohort').value;
@@ -1439,6 +1529,7 @@ pako/dist/pako.es5.min.js:
     fillCohortSelects();
     renderOverview();
     renderParticipants();
+    renderArchiv();
     renderCohorts();
     renderNotes();
     renderMessages();
@@ -1634,6 +1725,35 @@ pako/dist/pako.es5.min.js:
     }).join('');
   }
 
+  function renderArchiv(){
+    const q = ($('#arcSearch').value||'').toLowerCase();
+    const cohortF = $('#arcCohort').value;
+    const statusF = $('#arcStatus').value;
+    let list = participants.filter(p=>{
+      if(!p.archived) return false;
+      if(cohortF && p.cohortId!==cohortF) return false;
+      if(statusF && p.status!==statusF) return false;
+      if(q){
+        const hay = [p.vorname,p.nachname,p.ort,p.aktenzeichen,p.fundingBody].join(' ').toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    }).sort((a,b)=>(b.archivedAt||'').localeCompare(a.archivedAt||''));
+
+    const tbody = $('#archiveTable tbody');
+    if(!list.length){ tbody.innerHTML = `<tr><td colspan="5" class="empty">Keine archivierten Teilnehmerinnen gefunden.</td></tr>`; return; }
+    tbody.innerHTML = list.map(p=>{
+      const st = STATUS[p.status] || {label:p.status, cls:'st-neutral'};
+      return `<tr data-id="${p.id}">
+        <td>${esc(participantName(p))} ${p.demo?'<span class="demo-tag">Beispiel</span>':''}</td>
+        <td>${cohortLinkHTML(p.cohortId)}</td>
+        <td><span class="pill ${st.cls}">${esc(st.label)}</span></td>
+        <td>${p.archivedAt ? fmtDate(String(p.archivedAt).slice(0,10)) : '—'}</td>
+        <td>${esc(p.fundingBody||'—')}</td>
+      </tr>`;
+    }).join('');
+  }
+
   function openParticipantDialog(id){
     editingParticipantId = id;
     const p = id ? participants.find(x=>x.id===id) : null;
@@ -1643,6 +1763,7 @@ pako/dist/pako.es5.min.js:
     $('#pDlgTitle').textContent = p ? participantName(p) : 'Neue Teilnehmerin';
     $('#pDlgSub').textContent = p ? cohortName(p.cohortId) : 'Persönliche Daten und Ausbildungsdetails erfassen';
     $('#pVorname').value = p?.vorname||''; $('#pNachname').value = p?.nachname||'';
+    $('#pAnrede').value = p?.anrede||'frau';
     $('#pGeburtsdatum').value = p?.geburtsdatum||''; $('#pTelefon').value = p?.telefon||''; $('#pEmail').value = p?.email||'';
     $('#pStrasse').value = p?.strasse||''; $('#pOrt').value = p?.ort||'';
     $('#pCohort').value = p?.cohortId || (cohorts[0]?.id||'');
@@ -1794,21 +1915,162 @@ pako/dist/pako.es5.min.js:
   }
 
   // ---------- Mahnungen (automatische Briefe bei Fehltagen) ----------
-  // "Fehltage" = Entschuldigt + Unentschuldigt zusammen, über den gesamten bisherigen Jahrgang
-  // der Teilnehmerin (alle bislang erfassten Anwesenheits-Einträge, kein Zeitfenster).
-  function fehltageForParticipant(participantId){
+  // "Fehltage gesamt" = Krank + Entschuldigt + Unentschuldigt zusammen, über den gesamten
+  // bisherigen Jahrgang der Teilnehmerin (alle bislang erfassten Anwesenheits-Einträge, kein
+  // Zeitfenster). "Anwesend" und "Verspätet" zählen nie als Fehltag.
+  // mode 'unentschuldigt' zählt nur unentschuldigte Fehltage (U); jeder andere Wert (auch
+  // undefined, für ältere/bestehende Mahnstufen ohne dieses Feld) zählt Krank+Entschuldigt+Unentschuldigt.
+  function fehltageForParticipant(participantId, mode){
     const s = computeAttendanceStats(participantId);
-    return s.counts.E + s.counts.U;
+    return mode === 'unentschuldigt' ? s.counts.U : (s.counts.K + s.counts.E + s.counts.U);
+  }
+
+  // Alle Tage mit Code "U" (unentschuldigt) einer Teilnehmerin, chronologisch, als ISO-Daten.
+  function unentschuldigteDatesForParticipant(participantId){
+    const dates = [];
+    attendance.filter(a=>a.participantId===participantId).forEach(d=>{
+      Object.keys(d.days||{}).forEach(day=>{ if(d.days[day]==='U') dates.push(d.month+'-'+day); });
+    });
+    return dates.sort();
+  }
+  function tageListeText(participantId){
+    const dates = unentschuldigteDatesForParticipant(participantId);
+    return dates.length ? dates.map(fmtDate).join(', ') : 'keine';
+  }
+
+  function aktenzeichenZeileText(p){
+    return p.aktenzeichen ? ('Aktenzeichen / Kundennummer: ' + p.aktenzeichen) : '';
+  }
+
+  // Anrede-abhängige Anrede-Zeile ("Sehr geehrte Frau …" / "Sehr geehrter Herr …" / neutral) und
+  // das Wort "Teilnehmerin"/"Teilnehmer"/"teilnehmende Person" für Sätze wie "Als … sind Sie …".
+  // p.anrede fehlt bei älteren Datensätzen -> Standard "frau" (bisheriges Verhalten unverändert).
+  function anredeGruss(p){
+    const a = p.anrede||'frau';
+    if(a==='herr') return 'Sehr geehrter Herr ' + (p.nachname||'');
+    if(a==='neutral') return 'Guten Tag ' + [(p.vorname||''),(p.nachname||'')].filter(Boolean).join(' ');
+    return 'Sehr geehrte Frau ' + (p.nachname||'');
+  }
+  function teilnehmerWort(p){
+    const a = p.anrede||'frau';
+    if(a==='herr') return 'Teilnehmer';
+    if(a==='neutral') return 'teilnehmende Person';
+    return 'Teilnehmerin';
+  }
+
+  // Liefert den Satz "Wir hatten Sie bereits mit Schreiben vom … hingewiesen.", wenn für diese TN
+  // schon einmal eine FRÜHERE Mahnstufe ausgelöst wurde (z. B. das Hinweisschreiben vor einer
+  // Abmahnung) — sonst einen leeren String. "Früher" richtet sich nach "stage" (Reihenfolge der
+  // Eskalation), NICHT nach dem Schwellenwert: der zählt bei manchen Stufen nur unentschuldigte
+  // Fehltage, bei anderen alle, und ist deshalb zwischen Stufen nicht direkt vergleichbar (Stufe 1
+  // kann z. B. die höhere Zahl haben, obwohl sie die frühere Stufe ist). Stufen ohne eigenes
+  // "stage"-Feld (ältere/frei angelegte) fallen auf den Schwellenwert zurück.
+  function vorschreibenSatzText(p, currentStufe){
+    const stufen = settings.mahnstufen||[];
+    const history = p.mahnungHistory||{};
+    const currentOrder = currentStufe.stage||currentStufe.threshold;
+    let latest = null;
+    stufen.forEach(s=>{
+      if(s.id===currentStufe.id || (s.stage||s.threshold)>=currentOrder) return;
+      const h = history[s.id];
+      if(h && h.sentAt && (!latest || h.sentAt>latest.sentAt)) latest = h;
+    });
+    if(!latest) return '';
+    return `Wir hatten Sie bereits mit Schreiben vom ${fmtDate(String(latest.sentAt).slice(0,10))} auf Ihre Fehlzeiten und die Gefährdung Ihres Ausbildungsziels hingewiesen.`;
   }
 
   function buildMahnungBody(stufe, p, fehltage){
+    const stats = computeAttendanceStats(p.id);
+    const frist1 = stufe.fristTage1 ? fmtDate(addDaysISO(todayISO(), stufe.fristTage1)) : '';
+    const frist2 = stufe.fristTage2 ? fmtDate(addDaysISO(todayISO(), stufe.fristTage2)) : '';
     return String(stufe.body||'')
       .replace(/\{vorname\}/g, p.vorname||'')
       .replace(/\{nachname\}/g, p.nachname||'')
       .replace(/\{jahrgang\}/g, cohortName(p.cohortId))
       .replace(/\{fehltage\}/g, String(fehltage))
       .replace(/\{datum\}/g, fmtDate(todayISO()))
-      .replace(/\{absender\}/g, settings.mahnungAbsender||'');
+      .replace(/\{absender\}/g, settings.mahnungAbsender||'')
+      .replace(/\{anrede\}/g, anredeGruss(p))
+      .replace(/\{teilnehmerin\}/g, teilnehmerWort(p))
+      .replace(/\{grenzwert\}/g, String(stufe.threshold||''))
+      .replace(/\{zeitraum_von\}/g, fmtDate(p.entryDate))
+      .replace(/\{zeitraum_bis\}/g, fmtDate(todayISO()))
+      .replace(/\{fehltage_krank\}/g, String(stats.counts.K))
+      .replace(/\{fehltage_entschuldigt\}/g, String(stats.counts.E))
+      .replace(/\{fehltage_unentschuldigt\}/g, String(stats.counts.U))
+      .replace(/\{fehltage_gesamt\}/g, String(stats.counts.K+stats.counts.E+stats.counts.U))
+      .replace(/\{tage_liste\}/g, tageListeText(p.id))
+      .replace(/\{aktenzeichen_zeile\}/g, aktenzeichenZeileText(p))
+      .replace(/\{vorschreiben_satz\}/g, vorschreibenSatzText(p, stufe))
+      .replace(/\{kostentraeger\}/g, p.fundingBody||'')
+      .replace(/\{frist1\}/g, frist1)
+      .replace(/\{frist2\}/g, frist2);
+  }
+
+  // Zwei fertig formulierte, vom Nutzer freigegebene Standard-Mahnstufen (Stufe 1: Hinweis,
+  // Stufe 2: Abmahnung) — per Klick auf "Standard-Mahnstufen einrichten" in einem Schritt anlegbar,
+  // damit niemand die langen Brieftexte von Hand abtippen muss. Feste IDs, damit der Button beim
+  // erneuten Klicken nichts doppelt anlegt.
+  function defaultMahnstufen(){
+    return [
+      {
+        id:'stufe1_hinweis', title:'Stufe 1 – Hinweis: Ausbildungsziel evtl. gefährdet',
+        threshold:10, countMode:'alle', mode:'freigabe', stage:1, fristTage1:10, fristTage2:0,
+        body:
+`{anrede},
+
+mit diesem Schreiben weisen wir Sie auf Ihre Fehlzeiten in der Umschulung hin. Sie sind inzwischen so hoch, dass Ihr Ausbildungsziel gefährdet ist.
+
+Nach unseren Aufzeichnungen haben Sie im Zeitraum vom {zeitraum_von} bis {zeitraum_bis} insgesamt {fehltage_gesamt} Fehltage angesammelt, darunter {fehltage_krank} krankheitsbedingte, {fehltage_entschuldigt} entschuldigte und {fehltage_unentschuldigt} unentschuldigte Tage. Damit haben Sie die zulässige Grenze von {grenzwert} Fehltagen überschritten.
+
+Bitte bedenken Sie: Die Umschulung ist eng getaktet, und die Lerninhalte bauen aufeinander auf. Bei diesem Umfang an Fehlzeiten lässt sich der versäumte Stoff kaum noch nachholen. Es besteht die konkrete Gefahr, dass Sie die Anforderungen der Abschlussprüfung nicht erfüllen und Ihr Ausbildungsziel, den erfolgreichen Abschluss der Umschulung, nicht erreichen.
+
+Bitte melden Sie sich bis zum {frist1} unter 030 617929-0 oder kontakt@bwk-berlin.de bei uns und vereinbaren Sie einen Gesprächstermin. Bei gesundheitlichen, familiären oder organisatorischen Schwierigkeiten sprechen Sie uns bitte offen an, dann suchen wir gemeinsam nach Lösungen.
+
+Bitte beachten Sie: Fehlzeiten sind gemäß Teilnahmevertrag am ersten Fehltag zu melden, Krankheitstage sind spätestens ab dem dritten Tag ärztlich nachzuweisen. Bei weiteren Fehlzeiten prüfen wir Ihre weitere Teilnahme und leiten weitere Schritte ein.
+
+Mit freundlichen Grüßen
+Kerstin Pfrötzschner, Koordination
+BWK BildungsWerk in Kreuzberg GmbH`
+      },
+      {
+        id:'stufe2_abmahnung', title:'Stufe 2 – Abmahnung wegen unentschuldigter Fehlzeiten',
+        threshold:3, countMode:'unentschuldigt', mode:'freigabe', stage:2, fristTage1:10, fristTage2:14,
+        body:
+`{aktenzeichen_zeile}
+
+{anrede},
+
+wir mahnen Sie hiermit wegen unentschuldigter Fehlzeiten in der Umschulung ab.
+
+Sachverhalt: Sie haben im Zeitraum vom {zeitraum_von} bis {zeitraum_bis} an insgesamt {fehltage_unentschuldigt} Tagen unentschuldigt gefehlt. Damit haben Sie die Grenze von {grenzwert} unentschuldigten Fehltagen überschritten. Im Einzelnen handelt es sich um folgende Tage, für die weder eine Meldung noch ein Nachweis vorliegt: {tage_liste}.
+
+Pflichtverletzung: Als {teilnehmerin} sind Sie nach Ihrem Teilnahmevertrag zur regelmäßigen und pünktlichen Teilnahme am Unterricht verpflichtet. Fehlzeiten sind am ersten Fehltag zu melden, Krankheitstage sind spätestens ab dem dritten Tag durch eine ärztliche Bescheinigung nachzuweisen. Dieser Pflicht sind Sie für die oben genannten Tage nicht nachgekommen. {vorschreiben_satz}
+
+Aufforderung: Wir fordern Sie auf, künftig regelmäßig und pünktlich am Unterricht teilzunehmen, jede Verhinderung am ersten Fehltag zu melden und Krankheitstage fristgerecht nachzuweisen. Diese Abmahnung wird zu Ihrer Teilnehmerakte genommen.
+
+Konsequenzen: Wir weisen Sie ausdrücklich darauf hin, dass weitere unentschuldigte Fehlzeiten zu Ihrem Ausschluss aus der Maßnahme führen können, etwa durch außerordentliche Kündigung des Teilnahmevertrags. Ihr Kostenträger ({kostentraeger}) wird von uns über diese Abmahnung informiert. Ein Ausschluss beendet in der Regel auch die Förderung Ihrer Umschulung und kann Folgen für Ihren Leistungsanspruch haben. Ihr Ausbildungsziel, den erfolgreichen Abschluss der Umschulung, würden Sie dann nicht erreichen.
+
+Stellungnahme: Sind Sie der Auffassung, dass die genannten Fehltage zu Unrecht als unentschuldigt erfasst wurden, oder können Sie Gründe nachweisen (zum Beispiel durch eine ärztliche Bescheinigung), legen Sie uns dies bitte bis zum {frist1} schriftlich vor. Wir prüfen Ihre Angaben und berücksichtigen sie. Unabhängig davon bieten wir Ihnen ein Gespräch an. Bitte vereinbaren Sie dazu bis zum {frist2} einen Termin unter 030 617929-0 oder kontakt@bwk-berlin.de. Wenn Sie in einer schwierigen Situation sind, sprechen Sie uns an, denn wir möchten, dass Sie Ihre Umschulung erfolgreich abschließen.
+
+Bitte bestätigen Sie uns den Erhalt dieser Abmahnung durch eine kurze Antwort auf diese E-Mail. Die Bestätigung bedeutet nicht, dass Sie dem Inhalt zustimmen.
+
+Mit freundlichen Grüßen
+Kerstin Pfrötzschner, Koordination
+BWK BildungsWerk in Kreuzberg GmbH`
+      }
+    ];
+  }
+
+  async function onSetupDefaultMahnstufen(){
+    const existing = settings.mahnstufen||[];
+    const missing = defaultMahnstufen().filter(d=> !existing.some(s=>s.id===d.id));
+    if(!missing.length){ toast('Die beiden Standard-Mahnstufen sind bereits eingerichtet.'); return; }
+    if(!db){ toast('Kein Live-Speicher in dieser Vorschau.'); return; }
+    try{
+      await db.doc('settings/general').update({mahnstufen: existing.concat(missing)});
+      toast(`${missing.length} Standard-Mahnstufe(n) eingerichtet.`);
+    }catch(err){ console.warn(err); toast('Einrichten fehlgeschlagen.'); }
   }
 
   // Öffnet einen vorausgefüllten E-Mail-Entwurf (mailto:) im Standard-Mailprogramm und
@@ -1867,9 +2129,29 @@ pako/dist/pako.es5.min.js:
     toast(`Word-Brief für ${participantName(p)} heruntergeladen (${stufe.title}) — bitte an die geöffnete E-Mail anhängen.`);
   }
 
+  // Prüft, ob EmailJS vollständig eingerichtet ist (Service-ID, Template-ID, Public Key gesetzt
+  // und das SDK per CDN geladen) — nur dann kann die App eine Mahnung wirklich selbst verschicken,
+  // ohne dass jemand in einem externen E-Mail-Programm auf "Senden" klicken muss.
+  function emailjsReady(){
+    const cfg = settings.emailjs||{};
+    return !!(cfg.serviceId && cfg.templateId && cfg.publicKey && typeof window.emailjs !== 'undefined' && typeof window.emailjs.send === 'function');
+  }
+
+  // Verschickt eine Mahnung wirklich automatisch über EmailJS (über das von der Abteilung selbst
+  // in ihrem EmailJS-Konto verbundene Postfach) — kein mailto, kein manueller "Senden"-Klick, kein
+  // Anhang nötig, weil der komplette Brieftext direkt im Mailinhalt steht.
+  async function sendMahnungViaEmailJS(p, stufe, body){
+    const cfg = settings.emailjs||{};
+    window.emailjs.init({publicKey: cfg.publicKey});
+    await window.emailjs.send(cfg.serviceId, cfg.templateId, {
+      to_email: p.email, to_name: participantName(p), subject: stufe.title,
+      message: body, reply_to: settings.mahnungAbsender||''
+    });
+  }
+
   async function sendMahnung(p, stufe){
     if(!p.email){ toast(`Keine E-Mail-Adresse für ${participantName(p)} hinterlegt — Mahnung „${stufe.title}“ übersprungen.`); return; }
-    const fehltage = fehltageForParticipant(p.id);
+    const fehltage = fehltageForParticipant(p.id, stufe.countMode);
     if(stufe.docxAssetId){
       try{
         await sendMahnungDocx(p, stufe, fehltage);
@@ -1881,6 +2163,19 @@ pako/dist/pako.es5.min.js:
       return;
     }
     const body = buildMahnungBody(stufe, p, fehltage);
+    if(emailjsReady()){
+      try{
+        await sendMahnungViaEmailJS(p, stufe, body);
+        markMahnungSent(p, stufe, fehltage);
+        toast(`E-Mail an ${participantName(p)} wurde automatisch versendet (${stufe.title}).`);
+      }catch(err){
+        console.warn('sendMahnung (emailjs)', err);
+        toast('Automatischer Versand fehlgeschlagen: ' + (err && (err.text||err.message) || 'Unbekannter Fehler') + ' — bitte EmailJS-Einstellungen prüfen. Mahnung wurde NICHT als versendet vermerkt.');
+      }
+      return;
+    }
+    // Fallback ohne EmailJS-Einrichtung: wie bisher ein mailto-Entwurf, der von Hand abgeschickt
+    // werden muss (siehe Hinweistext im Mahnungen-Reiter).
     const params = ['subject='+encodeURIComponent(stufe.title), 'body='+encodeURIComponent(body)];
     if(settings.mahnungAbsender) params.push('reply-to='+encodeURIComponent(settings.mahnungAbsender));
     const href = 'mailto:'+encodeURIComponent(p.email)+'?'+params.join('&');
@@ -1894,12 +2189,12 @@ pako/dist/pako.es5.min.js:
   // ausgelöst wurden (siehe p.mahnungHistory). Nur aktive/in Verlängerung befindliche, nicht
   // archivierte TN werden geprüft — wer die Ausbildung schon verlassen hat, braucht keine Mahnung.
   function pendingMahnungen(){
-    const stufen = (settings.mahnstufen||[]).slice().sort((a,b)=>a.threshold-b.threshold);
+    const stufen = (settings.mahnstufen||[]).slice().sort((a,b)=>(a.stage||a.threshold)-(b.stage||b.threshold));
     if(!stufen.length) return [];
     const list = [];
     participants.filter(p=>!p.archived && ['aktiv','verlaengerung'].includes(p.status)).forEach(p=>{
-      const fehltage = fehltageForParticipant(p.id);
       stufen.forEach(stufe=>{
+        const fehltage = fehltageForParticipant(p.id, stufe.countMode);
         if(fehltage < stufe.threshold) return;
         if(p.mahnungHistory && p.mahnungHistory[stufe.id]) return;
         list.push({p, stufe, fehltage});
@@ -1913,24 +2208,33 @@ pako/dist/pako.es5.min.js:
   const mahnAutoTriggered = new Set();
 
   function renderMahnstufenList(){
-    const stufen = (settings.mahnstufen||[]).slice().sort((a,b)=>a.threshold-b.threshold);
+    const stufen = (settings.mahnstufen||[]).slice().sort((a,b)=>(a.stage||a.threshold)-(b.stage||b.threshold));
     $('#mahnstufenList').innerHTML = stufen.length ? stufen.map(s=>`
       <div class="row-between" style="padding:8px 0; border-bottom:1px solid var(--border);">
-        <div><strong>${esc(s.title)}</strong> <span class="faint">ab ${s.threshold} Fehltagen · ${s.mode==='auto'?'automatisch':'mit Freigabe'}${s.docxAssetId?' · Word-Vorlage: '+esc(s.docxFilename||'Datei'):''}</span></div>
+        <div><strong>${esc(s.title)}</strong> <span class="faint">ab ${s.threshold} Fehltagen${s.countMode==='unentschuldigt'?' (nur unentschuldigt)':' (gesamt)'} · ${s.mode==='auto'?'automatisch':'mit Freigabe'}${s.docxAssetId?' · Word-Vorlage: '+esc(s.docxFilename||'Datei'):''}</span></div>
         <button type="button" class="btn btn-sm" data-edit-mahnstufe="${s.id}">Bearbeiten</button>
       </div>`).join('') : '<p class="empty">Noch keine Mahnstufen angelegt. Mit „+ Neue Mahnstufe“ die erste anlegen.</p>';
   }
 
   function renderMahnungenTab(){
     $('#mahnAbsender').value = settings.mahnungAbsender || '';
+    const cfg = settings.emailjs||{};
+    $('#mahnEmailjsService').value = cfg.serviceId||'';
+    $('#mahnEmailjsTemplate').value = cfg.templateId||'';
+    $('#mahnEmailjsKey').value = cfg.publicKey||'';
+    $('#mahnSendModeInfo').textContent = emailjsReady()
+      ? 'Automatischer Versand ist aktiv: Ein Klick auf „Freigeben“ verschickt die E-Mail direkt über euer verbundenes Postfach — kein weiterer Schritt nötig.'
+      : 'Automatischer Versand ist noch nicht eingerichtet (siehe EmailJS-Kasten unten). Bis dahin öffnet „Freigeben“ nur einen E-Mail-Entwurf, den noch jemand von Hand abschicken muss.';
+
     const pending = pendingMahnungen();
     const freigabeItems = pending.filter(x=>x.stufe.mode!=='auto');
     const autoItems = pending.filter(x=>x.stufe.mode==='auto');
+    const sendBtnLabel = emailjsReady() ? '✉ Freigeben & senden' : '✉ E-Mail-Entwurf öffnen';
 
     $('#mahnQueue').innerHTML = freigabeItems.length ? freigabeItems.map(x=>`
       <div class="row-between" style="padding:8px 0; border-bottom:1px solid var(--border);">
         <div><strong>${participantLinkHTML(x.p)}</strong> <span class="faint">${esc(cohortName(x.p.cohortId))} · ${x.fehltage} Fehltage · ${esc(x.stufe.title)}</span></div>
-        <button type="button" class="btn btn-sm btn-primary" data-send-mahnung data-pid="${x.p.id}" data-stufe="${x.stufe.id}">✉ E-Mail-Entwurf öffnen</button>
+        <button type="button" class="btn btn-sm btn-primary" data-send-mahnung data-pid="${x.p.id}" data-stufe="${x.stufe.id}">${sendBtnLabel}</button>
       </div>`).join('') : '<p class="empty">Keine Mahnungen zur Freigabe.</p>';
 
     // Automatisch-Modus: einmalig pro TN×Stufe direkt auslösen, sobald dieser Reiter offen ist.
@@ -1980,7 +2284,11 @@ pako/dist/pako.es5.min.js:
     $('#mahnDlgTitle').textContent = s ? 'Mahnstufe bearbeiten' : 'Neue Mahnstufe';
     $('#mahnTitle').value = s?.title||'';
     $('#mahnThreshold').value = s?.threshold||'';
+    $('#mahnStage').value = s?.stage || (s ? '' : ((settings.mahnstufen||[]).length + 1));
+    $('#mahnCountMode').value = s?.countMode||'alle';
     $('#mahnMode').value = s?.mode||'freigabe';
+    $('#mahnFrist1').value = s?.fristTage1||'';
+    $('#mahnFrist2').value = s?.fristTage2||'';
     $('#mahnBody').value = s?.body||'';
     $('#btnDeleteMahnstufe').hidden = !s;
     pendingMahnDocx = (s && s.docxAssetId) ? {assetId: s.docxAssetId, mime: s.docxMime||'', filename: s.docxFilename||''} : null;
@@ -1997,7 +2305,11 @@ pako/dist/pako.es5.min.js:
     const editingId = $('#dlgMahnstufe').dataset.editingId || '';
     const stufen = (settings.mahnstufen||[]).slice();
     const data = {
-      title, threshold, mode: $('#mahnMode').value==='auto'?'auto':'freigabe', body: $('#mahnBody').value,
+      title, threshold, stage: parseInt($('#mahnStage').value, 10) || threshold,
+      countMode: $('#mahnCountMode').value==='unentschuldigt'?'unentschuldigt':'alle',
+      mode: $('#mahnMode').value==='auto'?'auto':'freigabe', body: $('#mahnBody').value,
+      fristTage1: parseInt($('#mahnFrist1').value, 10) || 0,
+      fristTage2: parseInt($('#mahnFrist2').value, 10) || 0,
       docxAssetId: pendingMahnDocx ? pendingMahnDocx.assetId : null,
       docxMime: pendingMahnDocx ? (pendingMahnDocx.mime||'') : '',
       docxFilename: pendingMahnDocx ? (pendingMahnDocx.filename||'') : ''
@@ -2027,6 +2339,17 @@ pako/dist/pako.es5.min.js:
     const val = $('#mahnAbsender').value.trim();
     if(!db) return;
     try{ await db.doc('settings/general').update({mahnungAbsender: val}); toast('Gespeichert.'); }
+    catch(err){ console.warn(err); toast('Speichern fehlgeschlagen.'); }
+  }
+
+  async function onSaveEmailjsConfig(){
+    const emailjsCfg = {
+      serviceId: $('#mahnEmailjsService').value.trim(),
+      templateId: $('#mahnEmailjsTemplate').value.trim(),
+      publicKey: $('#mahnEmailjsKey').value.trim()
+    };
+    if(!db) return;
+    try{ await db.doc('settings/general').update({emailjs: emailjsCfg}); toast('Gespeichert.'); }
     catch(err){ console.warn(err); toast('Speichern fehlgeschlagen.'); }
   }
 
@@ -2130,6 +2453,7 @@ pako/dist/pako.es5.min.js:
     if(!$('#pVorname').value.trim() || !$('#pNachname').value.trim()){ toast('Vor- und Nachname sind erforderlich.'); return; }
     const data = {
       vorname: $('#pVorname').value.trim(), nachname: $('#pNachname').value.trim(),
+      anrede: $('#pAnrede').value || 'frau',
       geburtsdatum: $('#pGeburtsdatum').value, telefon: $('#pTelefon').value.trim(), email: $('#pEmail').value.trim(),
       strasse: $('#pStrasse').value.trim(), ort: $('#pOrt').value.trim(),
       cohortId: $('#pCohort').value, entryType: $('#pEntryType').value, entryDate: $('#pEntryDate').value,
@@ -2306,7 +2630,8 @@ pako/dist/pako.es5.min.js:
         <div class="row-between">
           <div><h3>${esc(c.name)} ${c.demo?'<span class="demo-tag">Beispiel</span>':''}</h3>
           <div class="faint">${fmtDate(c.startDate)} – ${fmtDate(c.endDate)} · ${c.status==='aktiv'?'aktiv':'abgeschlossen'}</div></div>
-          <div class="row" style="gap:6px;">
+          <div class="row" style="gap:6px; align-items:center;">
+            <span class="pill st-info" style="cursor:pointer;" data-open-cohort-participants="${c.id}" title="Teilnehmerinnen dieses Jahrgangs anzeigen">${active.length} Teilnehmerinnen</span>
             ${STATUS_ORDER.map(k=>counts[k]?`<span class="pill ${STATUS[k].cls}">${counts[k]} ${esc(STATUS[k].label)}</span>`:'').join('')}
           </div>
         </div>
