@@ -318,9 +318,14 @@
             <label>Durchgang</label>
             <select class="select" id="attCohort"></select>
           </div>
-          <div class="field" style="min-width:160px;">
+          <div class="field" style="min-width:220px;">
             <label>Datum</label>
-            <input class="input" type="date" id="attDate">
+            <div class="row" style="gap:4px; align-items:center;">
+              <button type="button" class="btn btn-sm" id="attPrevDay" title="Vorheriger Tag">◀</button>
+              <input class="input" type="date" id="attDate" style="flex:1;">
+              <button type="button" class="btn btn-sm" id="attNextDay" title="Nächster Tag">▶</button>
+              <button type="button" class="btn btn-sm" id="attToday" title="Heute">Heute</button>
+            </div>
           </div>
           <div class="spacer"></div>
           <div class="row" id="attLegend" style="gap:6px; flex-wrap:wrap;"></div>
@@ -439,7 +444,25 @@
           <div class="bar-chart" id="statCurriculumChart" style="margin-top:12px;"></div>
         </div>
         <div class="card" style="margin-top:14px;">
-          <h3>Anwesenheit – laufender Monat</h3>
+          <h3 id="statAttTitle">Anwesenheit</h3>
+          <div class="row no-print" style="gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px;">
+            <select class="select" id="statPeriodMode" style="width:auto;">
+              <option value="day">Tag</option>
+              <option value="week">Woche</option>
+              <option value="month" selected>Monat</option>
+              <option value="year">Jahr</option>
+              <option value="custom">Zeitraum …</option>
+            </select>
+            <button type="button" class="btn btn-sm" id="statPeriodPrev" title="Zurück">◀</button>
+            <span class="faint" id="statPeriodLabel" style="min-width:160px; text-align:center;"></span>
+            <button type="button" class="btn btn-sm" id="statPeriodNext" title="Weiter">▶</button>
+            <button type="button" class="btn btn-sm" id="statPeriodToday" title="Heute">Heute</button>
+            <span class="row" id="statPeriodCustomWrap" hidden style="gap:6px; align-items:center;">
+              <input class="input" type="date" id="statPeriodFrom" style="width:auto;">
+              <span>–</span>
+              <input class="input" type="date" id="statPeriodTo" style="width:auto;">
+            </span>
+          </div>
           <div class="grid-stats" id="statAttendance" style="margin-top:10px;"></div>
         </div>
       </div>
@@ -700,6 +723,15 @@
   const fmtDateTime = iso => { if(!iso) return '—'; const d=new Date(iso); if(isNaN(d.getTime())) return esc(iso); return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})+' · '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}); };
   const todayISO = () => new Date().toISOString().slice(0,10);
   const nowISO = () => new Date().toISOString();
+  const addDaysISO = (iso, days) => { const d = new Date((iso||todayISO())+'T00:00:00'); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); };
+  function isoWeekNumber(iso){
+    const date = new Date(iso+'T00:00:00');
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7; // Montag=1 … Sonntag=7
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  }
 
   const STATUS = {
     aktiv:        {label:'Aktiv',        cls:'st-info'},
@@ -737,6 +769,9 @@
   let hasDemoData=false;
   let editingParticipantId=null, editingCohortId=null, editingDocs=[], editingHistory=[], editingCurriculum={};
   let activeLetterParticipant=null;
+  // Zeitraum-Auswahl für die Statistik: mode = 'day'|'week'|'month'|'year'|'custom';
+  // anchor steuert Tag/Woche/Monat/Jahr, from/to den individuellen Zeitraum.
+  let statPeriod = { mode:'month', anchor: todayISO(), from: todayISO(), to: todayISO() };
 
   function toast(msg){
     const w = $('#toastWrap');
@@ -1000,6 +1035,16 @@
     $('#attList').addEventListener('click', onAttendanceClick);
     $('#attDate').value = todayISO();
     $('#attLegend').innerHTML = ATT_ORDER.map(c=>`<span class="pill ${ATT_CODES[c].cls}">${c} = ${esc(ATT_CODES[c].label)}</span>`).join('');
+    $('#attPrevDay').addEventListener('click', ()=>{ $('#attDate').value = addDaysISO($('#attDate').value, -1); renderAttendanceTab(); });
+    $('#attNextDay').addEventListener('click', ()=>{ $('#attDate').value = addDaysISO($('#attDate').value, 1); renderAttendanceTab(); });
+    $('#attToday').addEventListener('click', ()=>{ $('#attDate').value = todayISO(); renderAttendanceTab(); });
+
+    $('#statPeriodMode').addEventListener('change', onStatPeriodModeChange);
+    $('#statPeriodPrev').addEventListener('click', ()=>{ statPeriod.anchor = shiftPeriodAnchor(statPeriod, -1); renderStats(); });
+    $('#statPeriodNext').addEventListener('click', ()=>{ statPeriod.anchor = shiftPeriodAnchor(statPeriod, 1); renderStats(); });
+    $('#statPeriodToday').addEventListener('click', ()=>{ statPeriod.anchor = todayISO(); renderStats(); });
+    $('#statPeriodFrom').addEventListener('change', ()=>{ statPeriod.from = $('#statPeriodFrom').value || todayISO(); if(statPeriod.to < statPeriod.from) statPeriod.to = statPeriod.from; renderStats(); });
+    $('#statPeriodTo').addEventListener('change', ()=>{ statPeriod.to = $('#statPeriodTo').value || statPeriod.from; if(statPeriod.to < statPeriod.from) statPeriod.from = statPeriod.to; renderStats(); });
 
     $('#pCohort').addEventListener('change', renderParticipantExamInfo);
     $('#pCurriculumList').addEventListener('click', onCurriculumToggleClick);
@@ -1739,6 +1784,84 @@
   }
 
   // ---------- statistics ----------
+  // Zeitraum-Navigation für die Anwesenheits-Auswertung: liefert je nach gewähltem Modus
+  // (Tag/Woche/Monat/Jahr/individueller Zeitraum) den passenden {from,to}-Bereich.
+  function periodRange(period){
+    if(period.mode==='custom'){
+      const from = period.from || todayISO(), to = period.to || from;
+      return from <= to ? {from,to} : {from:to, to:from};
+    }
+    const anchor = period.anchor || todayISO();
+    const d = new Date(anchor+'T00:00:00');
+    if(period.mode==='day') return {from:anchor, to:anchor};
+    if(period.mode==='week'){
+      const dow = (d.getDay()+6)%7; // 0 = Montag
+      const monday = addDaysISO(anchor, -dow);
+      return {from:monday, to:addDaysISO(monday,6)};
+    }
+    if(period.mode==='year'){
+      const y = d.getFullYear();
+      return {from:`${y}-01-01`, to:`${y}-12-31`};
+    }
+    // Monat (Standard)
+    const first = new Date(d.getFullYear(), d.getMonth(), 1);
+    const last = new Date(d.getFullYear(), d.getMonth()+1, 0);
+    return {from:first.toISOString().slice(0,10), to:last.toISOString().slice(0,10)};
+  }
+  function shiftPeriodAnchor(period, dir){
+    const anchor = period.anchor || todayISO();
+    const d = new Date(anchor+'T00:00:00');
+    if(period.mode==='day') return addDaysISO(anchor, dir);
+    if(period.mode==='week') return addDaysISO(anchor, dir*7);
+    if(period.mode==='year'){ d.setFullYear(d.getFullYear()+dir); return d.toISOString().slice(0,10); }
+    d.setMonth(d.getMonth()+dir); return d.toISOString().slice(0,10); // Monat
+  }
+  function periodLabel(period){
+    const r = periodRange(period);
+    if(period.mode==='day') return fmtDate(r.from);
+    if(period.mode==='week') return `KW ${isoWeekNumber(r.from)} (${fmtDate(r.from)} – ${fmtDate(r.to)})`;
+    if(period.mode==='year') return r.from.slice(0,4);
+    if(period.mode==='custom') return `${fmtDate(r.from)} – ${fmtDate(r.to)}`;
+    const d = new Date(r.from+'T00:00:00');
+    return d.toLocaleDateString('de-DE', {month:'long', year:'numeric'});
+  }
+  // Zählt Anwesenheits-Codes über alle Teilnehmerinnen hinweg innerhalb [from,to],
+  // unabhängig davon, wie viele Monats-Dokumente der Zeitraum überspannt.
+  function attendanceCountsForRange(from, to){
+    const counts = {A:0,V:0,E:0,U:0,K:0};
+    const fromMonth = monthKeyOf(from), toMonth = monthKeyOf(to);
+    attendance.forEach(doc=>{
+      if(!doc.month || doc.month < fromMonth || doc.month > toMonth) return;
+      Object.entries(doc.days||{}).forEach(([day,code])=>{
+        if(!code || counts[code]==null) return;
+        const iso = doc.month + '-' + day;
+        if(iso >= from && iso <= to) counts[code]++;
+      });
+    });
+    return counts;
+  }
+  function renderStatPeriodControls(){
+    $('#statPeriodMode').value = statPeriod.mode;
+    const isCustom = statPeriod.mode==='custom';
+    $('#statPeriodPrev').hidden = isCustom;
+    $('#statPeriodNext').hidden = isCustom;
+    $('#statPeriodToday').hidden = isCustom;
+    $('#statPeriodCustomWrap').hidden = !isCustom;
+    if(isCustom){
+      $('#statPeriodFrom').value = statPeriod.from || todayISO();
+      $('#statPeriodTo').value = statPeriod.to || statPeriod.from || todayISO();
+    }
+    $('#statPeriodLabel').textContent = periodLabel(statPeriod);
+  }
+  function onStatPeriodModeChange(){
+    statPeriod.mode = $('#statPeriodMode').value;
+    if(statPeriod.mode==='custom'){
+      const r = periodRange({mode:'month', anchor: statPeriod.anchor});
+      statPeriod.from = statPeriod.from || r.from;
+      statPeriod.to = statPeriod.to || r.to;
+    }
+    renderStats();
+  }
   function renderStats(){
     $('#statTitle').textContent = 'Gesamtübersicht — ' + (settings.institutionName || settings.programName);
     const counts = {}; STATUS_ORDER.forEach(k=>counts[k]=0);
@@ -1789,10 +1912,9 @@
         <span style="text-align:right;">${r.pct}%</span>
       </div>`).join('') : '<p class="empty">Keine Durchgänge vorhanden.</p>';
 
-    const curMonth = todayISO().slice(0,7);
-    const monthDocs = attendance.filter(a=>a.month===curMonth);
-    const mCounts = {A:0,V:0,E:0,U:0,K:0};
-    monthDocs.forEach(d=> Object.values(d.days||{}).forEach(code=>{ if(mCounts[code]!=null && code) mCounts[code]++; }));
+    renderStatPeriodControls();
+    const range = periodRange(statPeriod);
+    const mCounts = attendanceCountsForRange(range.from, range.to);
     const mTotal = Object.values(mCounts).reduce((a,b)=>a+b,0);
     const mRate = mTotal ? Math.round((mCounts.A/mTotal)*100) : null;
     $('#statAttendance').innerHTML = [
