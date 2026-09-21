@@ -239,7 +239,7 @@
     <div class="topbar-row">
       <div class="brand">
         <h1 id="programTitle">Umschulung Friseurhandwerk</h1>
-        <div class="sub" id="orgSub">Verwaltung der Ausbildungs-Durchgänge · papierlos</div>
+        <div class="sub" id="orgSub">Verwaltung der Ausbildungs-Jahrgänge</div>
       </div>
       <div class="topbar-actions no-print">
         <span class="faint" id="currentUserLabel" style="color:rgba(255,255,255,.7); font-size:11.5px;"></span>
@@ -256,7 +256,7 @@
       <button class="tab" role="tab" data-tab="uebersicht">Übersicht</button>
       <button class="tab" role="tab" data-tab="teilnehmerinnen">Teilnehmerinnen</button>
       <button class="tab" role="tab" data-tab="anwesenheit">Anwesenheit</button>
-      <button class="tab" role="tab" data-tab="durchgaenge">Durchgänge</button>
+      <button class="tab" role="tab" data-tab="durchgaenge">Jahrgänge</button>
       <button class="tab" role="tab" data-tab="notizen">Notizen &amp; Aufgaben</button>
       <button class="tab" role="tab" data-tab="kommunikation">Kommunikation</button>
       <button class="tab" role="tab" data-tab="partner">Partner</button>
@@ -272,8 +272,8 @@
       <div class="grid-stats" id="ovStats"></div>
       <div class="card">
         <div class="row-between">
-          <h3>Aktive Durchgänge</h3>
-          <button class="btn btn-sm" data-goto="durchgaenge">Alle Durchgänge →</button>
+          <h3>Aktive Jahrgänge</h3>
+          <button class="btn btn-sm" data-goto="durchgaenge">Alle Jahrgänge →</button>
         </div>
         <div id="ovCohorts" style="margin-top:10px;"></div>
       </div>
@@ -302,8 +302,8 @@
             <input class="input" id="fltSearch" placeholder="Name, Ort, Aktenzeichen …">
           </div>
           <div class="field" style="min-width:170px;">
-            <label>Durchgang</label>
-            <select class="select" id="fltCohort"><option value="">Alle Durchgänge</option></select>
+            <label>Jahrgang</label>
+            <select class="select" id="fltCohort"><option value="">Alle Jahrgänge</option></select>
           </div>
           <div class="field" style="min-width:170px;">
             <label>Status</label>
@@ -313,7 +313,7 @@
       </div>
       <div class="table-wrap">
         <table id="participantsTable">
-          <thead><tr><th>Name</th><th>Durchgang</th><th>Status</th><th>Eintritt</th><th>Kostenträger</th><th>Nächste Prüfung</th></tr></thead>
+          <thead><tr><th>Name</th><th>Jahrgang</th><th>Status</th><th>Eintritt</th><th>Kostenträger</th><th>Nächste Prüfung</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -324,7 +324,7 @@
       <div class="card">
         <div class="row">
           <div class="field" style="min-width:200px;">
-            <label>Durchgang</label>
+            <label>Jahrgang</label>
             <select class="select" id="attCohort"></select>
           </div>
           <div class="field" style="min-width:220px;">
@@ -358,8 +358,8 @@
     <!-- DURCHGÄNGE -->
     <section data-view="durchgaenge" hidden>
       <div class="row-between">
-        <h3>Durchgänge</h3>
-        <button class="btn btn-primary" id="btnNewCohort">+ Neuer Durchgang</button>
+        <h3>Jahrgänge</h3>
+        <button class="btn btn-primary" id="btnNewCohort">+ Neuer Jahrgang</button>
       </div>
       <div id="cohortsList" style="display:flex; flex-direction:column; gap:10px;"></div>
     </section>
@@ -451,16 +451,16 @@
           <div class="bar-chart" id="statStatusChart" style="margin-top:12px;"></div>
         </div>
         <div class="card" style="margin-top:14px;">
-          <h3>Nach Durchgang</h3>
+          <h3>Nach Jahrgang</h3>
           <div class="table-wrap" style="margin-top:10px;">
             <table>
-              <thead><tr><th>Durchgang</th><th>Aktiv</th><th>Verlängerung</th><th>Unterbrochen</th><th>Bestanden</th><th>Abgebrochen</th><th>Gesamt</th></tr></thead>
+              <thead><tr><th>Jahrgang</th><th>Aktiv</th><th>Verlängerung</th><th>Unterbrochen</th><th>Bestanden</th><th>Abgebrochen</th><th>Gesamt</th></tr></thead>
               <tbody id="statCohortTable"></tbody>
             </table>
           </div>
         </div>
         <div class="card" style="margin-top:14px;">
-          <h3>Ausbildungsrahmenplan – Fortschritt je Durchgang</h3>
+          <h3>Ausbildungsrahmenplan – Fortschritt je Jahrgang</h3>
           <div class="bar-chart" id="statCurriculumChart" style="margin-top:12px;"></div>
         </div>
         <div class="card" style="margin-top:14px;">
@@ -517,7 +517,7 @@
       <fieldset>
         <legend>Ausbildung &amp; Förderung</legend>
         <div class="form-grid">
-          <div class="field"><label>Durchgang</label><select class="select" id="pCohort"></select></div>
+          <div class="field"><label>Jahrgang</label><select class="select" id="pCohort"></select></div>
           <div class="field"><label>Einstiegsart</label>
             <select class="select" id="pEntryType"><option value="regulaer">Regulärer Start</option><option value="quereinstieg">Quereinstieg</option></select>
           </div>
@@ -548,7 +548,7 @@
       <fieldset>
         <legend>Anwesenheit</legend>
         <div class="grid-stats" id="pAttSummary"></div>
-        <p class="faint" style="margin-top:8px; margin-bottom:0;">Tägliche Erfassung im Tab „Anwesenheit“ (für alle Teilnehmerinnen eines Durchgangs auf einmal).</p>
+        <p class="faint" style="margin-top:8px; margin-bottom:0;">Tägliche Erfassung im Tab „Anwesenheit“ (für alle Teilnehmerinnen eines Jahrgangs auf einmal).</p>
       </fieldset>
       <fieldset>
         <legend>Ausbildungsrahmenplan</legend>
@@ -587,9 +587,9 @@
 <!-- Kohorte Dialog -->
 <dialog id="dlgCohort">
   <form method="dialog" id="frmCohort">
-    <div class="dlg-head"><h3 id="cDlgTitle">Neuer Durchgang</h3><button type="button" class="btn btn-ghost icon-btn" data-close>✕</button></div>
+    <div class="dlg-head"><h3 id="cDlgTitle">Neuer Jahrgang</h3><button type="button" class="btn btn-ghost icon-btn" data-close>✕</button></div>
     <div class="dlg-body">
-      <div class="field"><label>Bezeichnung *</label><input class="input" id="cName" placeholder="z. B. Durchgang 2026–2028" required></div>
+      <div class="field"><label>Bezeichnung *</label><input class="input" id="cName" placeholder="z. B. Jahrgang 2026–2028" required></div>
       <div class="form-grid">
         <div class="field"><label>Start</label><input class="input" type="date" id="cStart"></div>
         <div class="field"><label>Geplantes Ende</label><input class="input" type="date" id="cEnd"></div>
@@ -782,15 +782,47 @@
   const CURR_STATUS = {offen:{label:'Offen',cls:'st-neutral'}, in_arbeit:{label:'In Arbeit',cls:'st-warn'}, abgeschlossen:{label:'Abgeschlossen',cls:'st-success'}};
   const CURR_CYCLE = ['offen','in_arbeit','abgeschlossen'];
 
+  // Ausbildungsrahmenplan nach der Anlage (zu § 4) der Verordnung über die Berufsausbildung
+  // zum Friseur/zur Friseurin (FriseurAusbV), konsolidierte Fassung seit 01.08.2022.
+  // Reihenfolge: zuerst Abschnitt C (integrativ, von Beginn an durchgehend zu vermitteln),
+  // danach Abschnitt A in der amtlichen Nummerierung (gemeinsame berufsprofilgebende
+  // Fertigkeiten, überwiegend 1.–18. Monat mit Vertiefung 19.–36. Monat), zuletzt Abschnitt B
+  // (Wahlqualifikationseinheiten, 19.–36. Monat / 3. Ausbildungsjahr).
   function defaultCurriculum(){
-    const items = ['Arbeits- und Betriebsorganisation, Hygiene & Arbeitsschutz','Kundenempfang und Beratung','Haare und Kopfhaut waschen, pflegen, kurieren','Haarschnitttechniken Damen','Haarschnitttechniken Herren','Föhn- und Stylingtechniken','Dauerwelle / Umformung','Coloration und Tönung','Blondiertechniken','Hochsteck- und Festliche Frisuren','Bart- und Rasurpflege','Waren- und Verkaufskunde','Betriebswirtschaftliche Grundlagen','Vorbereitung Zwischen- und Abschlussprüfung'];
+    const items = [
+      'Organisation des Ausbildungsbetriebes, Berufsbildung sowie Arbeits- und Tarifrecht',
+      'Sicherheit und Gesundheit bei der Arbeit',
+      'Umweltschutz und Nachhaltigkeit',
+      'Digitalisierte Arbeitswelt',
+      'Kunden- und dienstleistungsorientiertes Handeln',
+      'Betreuen, Beraten und Verkaufen',
+      'Pflegen des Haares und der Kopfhaut',
+      'Haarschneiden',
+      'Gestalten von Frisuren',
+      'Dauerhaft Umformen',
+      'Farbverändernde Haarbehandlungen',
+      'Dekorative Kosmetik und Maniküre',
+      'Betriebs- und Arbeitsabläufe',
+      'Pflegen von Maschinen, Geräten und Werkzeugen',
+      'Schutz der Haut und der Atemwege sowie Hygiene',
+      'Qualitätssicherung',
+      'Arbeiten im Team',
+      'Informations- und Kommunikationssysteme',
+      'Werbung, Präsentation und Preisgestaltung',
+      'Kundenbindung',
+      'Wahlqualifikation: Pflegende Kosmetik/Visagistik',
+      'Wahlqualifikation: Langhaarfrisuren',
+      'Wahlqualifikation: Nageldesign/-modellage',
+      'Wahlqualifikation: Haarersatz',
+      'Wahlqualifikation: Coloration'
+    ];
     return items.map((title,i)=>({id:'lf'+String(i+1).padStart(2,'0'), title}));
   }
 
   function defaultTemplates(){
     return [
       {id:'erinnerung', title:'Erinnerung: fehlende Unterlagen', body:'Sehr geehrte/r {vorname} {nachname},\n\nuns fehlen noch Unterlagen für Ihre Umschulung ({durchgang}). Bitte reichen Sie diese bis {datum} nach.\n\nMit freundlichen Grüßen\nIhr Ausbildungsteam'},
-      {id:'mahnung', title:'Mahnung: Fehlzeiten', body:'Sehr geehrte/r {vorname} {nachname},\n\nwir haben festgestellt, dass Ihre Fehlzeiten im Durchgang {durchgang} zugenommen haben. Bitte setzen Sie sich zeitnah mit uns in Verbindung.\n\nMit freundlichen Grüßen\nIhr Ausbildungsteam'},
+      {id:'mahnung', title:'Mahnung: Fehlzeiten', body:'Sehr geehrte/r {vorname} {nachname},\n\nwir haben festgestellt, dass Ihre Fehlzeiten im Jahrgang {durchgang} zugenommen haben. Bitte setzen Sie sich zeitnah mit uns in Verbindung.\n\nMit freundlichen Grüßen\nIhr Ausbildungsteam'},
       {id:'verlaengerung', title:'Mitteilung: Verlängerung', body:'Sehr geehrte/r {vorname} {nachname},\n\nda die Abschlussprüfung nicht bestanden wurde, geht Ihre Umschulung ({durchgang}) in die Verlängerung. Über den weiteren Ablauf informieren wir Sie zeitnah gesondert.\n\nMit freundlichen Grüßen\nIhr Ausbildungsteam'},
       {id:'glueckwunsch', title:'Glückwunsch: Prüfung bestanden', body:'Sehr geehrte/r {vorname} {nachname},\n\nherzlichen Glückwunsch zum erfolgreichen Abschluss Ihrer Umschulung ({durchgang}) am {datum}!\n\nMit freundlichen Grüßen\nIhr Ausbildungsteam'}
     ];
@@ -982,11 +1014,11 @@
         documents:[], history:[], demo:true, createdAt: nowISO(), updatedAt: nowISO()
       }, data));
 
-      // Zwei Beispiel-Durchgänge mit je 10 Teilnehmerinnen (davon 2 bzw. 3 in Verlängerung),
+      // Zwei Beispiel-Jahrgänge mit je 10 Teilnehmerinnen (davon 2 bzw. 3 in Verlängerung),
       // damit neue Kolleginnen die App gleich mit realistischen Beispieldaten kennenlernen können.
       const cohortDefs = [
-        {name:'Durchgang 2025–2027', startDate:'2025-09-01', endDate:'2027-08-31', zwischenpruefungDatum:'2026-12-05', abschlusspruefungDatum:'2027-06-15', verlaengerungCount:2, quereinstiegIndex:1, quereinstiegDate:'2026-01-15'},
-        {name:'Durchgang 2024–2026', startDate:'2024-09-01', endDate:'2026-08-31', zwischenpruefungDatum:'2025-11-05', abschlusspruefungDatum:'2026-10-15', verlaengerungCount:3, quereinstiegIndex:1, quereinstiegDate:'2025-01-15'}
+        {name:'Jahrgang 2025–2027', startDate:'2025-09-01', endDate:'2027-08-31', zwischenpruefungDatum:'2026-12-05', abschlusspruefungDatum:'2027-06-15', verlaengerungCount:2, quereinstiegIndex:1, quereinstiegDate:'2026-01-15'},
+        {name:'Jahrgang 2024–2026', startDate:'2024-09-01', endDate:'2026-08-31', zwischenpruefungDatum:'2025-11-05', abschlusspruefungDatum:'2026-10-15', verlaengerungCount:3, quereinstiegIndex:1, quereinstiegDate:'2025-01-15'}
       ];
       const vornamen = ['Sabine','Elif','Petra','Jana','Aylin','Mareike','Franziska','Kerstin','Simone','Yvonne',
         'Nadine','Vanessa','Michelle','Julia','Anke','Silke','Larissa','Katharina','Denise','Melanie'];
@@ -1021,7 +1053,7 @@
         }
       }
 
-      await db.collection('notes').add({type:'aufgabe', participantId:null, assignee:null, text:'(Beispiel) Zertifikate für Durchgang 2024–2026 anfordern', done:false, authorName:'Beispiel-Ausbilderin', authorId:null, demo:true, createdAt: nowISO()});
+      await db.collection('notes').add({type:'aufgabe', participantId:null, assignee:null, text:'(Beispiel) Zertifikate für Jahrgang 2024–2026 anfordern', done:false, authorName:'Beispiel-Ausbilderin', authorId:null, demo:true, createdAt: nowISO()});
       await db.collection('messages').add({audience:'intern', participantId:null, partnerId:null, text:'(Beispiel) Bitte alle Anwesenheitslisten bis Freitag einreichen.', authorName:'Beispiel-Ausbilderin', authorId:null, demo:true, createdAt: nowISO()});
       toast('Beispieldaten wurden angelegt.');
     }catch(e){ console.warn('seed failed', e); }
@@ -1099,9 +1131,9 @@
     $('#fltPartnerSearch').addEventListener('input', renderPartners);
     $('#fltPartnerType').addEventListener('change', renderPartners);
 
-    // Zentraler Klick-Handler für alle Teilnehmerin-/Durchgang-Links (.ref-link), egal wo sie
+    // Zentraler Klick-Handler für alle Teilnehmerin-/Jahrgang-Links (.ref-link), egal wo sie
     // im Programm auftauchen. Läuft in der Capture-Phase, damit ein Link INNERHALB einer
-    // anklickbaren Zeile (z.B. der Durchgang in der Teilnehmerinnen-Tabelle) nicht zusätzlich
+    // anklickbaren Zeile (z.B. der Jahrgang in der Teilnehmerinnen-Tabelle) nicht zusätzlich
     // den Klick der Zeile selbst auslöst.
     document.addEventListener('click', (e)=>{
       const link = e.target.closest('[data-open-participant], [data-open-cohort], [data-open-partner]');
@@ -1149,13 +1181,13 @@
   }
 
   function renderTopMeta(){
-    $('#orgSub').textContent = (settings.institutionName ? settings.institutionName+' · ' : '') + 'Verwaltung der Ausbildungs-Durchgänge';
+    $('#orgSub').textContent = (settings.institutionName ? settings.institutionName+' · ' : '') + 'Verwaltung der Ausbildungs-Jahrgänge';
   }
 
   function fillCohortSelects(){
     const opts = cohorts.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
     const cur1 = $('#fltCohort').value, cur2 = $('#pCohort').value, cur3 = $('#noteFltParticipant');
-    $('#fltCohort').innerHTML = '<option value="">Alle Durchgänge</option>'+opts;
+    $('#fltCohort').innerHTML = '<option value="">Alle Jahrgänge</option>'+opts;
     $('#fltCohort').value = cur1;
     $('#pCohort').innerHTML = opts;
     if(cur2) $('#pCohort').value = cur2;
@@ -1186,7 +1218,7 @@
   }
 
   // ---------- Prüfungstermine ----------
-  // Zwischen- und Abschlussprüfung werden pro Durchgang erfasst (im Durchgang-Dialog) und von dort
+  // Zwischen- und Abschlussprüfung werden pro Jahrgang erfasst (im Jahrgang-Dialog) und von dort
   // überall angezeigt, wo sie gebraucht werden (Übersicht, Teilnehmerinnen-Liste und -Datensatz).
   const EXAM_PREP_DAYS = 56; // 8 Wochen — ab wann jemand als "in Prüfungsvorbereitung" zählt
   const EXAM_TYPES = [
@@ -1199,7 +1231,7 @@
     if(isNaN(d.getTime())) return null;
     return Math.round((d-t)/86400000);
   }
-  // Nächster noch bevorstehender Prüfungstermin eines Durchgangs (Zwischen- oder Abschlussprüfung,
+  // Nächster noch bevorstehender Prüfungstermin eines Jahrgangs (Zwischen- oder Abschlussprüfung,
   // je nachdem was zeitlich näher liegt), oder null falls keiner gesetzt / beide vergangen sind.
   function nextExamForCohort(c){
     if(!c) return null;
@@ -1210,7 +1242,7 @@
       .sort((a,b)=> a.date.localeCompare(b.date));
     return upcoming[0] || null;
   }
-  // Alle bevorstehenden Prüfungstermine über alle Durchgänge hinweg, chronologisch sortiert.
+  // Alle bevorstehenden Prüfungstermine über alle Jahrgänge hinweg, chronologisch sortiert.
   function upcomingExamsList(){
     const today = todayISO();
     const items = [];
@@ -1256,7 +1288,7 @@
         <div><strong>${cohortLinkHTML(c.id)}</strong> <span class="faint">${fmtDate(c.startDate)} – ${fmtDate(c.endDate)}</span></div>
         <span class="pill st-info">${cnt} Teilnehmerinnen</span>
       </div>`;
-    }).join('') : '<p class="empty">Noch keine aktiven Durchgänge.</p>';
+    }).join('') : '<p class="empty">Noch keine aktiven Jahrgänge.</p>';
 
     const exams = upcomingExamsList();
     $('#ovExams').innerHTML = exams.length ? exams.slice(0,8).map(x=>{
@@ -1278,7 +1310,7 @@
   // ---------- participants ----------
   function participantName(p){ return `${p.vorname||''} ${p.nachname||''}`.trim() || '(ohne Namen)'; }
   function cohortName(id){ const c = cohorts.find(c=>c.id===id); return c ? c.name : '—'; }
-  // Überall, wo eine Teilnehmerin oder ein Durchgang nur genannt wird (Notizen, Kommunikation,
+  // Überall, wo eine Teilnehmerin oder ein Jahrgang nur genannt wird (Notizen, Kommunikation,
   // Übersicht, Statistik ...), verlinken diese beiden Helfer direkt auf den passenden Datensatz.
   function participantLinkHTML(p){
     if(!p) return '';
@@ -1369,13 +1401,13 @@
     $('#dlgParticipant').showModal();
   }
 
-  // Zeigt die Prüfungstermine des im Formular aktuell gewählten Durchgangs an (aktualisiert sich
-  // live, wenn der Durchgang im Dropdown gewechselt wird — die Termine selbst werden im
-  // Durchgang-Dialog gepflegt, hier nur informativ angezeigt).
+  // Zeigt die Prüfungstermine des im Formular aktuell gewählten Jahrgangs an (aktualisiert sich
+  // live, wenn der Jahrgang im Dropdown gewechselt wird — die Termine selbst werden im
+  // Jahrgang-Dialog gepflegt, hier nur informativ angezeigt).
   function renderParticipantExamInfo(){
     const c = cohorts.find(x=>x.id===$('#pCohort').value);
     const parts = EXAM_TYPES.map(t=> c && c[t.key] ? `${t.label}: ${fmtDate(c[t.key])}` : null).filter(Boolean);
-    $('#pExamInfo').textContent = parts.length ? 'Prüfungstermine (Durchgang): ' + parts.join(' · ') : 'Für den gewählten Durchgang sind noch keine Prüfungstermine eingetragen.';
+    $('#pExamInfo').textContent = parts.length ? 'Prüfungstermine (Jahrgang): ' + parts.join(' · ') : 'Für den gewählten Jahrgang sind noch keine Prüfungstermine eingetragen.';
   }
 
   function renderDocsList(){
@@ -1518,7 +1550,7 @@
           </div>
         </div>
       </div>`;
-    }).join('') : '<p class="empty">Keine Teilnehmerinnen in diesem Durchgang.</p>';
+    }).join('') : '<p class="empty">Keine Teilnehmerinnen in diesem Jahrgang.</p>';
 
     // Zusammenfassung oben: je nach gewählter Kategorie (Tag/Woche/Monat/Ausbildungsjahr/Gesamt)
     // entweder nur der angezeigte Tag, ein um ihn herum berechneter Zeitraum, oder alles seit je her.
@@ -1681,14 +1713,14 @@
           </div>
         </div>
       </div>`;
-    }).join('') : '<p class="empty">Noch keine Durchgänge angelegt.</p>';
+    }).join('') : '<p class="empty">Noch keine Jahrgänge angelegt.</p>';
     $$('[data-cohort]').forEach(el=> el.addEventListener('click', ()=> openCohortDialog(el.dataset.cohort)));
   }
 
   function openCohortDialog(id){
     editingCohortId = id;
     const c = id ? cohorts.find(x=>x.id===id) : null;
-    $('#cDlgTitle').textContent = c ? 'Durchgang bearbeiten' : 'Neuer Durchgang';
+    $('#cDlgTitle').textContent = c ? 'Jahrgang bearbeiten' : 'Neuer Jahrgang';
     $('#cName').value = c?.name||''; $('#cStart').value = c?.startDate||''; $('#cEnd').value = c?.endDate||'';
     $('#cStatus').value = c?.status||'aktiv'; $('#cNote').value = c?.note||'';
     $('#cZwischenpruefung').value = c?.zwischenpruefungDatum||''; $('#cAbschlusspruefung').value = c?.abschlusspruefungDatum||'';
@@ -1714,8 +1746,8 @@
   async function onDeleteCohort(){
     if(!editingCohortId) return;
     const inUse = participants.some(p=>p.cohortId===editingCohortId);
-    if(inUse && !confirm('Diesem Durchgang sind Teilnehmerinnen zugeordnet. Trotzdem löschen?')) return;
-    if(!inUse && !confirm('Durchgang wirklich löschen?')) return;
+    if(inUse && !confirm('Diesem Jahrgang sind Teilnehmerinnen zugeordnet. Trotzdem löschen?')) return;
+    if(!inUse && !confirm('Jahrgang wirklich löschen?')) return;
     try{ await db.collection('cohorts').doc(editingCohortId).delete(); toast('Gelöscht.'); $('#dlgCohort').close(); }
     catch(e){ toast('Löschen fehlgeschlagen.'); }
   }
@@ -1933,7 +1965,7 @@
   }
   // Zählt Anwesenheits-Codes innerhalb [from,to], unabhängig davon, wie viele Monats-Dokumente
   // der Zeitraum überspannt. Mit participantIds eingeschränkt auf bestimmte Teilnehmerinnen
-  // (z. B. den aktuell gefilterten Durchgang in der Anwesenheit), sonst über alle hinweg (Statistik).
+  // (z. B. den aktuell gefilterten Jahrgang in der Anwesenheit), sonst über alle hinweg (Statistik).
   function attendanceCountsForRange(from, to, participantIds){
     const idSet = participantIds ? new Set(participantIds) : null;
     const counts = {A:0,V:0,E:0,U:0,K:0};
@@ -1985,7 +2017,7 @@
     $('#statTitle').textContent = 'Gesamtübersicht — ' + (settings.institutionName || settings.programName);
     // Archivierte TN (Bestanden/Abgebrochen/Unterbrochen) gehören nicht mehr zum Tagesgeschäft und
     // fließen daher nicht in die Gesamtübersicht/den Status-Chart ein — sie erscheinen weiterhin,
-    // Jahrgangsbezogen, in der Tabelle "Nach Durchgang" weiter unten (die bleibt unverändert).
+    // Jahrgangsbezogen, in der Tabelle "Nach Jahrgang" weiter unten (die bleibt unverändert).
     const operational = participants.filter(p=>!p.archived);
     const counts = {}; STATUS_ORDER.forEach(k=>counts[k]=0);
     operational.forEach(p=>{ if(counts[p.status]!=null) counts[p.status]++; });
@@ -2011,7 +2043,7 @@
       participants.forEach(p=>{ if(p.cohortId===c.id){ if(cc[p.status]!=null) cc[p.status]++; total++; } });
       return `<tr><td>${cohortLinkHTML(c.id)}</td><td>${cc.aktiv}</td><td>${cc.verlaengerung}</td><td>${cc.pausiert}</td><td>${cc.bestanden}</td><td>${cc.abgebrochen}</td><td><strong>${total}</strong></td></tr>`;
     }).join('');
-    $('#statCohortTable').innerHTML = rows || '<tr><td colspan="7" class="empty">Keine Durchgänge angelegt.</td></tr>';
+    $('#statCohortTable').innerHTML = rows || '<tr><td colspan="7" class="empty">Keine Jahrgänge angelegt.</td></tr>';
 
     const curItems = settings.curriculum||[];
     const cohortRowsCur = cohorts.slice().sort((a,b)=>(b.startDate||'').localeCompare(a.startDate||'')).map(c=>{
@@ -2031,7 +2063,7 @@
         <span>${esc(r.name)}</span>
         <div class="bar-track"><div class="bar-fill" style="width:${r.pct}%; background:var(--accent);"></div></div>
         <span style="text-align:right;">${r.pct}%</span>
-      </div>`).join('') : '<p class="empty">Keine Durchgänge vorhanden.</p>';
+      </div>`).join('') : '<p class="empty">Keine Jahrgänge vorhanden.</p>';
 
     renderStatPeriodControls();
     const range = periodRange(statPeriod);
