@@ -263,6 +263,7 @@
       <button class="tab" role="tab" data-tab="kommunikation">Kommunikation</button>
       <button class="tab" role="tab" data-tab="partner">Partner</button>
       <button class="tab" role="tab" data-tab="statistik">Statistik</button>
+      <button class="tab" role="tab" data-tab="mahnungen">Mahnungen</button>
     </nav>
   </div>
 </header>
@@ -496,6 +497,37 @@
         </div>
       </div>
     </section>
+
+    <!-- MAHNUNGEN -->
+    <section data-view="mahnungen" hidden>
+      <div class="card">
+        <h3>Automatische Mahnungen bei Fehltagen</h3>
+        <p class="faint">Zählt Entschuldigt + Unentschuldigt zusammen, über den gesamten bisherigen Jahrgang der Teilnehmerin. Wird eine Schwelle erreicht, kann die App einen fertig ausgefüllten E-Mail-Entwurf öffnen — je Mahnstufe entweder mit Freigabe durch eine Ausbilderin oder automatisch beim Öffnen dieses Reiters. Der tatsächliche Versand (Klick auf „Senden“) bleibt dabei immer im E-Mail-Programm der jeweiligen Person; ein Versand ganz ohne geöffnete App ist auf einer reinen GitHub-Pages-Seite ohne eigenen Server technisch nicht möglich.</p>
+        <div class="row" style="gap:10px; align-items:flex-end; flex-wrap:wrap; margin-top:10px;">
+          <div class="field" style="flex:1; min-width:260px;">
+            <label>Absender-E-Mail (für Antworten der Teilnehmerinnen)</label>
+            <input class="input" type="email" id="mahnAbsender" placeholder="z. B. ausbildung@bwk-berlin.de">
+          </div>
+          <button type="button" class="btn" id="btnSaveMahnAbsender">Speichern</button>
+        </div>
+        <p class="faint" style="margin-top:6px;">Wichtig: Ein „mailto“-Link kann nicht festlegen, von welchem Konto aus tatsächlich gesendet wird — das entscheidet immer das E-Mail-Programm der Person, die auf „Senden“ klickt. Diese Adresse wird nach bestem Bemühen als Antwort-an-Adresse übernommen (funktioniert nicht bei jedem E-Mail-Programm) und steht zusätzlich als Platzhalter <code>{absender}</code> für den Brieftext zur Verfügung, damit sie z. B. in der Unterschrift erscheint.</p>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <div class="row-between">
+          <h3>Ausstehende Mahnungen (Freigabe erforderlich)</h3>
+        </div>
+        <div id="mahnQueue" style="margin-top:10px;"></div>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <div class="row-between">
+          <h3>Mahnstufen</h3>
+          <button type="button" class="btn btn-primary btn-sm" id="btnNewMahnstufe">+ Neue Mahnstufe</button>
+        </div>
+        <div id="mahnstufenList" style="margin-top:10px;"></div>
+      </div>
+    </section>
   </main>
 </div></div>
 </div>
@@ -718,6 +750,34 @@
   </div>
 </dialog>
 
+<!-- Mahnstufe Dialog -->
+<dialog id="dlgMahnstufe">
+  <form method="dialog" id="frmMahnstufe">
+    <div class="dlg-head"><h3 id="mahnDlgTitle">Neue Mahnstufe</h3><button type="button" class="btn btn-ghost icon-btn" data-close>✕</button></div>
+    <div class="dlg-body">
+      <div class="field"><label>Bezeichnung *</label><input class="input" id="mahnTitle" placeholder="z. B. Stufe 2 – Hinweis: Ausbildungsziel gefährdet" required></div>
+      <div class="field"><label>Schwellenwert (Fehltage, entschuldigt + unentschuldigt) *</label><input class="input" type="number" min="1" step="1" id="mahnThreshold" required></div>
+      <div class="field">
+        <label>Versand</label>
+        <select class="select" id="mahnMode">
+          <option value="freigabe">Erst nach Freigabe durch eine Ausbilderin</option>
+          <option value="auto">Automatisch (E-Mail-Entwurf öffnet direkt)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Brieftext</label>
+        <textarea class="textarea" id="mahnBody" style="min-height:200px;" placeholder="Sehr geehrte/r {vorname} {nachname}, ..."></textarea>
+      </div>
+      <p class="faint" style="margin:4px 0 0;">Platzhalter: <code>{vorname}</code> <code>{nachname}</code> <code>{jahrgang}</code> <code>{fehltage}</code> <code>{datum}</code> <code>{absender}</code> — werden beim Öffnen des E-Mail-Entwurfs automatisch durch die Daten der jeweiligen Teilnehmerin ersetzt.</p>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn btn-danger no-print" id="btnDeleteMahnstufe" style="margin-right:auto;">Löschen</button>
+      <button type="button" class="btn" data-close>Abbrechen</button>
+      <button type="submit" class="btn btn-primary">Speichern</button>
+    </div>
+  </form>
+</dialog>
+
 <!-- Teilnehmerinnen-Import (Excel) -->
 <dialog id="dlgImport" class="wide">
   <div class="dlg-head"><h3>Teilnehmerinnen aus Excel importieren</h3><button type="button" class="btn btn-ghost icon-btn" data-close>✕</button></div>
@@ -926,7 +986,7 @@
 
   let db=null, assetsCap=null, userCap=null, myId=null, myName='Ich';
   let cohorts=[], participants=[], notes=[], messages=[], attendance=[], partners=[];
-  let settings = {institutionName:'', programName:'Umschulung Friseurhandwerk', fundingBodies:['Agentur für Arbeit','Jobcenter'], templates: defaultTemplates(), curriculum: defaultCurriculum()};
+  let settings = {institutionName:'', programName:'Umschulung Friseurhandwerk', fundingBodies:['Agentur für Arbeit','Jobcenter'], templates: defaultTemplates(), curriculum: defaultCurriculum(), mahnstufen: [], mahnungAbsender: ''};
   let hasDemoData=false;
   let editingParticipantId=null, editingCohortId=null, editingDocs=[], editingHistory=[], editingCurriculum={};
   let activeLetterParticipant=null;
@@ -1048,6 +1108,8 @@
         } else {
           db.doc('settings/general').update({curriculum: settings.curriculum}).catch(()=>{});
         }
+        settings.mahnstufen = Array.isArray(d.mahnstufen) ? d.mahnstufen : settings.mahnstufen;
+        settings.mahnungAbsender = d.mahnungAbsender || settings.mahnungAbsender;
       } else {
         seedIfEmpty();
       }
@@ -1055,6 +1117,7 @@
       fillStaticSelects();
       if($('#dlgParticipant').open) renderCurriculumList();
       if(!$('section[data-view="statistik"]').hidden) renderStats();
+      if(!$('section[data-view="mahnungen"]').hidden) renderMahnungenTab();
     }, e=>console.warn('settings', e));
 
     db.collection('attendance').onSnapshot(snap=>{
@@ -1062,6 +1125,7 @@
       renderAttendanceTab();
       if($('#dlgParticipant').open) renderAttendanceSummary();
       if(!$('section[data-view="statistik"]').hidden) renderStats();
+      if(!$('section[data-view="mahnungen"]').hidden) renderMahnungenTab();
     }, e=>console.warn('attendance', e));
 
     db.collection('cohorts').orderBy('startDate','desc').onSnapshot(snap=>{
@@ -1105,7 +1169,9 @@
         programName:'Umschulung Friseurhandwerk',
         fundingBodies:['Agentur für Arbeit','Jobcenter'],
         templates: defaultTemplates(),
-        curriculum: defaultCurriculum()
+        curriculum: defaultCurriculum(),
+        mahnstufen: [],
+        mahnungAbsender: ''
       });
       const mk = (data)=> db.collection('participants').add(Object.assign({
         documents:[], history:[], demo:true, createdAt: nowISO(), updatedAt: nowISO()
@@ -1183,6 +1249,21 @@
     $('#impFile').addEventListener('change', onImportFileChange);
     $('#impCohort').addEventListener('change', renderImportPreview);
     $('#btnConfirmImport').addEventListener('click', onConfirmImport);
+
+    $('#btnNewMahnstufe').addEventListener('click', ()=> openMahnstufeDialog(null));
+    $('#frmMahnstufe').addEventListener('submit', onSaveMahnstufe);
+    $('#btnDeleteMahnstufe').addEventListener('click', onDeleteMahnstufe);
+    $('#btnSaveMahnAbsender').addEventListener('click', onSaveMahnAbsender);
+    document.addEventListener('click', (e)=>{
+      const editBtn = e.target.closest('[data-edit-mahnstufe]');
+      if(editBtn){ openMahnstufeDialog(editBtn.dataset.editMahnstufe); return; }
+      const sendBtn = e.target.closest('[data-send-mahnung]');
+      if(sendBtn){
+        const p = participants.find(x=>x.id===sendBtn.dataset.pid);
+        const stufe = (settings.mahnstufen||[]).find(s=>s.id===sendBtn.dataset.stufe);
+        if(p && stufe) sendMahnung(p, stufe);
+      }
+    });
     $('#btnNewNote').addEventListener('click', ()=> openNoteDialog());
     $('#btnNewMessage').addEventListener('click', ()=> openMessageDialog());
     $('#btnNewPartner').addEventListener('click', ()=> openPartnerDialog(null));
@@ -1275,6 +1356,7 @@
     $$('section[data-view]').forEach(s=> s.hidden = s.dataset.view !== tab);
     if(tab==='statistik') renderStats();
     if(tab==='anwesenheit') renderAttendanceTab();
+    if(tab==='mahnungen') renderMahnungenTab();
   }
 
   function fillStaticSelects(){
@@ -1318,6 +1400,7 @@
     renderPartners();
     if(!$('section[data-view="anwesenheit"]').hidden) renderAttendanceTab();
     if(!$('section[data-view="statistik"]').hidden) renderStats();
+    if(!$('section[data-view="mahnungen"]').hidden) renderMahnungenTab();
   }
 
   // ---------- Prüfungstermine ----------
@@ -1664,6 +1747,151 @@
     const rate = total ? Math.round((counts.A/total)*100) : null;
     return {counts, total, rate};
   }
+
+  // ---------- Mahnungen (automatische Briefe bei Fehltagen) ----------
+  // "Fehltage" = Entschuldigt + Unentschuldigt zusammen, über den gesamten bisherigen Jahrgang
+  // der Teilnehmerin (alle bislang erfassten Anwesenheits-Einträge, kein Zeitfenster).
+  function fehltageForParticipant(participantId){
+    const s = computeAttendanceStats(participantId);
+    return s.counts.E + s.counts.U;
+  }
+
+  function buildMahnungBody(stufe, p, fehltage){
+    return String(stufe.body||'')
+      .replace(/\{vorname\}/g, p.vorname||'')
+      .replace(/\{nachname\}/g, p.nachname||'')
+      .replace(/\{jahrgang\}/g, cohortName(p.cohortId))
+      .replace(/\{fehltage\}/g, String(fehltage))
+      .replace(/\{datum\}/g, fmtDate(todayISO()))
+      .replace(/\{absender\}/g, settings.mahnungAbsender||'');
+  }
+
+  // Öffnet einen vorausgefüllten E-Mail-Entwurf (mailto:) im Standard-Mailprogramm und
+  // vermerkt danach im Teilnehmerinnen-Datensatz, dass diese Mahnstufe ausgelöst wurde — damit
+  // sie bei gleichbleibendem oder weiter steigendem Fehltage-Stand nicht erneut ausgelöst wird.
+  // WICHTIG: "mailto" kann weder festlegen, von welchem Konto aus gesendet wird (das entscheidet
+  // immer das E-Mail-Programm der Person, die auf "Senden" klickt), noch irgendetwas ohne einen
+  // Klick dieser Person tatsächlich verschicken — echter Versand ganz ohne geöffnete App und ohne
+  // menschliches Zutun ist auf einer reinen GitHub-Pages-Seite ohne eigenen Server nicht möglich.
+  function sendMahnung(p, stufe){
+    if(!p.email){ toast(`Keine E-Mail-Adresse für ${participantName(p)} hinterlegt — Mahnung „${stufe.title}“ übersprungen.`); return; }
+    const fehltage = fehltageForParticipant(p.id);
+    const body = buildMahnungBody(stufe, p, fehltage);
+    const params = ['subject='+encodeURIComponent(stufe.title), 'body='+encodeURIComponent(body)];
+    if(settings.mahnungAbsender) params.push('reply-to='+encodeURIComponent(settings.mahnungAbsender));
+    const href = 'mailto:'+encodeURIComponent(p.email)+'?'+params.join('&');
+    const a = document.createElement('a'); a.href = href; a.target = '_blank';
+    document.body.appendChild(a); a.click(); a.remove();
+    if(db){
+      db.collection('participants').doc(p.id).update({
+        ['mahnungHistory.'+stufe.id]: {sentAt: nowISO(), fehltageAtSend: fehltage}
+      }).catch(err=> console.warn('sendMahnung', err));
+    }
+    toast(`E-Mail-Entwurf für ${participantName(p)} geöffnet (${stufe.title}).`);
+  }
+
+  // Alle TN×Mahnstufe-Kombinationen, deren Schwelle erreicht ist und die für diese TN noch nicht
+  // ausgelöst wurden (siehe p.mahnungHistory). Nur aktive/in Verlängerung befindliche, nicht
+  // archivierte TN werden geprüft — wer die Ausbildung schon verlassen hat, braucht keine Mahnung.
+  function pendingMahnungen(){
+    const stufen = (settings.mahnstufen||[]).slice().sort((a,b)=>a.threshold-b.threshold);
+    if(!stufen.length) return [];
+    const list = [];
+    participants.filter(p=>!p.archived && ['aktiv','verlaengerung'].includes(p.status)).forEach(p=>{
+      const fehltage = fehltageForParticipant(p.id);
+      stufen.forEach(stufe=>{
+        if(fehltage < stufe.threshold) return;
+        if(p.mahnungHistory && p.mahnungHistory[stufe.id]) return;
+        list.push({p, stufe, fehltage});
+      });
+    });
+    return list;
+  }
+
+  // Verhindert, dass dieselbe Kombination innerhalb einer Sitzung mehrfach hintereinander einen
+  // mailto-Tab öffnet, während der Firestore-Schreibvorgang aus sendMahnung() noch unterwegs ist.
+  const mahnAutoTriggered = new Set();
+
+  function renderMahnstufenList(){
+    const stufen = (settings.mahnstufen||[]).slice().sort((a,b)=>a.threshold-b.threshold);
+    $('#mahnstufenList').innerHTML = stufen.length ? stufen.map(s=>`
+      <div class="row-between" style="padding:8px 0; border-bottom:1px solid var(--border);">
+        <div><strong>${esc(s.title)}</strong> <span class="faint">ab ${s.threshold} Fehltagen · ${s.mode==='auto'?'automatisch':'mit Freigabe'}</span></div>
+        <button type="button" class="btn btn-sm" data-edit-mahnstufe="${s.id}">Bearbeiten</button>
+      </div>`).join('') : '<p class="empty">Noch keine Mahnstufen angelegt. Mit „+ Neue Mahnstufe“ die erste anlegen.</p>';
+  }
+
+  function renderMahnungenTab(){
+    $('#mahnAbsender').value = settings.mahnungAbsender || '';
+    const pending = pendingMahnungen();
+    const freigabeItems = pending.filter(x=>x.stufe.mode!=='auto');
+    const autoItems = pending.filter(x=>x.stufe.mode==='auto');
+
+    $('#mahnQueue').innerHTML = freigabeItems.length ? freigabeItems.map(x=>`
+      <div class="row-between" style="padding:8px 0; border-bottom:1px solid var(--border);">
+        <div><strong>${participantLinkHTML(x.p)}</strong> <span class="faint">${esc(cohortName(x.p.cohortId))} · ${x.fehltage} Fehltage · ${esc(x.stufe.title)}</span></div>
+        <button type="button" class="btn btn-sm btn-primary" data-send-mahnung data-pid="${x.p.id}" data-stufe="${x.stufe.id}">✉ E-Mail-Entwurf öffnen</button>
+      </div>`).join('') : '<p class="empty">Keine Mahnungen zur Freigabe.</p>';
+
+    // Automatisch-Modus: einmalig pro TN×Stufe direkt auslösen, sobald dieser Reiter offen ist.
+    autoItems.forEach(x=>{
+      const key = x.p.id+'|'+x.stufe.id;
+      if(mahnAutoTriggered.has(key)) return;
+      mahnAutoTriggered.add(key);
+      sendMahnung(x.p, x.stufe);
+    });
+
+    renderMahnstufenList();
+  }
+
+  function openMahnstufeDialog(id){
+    const s = id ? (settings.mahnstufen||[]).find(x=>x.id===id) : null;
+    $('#dlgMahnstufe').dataset.editingId = id||'';
+    $('#mahnDlgTitle').textContent = s ? 'Mahnstufe bearbeiten' : 'Neue Mahnstufe';
+    $('#mahnTitle').value = s?.title||'';
+    $('#mahnThreshold').value = s?.threshold||'';
+    $('#mahnMode').value = s?.mode||'freigabe';
+    $('#mahnBody').value = s?.body||'';
+    $('#btnDeleteMahnstufe').hidden = !s;
+    $('#dlgMahnstufe').showModal();
+  }
+
+  async function onSaveMahnstufe(e){
+    e.preventDefault();
+    const title = $('#mahnTitle').value.trim();
+    const threshold = parseInt($('#mahnThreshold').value, 10);
+    if(!title || !threshold || threshold<1){ toast('Bitte Bezeichnung und einen Schwellenwert (mind. 1) angeben.'); return; }
+    const editingId = $('#dlgMahnstufe').dataset.editingId || '';
+    const stufen = (settings.mahnstufen||[]).slice();
+    const data = { title, threshold, mode: $('#mahnMode').value==='auto'?'auto':'freigabe', body: $('#mahnBody').value };
+    if(editingId){
+      const idx = stufen.findIndex(s=>s.id===editingId);
+      if(idx>-1) stufen[idx] = {...stufen[idx], ...data};
+    } else {
+      stufen.push({id:'mahn'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), ...data});
+    }
+    if(!db){ $('#dlgMahnstufe').close(); return; }
+    try{ await db.doc('settings/general').update({mahnstufen: stufen}); toast('Gespeichert.'); $('#dlgMahnstufe').close(); }
+    catch(err){ console.warn(err); toast('Speichern fehlgeschlagen.'); }
+  }
+
+  async function onDeleteMahnstufe(){
+    const editingId = $('#dlgMahnstufe').dataset.editingId || '';
+    if(!editingId) return;
+    if(!confirm('Diese Mahnstufe wirklich löschen?')) return;
+    const stufen = (settings.mahnstufen||[]).filter(s=>s.id!==editingId);
+    if(!db){ $('#dlgMahnstufe').close(); return; }
+    try{ await db.doc('settings/general').update({mahnstufen: stufen}); toast('Gelöscht.'); $('#dlgMahnstufe').close(); }
+    catch(err){ console.warn(err); toast('Löschen fehlgeschlagen.'); }
+  }
+
+  async function onSaveMahnAbsender(){
+    const val = $('#mahnAbsender').value.trim();
+    if(!db) return;
+    try{ await db.doc('settings/general').update({mahnungAbsender: val}); toast('Gespeichert.'); }
+    catch(err){ console.warn(err); toast('Speichern fehlgeschlagen.'); }
+  }
+
   function renderAttendanceTab(){
     const cohortId = $('#attCohort').value;
     const date = $('#attDate').value || todayISO();
