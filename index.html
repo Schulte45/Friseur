@@ -1136,13 +1136,14 @@
     // anklickbaren Zeile (z.B. der Jahrgang in der Teilnehmerinnen-Tabelle) nicht zusätzlich
     // den Klick der Zeile selbst auslöst.
     document.addEventListener('click', (e)=>{
-      const link = e.target.closest('[data-open-participant], [data-open-cohort], [data-open-partner]');
+      const link = e.target.closest('[data-open-participant], [data-open-cohort], [data-open-partner], [data-open-cohort-participants]');
       if(!link) return;
       e.preventDefault();
       e.stopPropagation();
       if(link.dataset.openParticipant) openParticipantDialog(link.dataset.openParticipant);
       else if(link.dataset.openCohort) openCohortDialog(link.dataset.openCohort);
       else if(link.dataset.openPartner) openPartnerDialog(link.dataset.openPartner);
+      else if(link.dataset.openCohortParticipants) gotoCohortParticipants(link.dataset.openCohortParticipants);
     }, true);
 
     $('#frmParticipant').addEventListener('submit', onSaveParticipant);
@@ -1254,6 +1255,17 @@
   }
 
   // ---------- overview ----------
+  // Springt von der Übersicht (Kachel "X Teilnehmerinnen" bei einem Jahrgang) direkt in die
+  // Teilnehmerinnen-Liste, gefiltert auf genau diesen Jahrgang (Status-/Suchfilter werden dafür
+  // zurückgesetzt, damit wirklich alle TN des Jahrgangs sichtbar sind).
+  function gotoCohortParticipants(cohortId){
+    $('#fltSearch').value = '';
+    $('#fltCohort').value = cohortId;
+    $('#fltStatus').value = '';
+    renderParticipants();
+    switchTab('teilnehmerinnen');
+  }
+
   function renderOverview(){
     // Archivierte TN (Bestanden/Abgebrochen/Unterbrochen, manuell ins Archiv verschoben) zählen
     // nicht mehr im operativen Tagesgeschäft mit.
@@ -1286,7 +1298,7 @@
       const cnt = operational.filter(p=>p.cohortId===c.id && ['aktiv','verlaengerung','pausiert'].includes(p.status)).length;
       return `<div class="row-between" style="padding:8px 0; border-bottom:1px solid var(--border);">
         <div><strong>${cohortLinkHTML(c.id)}</strong> <span class="faint">${fmtDate(c.startDate)} – ${fmtDate(c.endDate)}</span></div>
-        <span class="pill st-info">${cnt} Teilnehmerinnen</span>
+        <span class="pill st-info" style="cursor:pointer;" data-open-cohort-participants="${c.id}" title="Teilnehmerinnen dieses Jahrgangs anzeigen">${cnt} Teilnehmerinnen</span>
       </div>`;
     }).join('') : '<p class="empty">Noch keine aktiven Jahrgänge.</p>';
 
