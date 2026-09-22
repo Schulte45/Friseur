@@ -1102,6 +1102,12 @@ pako/dist/pako.es5.min.js:
 
   let db=null, assetsCap=null, userCap=null, myId=null, myName='Ich';
   let cohorts=[], participants=[], notes=[], messages=[], attendance=[], partners=[];
+  // Merkt sich, ob die Anwesenheit-Jahrgangsauswahl schon einmal automatisch auf den aktiven
+  // Jahrgang voreingestellt wurde. Erst wenn echte Jahrgänge geladen sind, darf das einmalig
+  // passieren — danach bleibt jede spätere, bewusste Auswahl (auch "Alle Jahrgänge" = leer)
+  // unangetastet, egal wie oft fillCohortSelects() zwischenzeitlich (z. B. vor dem Laden der
+  // Jahrgänge) mit einer leeren Jahrgangsliste aufgerufen wurde.
+  let attCohortDefaulted = false;
   let settings = {institutionName:'', programName:'Umschulung Friseurhandwerk', fundingBodies:['Agentur für Arbeit','Jobcenter'], templates: defaultTemplates(), curriculum: defaultCurriculum(), mahnstufen: [], mahnungAbsender: '', emailjs: {serviceId:'', templateId:'', publicKey:''}};
   let hasDemoData=false;
   let editingParticipantId=null, editingCohortId=null, editingDocs=[], editingHistory=[], editingCurriculum={};
@@ -1511,10 +1517,18 @@ pako/dist/pako.es5.min.js:
     $('#arcCohort').value = curArc;
     $('#pCohort').innerHTML = opts;
     if(cur2) $('#pCohort').value = cur2;
+    // "Alle Jahrgänge" ist eine gültige, bewusste Auswahl (leerer Wert) — daher nur einmalig,
+    // sobald echte Jahrgänge vorliegen, automatisch den aktiven Jahrgang vorauswählen (siehe
+    // attCohortDefaulted); jede spätere bewusste Auswahl (auch leer = "Alle Jahrgänge") bleibt
+    // danach bei jedem weiteren Aufbau der Liste erhalten.
     const curAtt = $('#attCohort').value;
-    $('#attCohort').innerHTML = opts;
-    if(curAtt) $('#attCohort').value = curAtt;
-    else if(cohorts.length) $('#attCohort').value = (cohorts.find(c=>c.status==='aktiv')||cohorts[0]).id;
+    $('#attCohort').innerHTML = '<option value="">Alle Jahrgänge</option>'+opts;
+    if(!attCohortDefaulted && cohorts.length){
+      $('#attCohort').value = (cohorts.find(c=>c.status==='aktiv')||cohorts[0]).id;
+      attCohortDefaulted = true;
+    } else {
+      $('#attCohort').value = curAtt;
+    }
     const pOpts = participants.filter(p=>!p.archived).slice().sort((a,b)=>(a.nachname||'').localeCompare(b.nachname||'')).map(p=>`<option value="${p.id}">${esc(p.nachname)}, ${esc(p.vorname)}</option>`).join('');
     ['#noteFltParticipant','#nParticipant','#mParticipant'].forEach(sel=>{
       const el = $(sel); const cur = el.value; const placeholder = el.querySelector('option[value=""]').outerHTML;
@@ -2369,13 +2383,13 @@ BWK BildungsWerk in Kreuzberg GmbH`
       const stats = computeAttendanceStats(p.id);
       return `<div class="card" style="padding:10px 14px;">
         <div class="row-between">
-          <div><strong>${participantLinkHTML(p)}</strong> <span class="faint">· Quote gesamt ${stats.rate==null?'—':stats.rate+'%'}</span></div>
+          <div><strong>${participantLinkHTML(p)}</strong> ${cohortId?'':`<span class="faint">· ${cohortLinkHTML(p.cohortId)}</span>`} <span class="faint">· Quote gesamt ${stats.rate==null?'—':stats.rate+'%'}</span></div>
           <div class="row" style="gap:6px;" data-att-row="${p.id}">
             ${ATT_ORDER.map(c=>`<button type="button" class="btn btn-sm att-btn ${code===c?('active '+ATT_CODES[c].cls):''}" data-att-code="${c}" title="${esc(ATT_CODES[c].label)}">${c}</button>`).join('')}
           </div>
         </div>
       </div>`;
-    }).join('') : '<p class="empty">Keine Teilnehmerinnen in diesem Jahrgang.</p>';
+    }).join('') : `<p class="empty">${cohortId?'Keine Teilnehmerinnen in diesem Jahrgang.':'Keine Teilnehmerinnen gefunden.'}</p>`;
 
     // Zusammenfassung oben: je nach gewählter Kategorie (Tag/Woche/Monat/Ausbildungsjahr/Gesamt)
     // entweder nur der angezeigte Tag, ein um ihn herum berechneter Zeitraum, oder alles seit je her.
