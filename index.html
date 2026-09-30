@@ -1051,6 +1051,20 @@ pako/dist/pako.es5.min.js:
   }
   const ATT_CODES = {A:{label:'Anwesend',cls:'st-success'}, V:{label:'Verspätet',cls:'st-warn'}, E:{label:'Entschuldigt',cls:'st-info'}, U:{label:'Unentschuldigt',cls:'st-danger'}, K:{label:'Krank',cls:'st-neutral'}};
   const ATT_ORDER = ['A','V','E','U','K'];
+  // Kategorien für "Grund für Fehlen" — zusätzlich zu den A/V/E/U/K-Kürzeln, als genauere Angabe
+  // z. B. für den Praktikumsbetrieb (Friseursalon). Frei erweiterbar; Reihenfolge = Anzeigereihenfolge.
+  const ABSENCE_REASONS = {
+    krankheit: 'Krankheit',
+    arzttermin: 'Arzttermin',
+    familiaer: 'Familiäre Gründe',
+    urlaub: 'Urlaub / Freistellung',
+    sonstiges: 'Sonstiges'
+  };
+  // Welche Teilnehmerinnen-Zeilen in der Anwesenheit gerade die Detailfelder (Ankunft/Ende/Grund/
+  // Tagesinhalt) aufgeklappt haben — bleibt über ein Re-Render hinweg erhalten (z. B. nach dem
+  // Speichern eines Feldes), geht aber wieder verloren beim Wechsel des Tages oder Verlassen des
+  // Reiters, was hier bewusst so einfach gehalten ist.
+  const attExpandedDetails = new Set();
   const CURR_STATUS = {offen:{label:'Offen',cls:'st-neutral'}, in_arbeit:{label:'In Arbeit',cls:'st-warn'}, abgeschlossen:{label:'Abgeschlossen',cls:'st-success'}};
   const CURR_CYCLE = ['offen','in_arbeit','abgeschlossen'];
 
@@ -1420,6 +1434,7 @@ pako/dist/pako.es5.min.js:
     $('#attCohort').addEventListener('change', renderAttendanceTab);
     $('#attDate').addEventListener('change', renderAttendanceTab);
     $('#attList').addEventListener('click', onAttendanceClick);
+    $('#attList').addEventListener('change', onAttendanceDetailChange);
     $('#attDate').value = todayISO();
     $('#attLegend').innerHTML = ATT_ORDER.map(c=>`<span class="pill ${ATT_CODES[c].cls}">${c} = ${esc(ATT_CODES[c].label)}</span>`).join('');
     $('#attPrevDay').addEventListener('click', ()=>{ $('#attDate').value = addDaysISO($('#attDate').value, -1); renderAttendanceTab(); });
@@ -1919,6 +1934,27 @@ pako/dist/pako.es5.min.js:
       }
     }catch(err){ console.warn(err); toast('Anwesenheit konnte nicht gespeichert werden.'); }
   }
+  // Zusätzliche Tagesangaben (Ankunftszeit, Arbeitsende, Grund für Fehlen, Inhalte des Tages) —
+  // unabhängig von den A/V/E/U/K-Kürzeln, wirken sich NICHT auf Fehltage-Zählung oder Mahnungen aus,
+  // sondern dienen der genaueren Dokumentation (z. B. durch den Praktikumsbetrieb).
+  function getAttDetail(participantId, dateISO){
+    const doc = getAttDoc(participantId, monthKeyOf(dateISO));
+    if(!doc || !doc.details) return {};
+    return doc.details[dayKeyOf(dateISO)] || {};
+  }
+  async function setAttendanceDetail(participantId, dateISO, field, value){
+    if(!db){ toast('Kein Live-Speicher in dieser Vorschau.'); return; }
+    const month = monthKeyOf(dateISO), day = dayKeyOf(dateISO);
+    const id = attDocId(participantId, month);
+    const existing = getAttDoc(participantId, month);
+    try{
+      if(existing){
+        await db.collection('attendance').doc(id).update({['details.'+day+'.'+field]: value, updatedAt: nowISO()});
+      } else {
+        await db.collection('attendance').doc(id).set({participantId, month, days:{}, details:{[day]:{[field]:value}}, updatedAt: nowISO()});
+      }
+    }catch(err){ console.warn(err); toast('Angabe konnte nicht gespeichert werden.'); }
+  }
   function computeAttendanceStats(participantId){
     const docs = attendance.filter(a=>a.participantId===participantId);
     const counts = {A:0,V:0,E:0,U:0,K:0};
@@ -2381,13 +2417,39 @@ BWK BildungsWerk in Kreuzberg GmbH`
       const code = getAttCode(p.id, date);
       if(code && dayCounts[code]!=null) dayCounts[code]++; else dayCounts.offen++;
       const stats = computeAttendanceStats(p.id);
+      const detail = getAttDetail(p.id, date);
+      const expanded = attExpandedDetails.has(p.id);
       return `<div class="card" style="padding:10px 14px;">
         <div class="row-between">
           <div><strong>${participantLinkHTML(p)}</strong> ${cohortId?'':`<span class="faint">· ${cohortLinkHTML(p.cohortId)}</span>`} <span class="faint">· Quote gesamt ${stats.rate==null?'—':stats.rate+'%'}</span></div>
-          <div class="row" style="gap:6px;" data-att-row="${p.id}">
-            ${ATT_ORDER.map(c=>`<button type="button" class="btn btn-sm att-btn ${code===c?('active '+ATT_CODES[c].cls):''}" data-att-code="${c}" title="${esc(ATT_CODES[c].label)}">${c}</button>`).join('')}
+          <div class="row" style="gap:6px; align-items:center;">
+            <div class="row" style="gap:6px;" data-att-row="${p.id}">
+              ${ATT_ORDER.map(c=>`<button type="button" class="btn btn-sm att-btn ${code===c?('active '+ATT_CODES[c].cls):''}" data-att-code="${c}" title="${esc(ATT_CODES[c].label)}">${c}</button>`).join('')}
+            </div>
+            <button type="button" class="btn btn-sm no-print" data-att-toggle-details="${p.id}" title="Ankunft, Arbeitsende, Grund für Fehlen, Inhalte des Tages">${expanded?'▾':'▸'} Details</button>
           </div>
         </div>
+        ${expanded ? `<div class="row" style="gap:10px; margin-top:10px; flex-wrap:wrap;" data-att-details-row="${p.id}">
+          <div class="field" style="min-width:110px;">
+            <label>Ankunftszeit</label>
+            <input class="input" type="time" data-att-field="ankunft" value="${esc(detail.ankunft||'')}">
+          </div>
+          <div class="field" style="min-width:110px;">
+            <label>Arbeitsende</label>
+            <input class="input" type="time" data-att-field="ende" value="${esc(detail.ende||'')}">
+          </div>
+          <div class="field" style="min-width:190px;">
+            <label>Grund für Fehlen</label>
+            <select class="select" data-att-field="grund">
+              <option value="">—</option>
+              ${Object.entries(ABSENCE_REASONS).map(([k,v])=>`<option value="${k}" ${detail.grund===k?'selected':''}>${esc(v)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field" style="flex:1; min-width:220px;">
+            <label>Inhalte des Tages</label>
+            <input class="input" type="text" data-att-field="inhalt" value="${esc(detail.inhalt||'')}" placeholder="Kurz: was wurde heute gemacht?">
+          </div>
+        </div>` : ''}
       </div>`;
     }).join('') : `<p class="empty">${cohortId?'Keine Teilnehmerinnen in diesem Jahrgang.':'Keine Teilnehmerinnen gefunden.'}</p>`;
 
@@ -2413,12 +2475,28 @@ BWK BildungsWerk in Kreuzberg GmbH`
     $('#attSummary').innerHTML = tiles.map(s=>`<div class="stat-tile"><div class="n">${s.n}</div><div class="l">${esc(s.l)}</div></div>`).join('');
   }
   function onAttendanceClick(e){
+    const toggle = e.target.closest('[data-att-toggle-details]');
+    if(toggle){
+      const pid = toggle.dataset.attToggleDetails;
+      if(attExpandedDetails.has(pid)) attExpandedDetails.delete(pid); else attExpandedDetails.add(pid);
+      renderAttendanceTab();
+      return;
+    }
     const btn = e.target.closest('[data-att-code]');
     if(!btn) return;
     const row = btn.closest('[data-att-row]');
     const participantId = row.dataset.attRow;
     const date = $('#attDate').value || todayISO();
     setAttendance(participantId, date, btn.dataset.attCode);
+  }
+  function onAttendanceDetailChange(e){
+    const el = e.target.closest('[data-att-field]');
+    if(!el) return;
+    const row = el.closest('[data-att-details-row]');
+    if(!row) return;
+    const participantId = row.dataset.attDetailsRow;
+    const date = $('#attDate').value || todayISO();
+    setAttendanceDetail(participantId, date, el.dataset.attField, el.value);
   }
   function renderAttendanceSummary(){
     if(!editingParticipantId){ $('#pAttSummary').innerHTML = '<p class="faint">Anwesenheit wird erfasst, sobald die Teilnehmerin gespeichert ist.</p>'; return; }
