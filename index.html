@@ -447,7 +447,6 @@ pako/dist/pako.es5.min.js:
                 <th>Ankunftszeit</th>
                 <th>Arbeitsende</th>
                 <th>Inhalte des Tages</th>
-                <th>Grund für Fehlen</th>
               </tr>
             </thead>
             <tbody id="attList"></tbody>
@@ -1087,15 +1086,6 @@ pako/dist/pako.es5.min.js:
   }
   const ATT_CODES = {A:{label:'Anwesend',cls:'st-success'}, V:{label:'Verspätet',cls:'st-warn'}, E:{label:'Entschuldigt',cls:'st-info'}, U:{label:'Unentschuldigt',cls:'st-danger'}, K:{label:'Krank',cls:'st-neutral'}};
   const ATT_ORDER = ['A','V','E','U','K'];
-  // Kategorien für "Grund für Fehlen" — zusätzlich zu den A/V/E/U/K-Kürzeln, als genauere Angabe
-  // z. B. für den Praktikumsbetrieb (Friseursalon). Frei erweiterbar; Reihenfolge = Anzeigereihenfolge.
-  const ABSENCE_REASONS = {
-    krankheit: 'Krankheit',
-    arzttermin: 'Arzttermin',
-    familiaer: 'Familiäre Gründe',
-    urlaub: 'Urlaub / Freistellung',
-    sonstiges: 'Sonstiges'
-  };
   const CURR_STATUS ={offen:{label:'Offen',cls:'st-neutral'}, in_arbeit:{label:'In Arbeit',cls:'st-warn'}, abgeschlossen:{label:'Abgeschlossen',cls:'st-success'}};
   const CURR_CYCLE = ['offen','in_arbeit','abgeschlossen'];
 
@@ -1958,9 +1948,11 @@ pako/dist/pako.es5.min.js:
       }
     }catch(err){ console.warn(err); toast('Anwesenheit konnte nicht gespeichert werden.'); }
   }
-  // Zusätzliche Tagesangaben (Ankunftszeit, Arbeitsende, Grund für Fehlen, Inhalte des Tages) —
-  // unabhängig von den A/V/E/U/K-Kürzeln, wirken sich NICHT auf Fehltage-Zählung oder Mahnungen aus,
-  // sondern dienen der genaueren Dokumentation (z. B. durch den Praktikumsbetrieb).
+  // Zusätzliche Tagesangaben (Ankunftszeit, Arbeitsende, Inhalte des Tages) — unabhängig von den
+  // A/V/E/U/K-Kürzeln, wirken sich NICHT auf Fehltage-Zählung oder Mahnungen aus, sondern dienen der
+  // genaueren Dokumentation (z. B. durch den Praktikumsbetrieb). Der Grund für ein Fehlen wird
+  // bewusst NICHT separat erfasst — das deckt das Status-Kürzel (Entschuldigt/Unentschuldigt/Krank)
+  // bereits ab, ein zusätzliches Auswahlfeld wäre doppelt gepflegte Information gewesen.
   function getAttDetail(participantId, dateISO){
     const doc = getAttDoc(participantId, monthKeyOf(dateISO));
     if(!doc || !doc.details) return {};
@@ -2427,11 +2419,6 @@ BWK BildungsWerk in Kreuzberg GmbH`
     catch(err){ console.warn(err); toast('Speichern fehlgeschlagen.'); }
   }
 
-  // Absenz-Kürzel, bei denen die Angabe eines Grundes sinnvoll ist ("bei Fehlen"). Bei "A"
-  // (Anwesend), "V" (Verspätet, kam ja trotzdem) oder noch gar keinem Kürzel wird stattdessen nur
-  // ein "–" angezeigt statt des Auswahlmenüs — einfach und übersichtlich, wie von den
-  // Ausbilder*innen gewünscht, statt eines immer sichtbaren, meist leeren Dropdowns.
-  const ABSENCE_CODES = ['K','E','U'];
   function renderAttendanceTab(){
     const cohortId = $('#attCohort').value;
     const date = $('#attDate').value || todayISO();
@@ -2456,7 +2443,6 @@ BWK BildungsWerk in Kreuzberg GmbH`
       const code = getAttCode(p.id, date);
       if(code && dayCounts[code]!=null) dayCounts[code]++; else dayCounts.offen++;
       const detail = getAttDetail(p.id, date);
-      const isAbsence = ABSENCE_CODES.includes(code);
       return `<tr data-id="${p.id}">
         <td>${participantLinkHTML(p)}</td>
         <td>${cohortLinkHTML(p.cohortId)}</td>
@@ -2469,12 +2455,8 @@ BWK BildungsWerk in Kreuzberg GmbH`
         <td><input class="input" type="time" data-att-field="ankunft" value="${esc(detail.ankunft||'')}"></td>
         <td><input class="input" type="time" data-att-field="ende" value="${esc(detail.ende||'')}"></td>
         <td><input class="input" type="text" data-att-field="inhalt" value="${esc(detail.inhalt||'')}" placeholder="Kurz: was wurde gemacht?"></td>
-        <td>${isAbsence ? `<select class="select" data-att-field="grund">
-              <option value="">—</option>
-              ${Object.entries(ABSENCE_REASONS).map(([k,v])=>`<option value="${k}" ${detail.grund===k?'selected':''}>${esc(v)}</option>`).join('')}
-            </select>` : '<span class="faint">–</span>'}</td>
       </tr>`;
-    }).join('') : `<tr><td colspan="7" class="empty">${cohortId?'Keine Teilnehmerinnen in diesem Jahrgang.':'Keine Teilnehmerinnen gefunden.'}</td></tr>`;
+    }).join('') : `<tr><td colspan="6" class="empty">${cohortId?'Keine Teilnehmerinnen in diesem Jahrgang.':'Keine Teilnehmerinnen gefunden.'}</td></tr>`;
 
     // Zusammenfassung oben: je nach gewählter Kategorie (Tag/Woche/Monat/Ausbildungsjahr/Gesamt)
     // entweder nur der angezeigte Tag, ein um ihn herum berechneter Zeitraum, oder alles seit je her.
