@@ -209,6 +209,9 @@ pako/dist/pako.es5.min.js:
   .doc-row .cat{color:var(--text-dim);}
   .ref-link{color:var(--accent); text-decoration:none; font-weight:600; cursor:pointer;}
   .ref-link:hover{text-decoration:underline;}
+  /* Jahrgang in der Tagesübersicht bewusst dezenter als Name/übrige Links — er dient dort nur der
+     Einordnung/Sortierung, nicht als Haupt-Handlungsziel, darum kleiner und ohne Akzentfarbe. */
+  #attList .att-cohort-cell, #attList .att-cohort-cell .ref-link{color:var(--text-faint); font-weight:400; font-size:12px;}
   .stat-tile-link{cursor:pointer;}
   .stat-tile-link:hover{outline:2px solid var(--accent); outline-offset:-2px;}
   .curr-row{border:1px solid var(--border); border-radius:10px; padding:9px 11px;}
@@ -294,7 +297,6 @@ pako/dist/pako.es5.min.js:
     </div>
     <nav class="tabs no-print" role="tablist" id="tabs">
       <button class="tab" role="tab" data-tab="anwesenheit">Tagesübersicht</button>
-      <button class="tab" role="tab" data-tab="uebersicht">Übersicht</button>
       <button class="tab" role="tab" data-tab="teilnehmerinnen">Teilnehmerinnen</button>
       <button class="tab" role="tab" data-tab="archiv">Archiv</button>
       <button class="tab" role="tab" data-tab="durchgaenge">Jahrgänge</button>
@@ -309,32 +311,6 @@ pako/dist/pako.es5.min.js:
 
 <div class="app"><div class="app-inner">
   <main>
-    <!-- ÜBERSICHT -->
-    <section data-view="uebersicht">
-      <div class="grid-stats" id="ovStats"></div>
-      <div class="card">
-        <div class="row-between">
-          <h3>Aktive Jahrgänge</h3>
-          <button class="btn btn-sm" data-goto="durchgaenge">Alle Jahrgänge →</button>
-        </div>
-        <div id="ovCohorts" style="margin-top:10px;"></div>
-      </div>
-      <div class="card">
-        <h3>Nächste Prüfungen</h3>
-        <div id="ovExams" style="margin-top:10px;"></div>
-      </div>
-      <div class="row" style="align-items:stretch; gap:16px; flex-wrap:wrap;">
-        <div class="card" style="flex:1; min-width:260px;">
-          <div class="row-between"><h3>Offene Aufgaben</h3><button class="btn btn-sm" data-goto="notizen">Alle →</button></div>
-          <div id="ovTasks" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
-        </div>
-        <div class="card" style="flex:1; min-width:260px;">
-          <div class="row-between"><h3>Letzte interne Mitteilungen</h3><button class="btn btn-sm" data-goto="kommunikation">Alle →</button></div>
-          <div id="ovMessages" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
-        </div>
-      </div>
-    </section>
-
     <!-- TEILNEHMERINNEN -->
     <section data-view="teilnehmerinnen" hidden>
       <div class="card">
@@ -439,6 +415,14 @@ pako/dist/pako.es5.min.js:
         <div class="grid-stats no-print" id="attSummary"></div>
         <div class="table-wrap">
           <table>
+            <colgroup>
+              <col style="width:15%">
+              <col style="width:9%">
+              <col style="width:13%">
+              <col style="width:9%">
+              <col style="width:9%">
+              <col style="width:45%">
+            </colgroup>
             <thead>
               <tr>
                 <th>Name</th>
@@ -451,6 +435,32 @@ pako/dist/pako.es5.min.js:
             </thead>
             <tbody id="attList"></tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- ehemalige Startseite (Übersicht): jetzt direkt unter der Tagesübersicht -->
+      <div class="no-print" style="margin-top:28px;">
+        <div class="grid-stats" id="ovStats"></div>
+        <div class="card">
+          <div class="row-between">
+            <h3>Aktive Jahrgänge</h3>
+            <button class="btn btn-sm" data-goto="durchgaenge">Alle Jahrgänge →</button>
+          </div>
+          <div id="ovCohorts" style="margin-top:10px;"></div>
+        </div>
+        <div class="card">
+          <h3>Nächste Prüfungen</h3>
+          <div id="ovExams" style="margin-top:10px;"></div>
+        </div>
+        <div class="row" style="align-items:stretch; gap:16px; flex-wrap:wrap;">
+          <div class="card" style="flex:1; min-width:260px;">
+            <div class="row-between"><h3>Offene Aufgaben</h3><button class="btn btn-sm" data-goto="notizen">Alle →</button></div>
+            <div id="ovTasks" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
+          </div>
+          <div class="card" style="flex:1; min-width:260px;">
+            <div class="row-between"><h3>Letzte interne Mitteilungen</h3><button class="btn btn-sm" data-goto="kommunikation">Alle →</button></div>
+            <div id="ovMessages" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -2445,7 +2455,7 @@ BWK BildungsWerk in Kreuzberg GmbH`
       const detail = getAttDetail(p.id, date);
       return `<tr data-id="${p.id}">
         <td>${participantLinkHTML(p)}</td>
-        <td>${cohortLinkHTML(p.cohortId)}</td>
+        <td class="att-cohort-cell">${cohortLinkHTML(p.cohortId)}</td>
         <td>
           <div class="row" style="gap:4px; flex-wrap:nowrap;" data-att-row="${p.id}">
             ${ATT_ORDER.map(c=>`<button type="button" class="btn btn-sm att-btn ${code===c?('active '+ATT_CODES[c].cls):''}" data-att-code="${c}" title="${esc(ATT_CODES[c].label)}" style="padding:4px 8px;">${c}</button>`).join('')}
