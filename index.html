@@ -300,6 +300,7 @@ pako/dist/pako.es5.min.js:
       <button class="tab" role="tab" data-tab="teilnehmerinnen">Teilnehmerinnen</button>
       <button class="tab" role="tab" data-tab="archiv">Archiv</button>
       <button class="tab" role="tab" data-tab="durchgaenge">Jahrgänge</button>
+      <button class="tab" role="tab" data-tab="pruefungstermine">Prüfungstermine</button>
       <button class="tab" role="tab" data-tab="notizen">Notizen &amp; Aufgaben</button>
       <button class="tab" role="tab" data-tab="kommunikation">Kommunikation</button>
       <button class="tab" role="tab" data-tab="partner">Partner</button>
@@ -472,6 +473,22 @@ pako/dist/pako.es5.min.js:
         <button class="btn btn-primary" id="btnNewCohort">+ Neuer Jahrgang</button>
       </div>
       <div id="cohortsList" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </section>
+
+    <!-- PRÜFUNGSTERMINE -->
+    <section data-view="pruefungstermine" hidden>
+      <div class="row-between">
+        <h3>Prüfungstermine</h3>
+      </div>
+      <p class="faint" style="margin-top:4px;">Hier werden die Prüfungstermine je Jahrgang eingetragen. Sie erscheinen danach automatisch auf den Teilnehmerakten der jeweiligen Teilnehmerinnen. Bei Teilnehmerinnen in Verlängerung wird automatisch auf den nächsten Termin desselben Prüfungstyps aus einem späteren Jahrgang verschoben — das lässt sich auf der jeweiligen Teilnehmerakte jederzeit manuell ändern.</p>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Jahrgang</th><th>Zwischenprüfung</th><th>Abschlussprüfung</th></tr></thead>
+            <tbody id="examCohortList"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
     <!-- NOTIZEN & AUFGABEN -->
@@ -696,7 +713,7 @@ pako/dist/pako.es5.min.js:
           <div class="field"><label>Kostenträger / Fördermittelgeber</label><input class="input" id="pFunding" list="fundingList"></div>
           <div class="field"><label>Aktenzeichen / Kundennummer</label><input class="input" id="pAktenzeichen"></div>
         </div>
-        <p class="faint" id="pExamInfo" style="margin:4px 0 0;"></p>
+        <div id="pExamList" style="margin-top:8px; display:flex; flex-direction:column; gap:6px;"></div>
         <datalist id="fundingList"></datalist>
       </fieldset>
       <fieldset>
@@ -1149,7 +1166,7 @@ pako/dist/pako.es5.min.js:
   let cohorts=[], participants=[], notes=[], messages=[], attendance=[], partners=[];
   let settings ={institutionName:'', programName:'Umschulung Friseurhandwerk', fundingBodies:['Agentur für Arbeit','Jobcenter'], templates: defaultTemplates(), curriculum: defaultCurriculum(), mahnstufen: [], mahnungAbsender: '', emailjs: {serviceId:'', templateId:'', publicKey:''}};
   let hasDemoData=false;
-  let editingParticipantId=null, editingCohortId=null, editingDocs=[], editingHistory=[], editingCurriculum={};
+  let editingParticipantId=null, editingCohortId=null, editingDocs=[], editingHistory=[], editingCurriculum={}, editingExamOverrides={};
   // Word-Vorlage, die gerade im Mahnstufe-Dialog hochgeladen/ausgewählt ist: {assetId, mime, filename} oder null.
   let pendingMahnDocx = null;
   let activeLetterParticipant=null;
@@ -1479,6 +1496,8 @@ pako/dist/pako.es5.min.js:
     $('#statPeriodTo').addEventListener('change', ()=>{ statPeriod.to = $('#statPeriodTo').value || statPeriod.from; if(statPeriod.to < statPeriod.from) statPeriod.from = statPeriod.to; renderStats(); });
 
     $('#pCohort').addEventListener('change', renderParticipantExamInfo);
+    $('#pStatus').addEventListener('change', renderParticipantExamInfo);
+    $('#examCohortList').addEventListener('change', onExamCohortFieldChange);
     $('#pStatus').addEventListener('change', renderArchiveControls);
     $('#pCurriculumList').addEventListener('click', onCurriculumToggleClick);
     $('#pCurriculumList').addEventListener('change', onCurriculumFieldChange);
@@ -1539,6 +1558,7 @@ pako/dist/pako.es5.min.js:
     if(tab==='statistik') renderStats();
     if(tab==='anwesenheit') renderAttendanceTab();
     if(tab==='mahnungen') renderMahnungenTab();
+    if(tab==='pruefungstermine') renderExamCohortsTab();
   }
 
   function fillStaticSelects(){
@@ -1590,6 +1610,7 @@ pako/dist/pako.es5.min.js:
     if(!$('section[data-view="anwesenheit"]').hidden) renderAttendanceTab();
     if(!$('section[data-view="statistik"]').hidden) renderStats();
     if(!$('section[data-view="mahnungen"]').hidden) renderMahnungenTab();
+    if(!$('section[data-view="pruefungstermine"]').hidden) renderExamCohortsTab();
   }
 
   // ---------- Prüfungstermine ----------
@@ -1628,6 +1649,51 @@ pako/dist/pako.es5.min.js:
     return items;
   }
 
+  // Nächster Termin DESSELBEN Prüfungstyps, der zeitlich NACH "afterDate" liegt — gesucht über alle
+  // Jahrgänge hinweg. Das ist der automatische Ausweichtermin für Teilnehmerinnen in Verlängerung,
+  // deren eigener Jahrgangstermin bereits feststeht/vergangen ist: sie rutschen auf den nächsten
+  // späteren Termin desselben Prüfungstyps (z. B. die Abschlussprüfung des nachfolgenden Jahrgangs).
+  function nextCohortExamDateAfter(examKey, afterDate){
+    if(!afterDate) return null;
+    const dates = cohorts.map(c=> c[examKey]).filter(d=> d && d > afterDate).sort();
+    return dates[0] || null;
+  }
+
+  // Der für EINE Teilnehmerin tatsächlich gültige ("effektive") Termin eines Prüfungstyps, mit
+  // folgender Rangfolge:
+  //  1) eine manuelle Übersteuerung auf der Teilnehmerakte (p.examOverrides) hat immer Vorrang,
+  //  2) bei Status "Verlängerung" wird automatisch auf den nächsten Termin desselben Prüfungstyps
+  //     aus einem späteren Jahrgang verschoben (sofern ein solcher existiert),
+  //  3) sonst gilt schlicht der Termin des eigenen Jahrgangs.
+  // Liefert {date, source} ('override'|'shifted'|'cohort') oder null, falls kein Termin ermittelbar ist.
+  function effectiveExamDate(p, examKey){
+    if(!p) return null;
+    const override = p.examOverrides && p.examOverrides[examKey];
+    if(override) return {date: override, source:'override'};
+    const c = cohorts.find(x=>x.id===p.cohortId);
+    const ownDate = c ? c[examKey] : null;
+    if(p.status==='verlaengerung' && ownDate){
+      const shifted = nextCohortExamDateAfter(examKey, ownDate);
+      if(shifted) return {date: shifted, source:'shifted'};
+    }
+    return ownDate ? {date: ownDate, source:'cohort'} : null;
+  }
+
+  // Nächster bevorstehender effektiver Prüfungstermin EINER Teilnehmerin (über beide Prüfungstypen
+  // hinweg) — berücksichtigt im Gegensatz zu nextExamForCohort() auch Verlängerung und manuelle
+  // Übersteuerung. Diese Funktion ist überall dort zu verwenden, wo es um eine konkrete
+  // Teilnehmerin geht (Teilnehmerinnen-Liste, Übersicht-Zähler), während nextExamForCohort() für
+  // die rein jahrgangsbezogene "Nächste Prüfungen"-Karte weiter sinnvoll ist.
+  function nextExamForParticipant(p){
+    if(!p) return null;
+    const today = todayISO();
+    const upcoming = EXAM_TYPES
+      .map(t=>{ const ex = effectiveExamDate(p, t.key); return ex ? {type:t.label, key:t.key, date:ex.date, source:ex.source} : null; })
+      .filter(x=> x && x.date >= today)
+      .sort((a,b)=> a.date.localeCompare(b.date));
+    return upcoming[0] || null;
+  }
+
   // ---------- overview ----------
   // Springt von der Übersicht (Kachel "X Teilnehmerinnen" bei einem Jahrgang) direkt in die
   // Teilnehmerinnen-Liste, gefiltert auf genau diesen Jahrgang (Status-/Suchfilter werden dafür
@@ -1649,7 +1715,7 @@ pako/dist/pako.es5.min.js:
     const activeCohorts = cohorts.filter(c=>c.status==='aktiv').length;
     const inPrep = operational.filter(p=>{
       if(!['aktiv','verlaengerung'].includes(p.status)) return false;
-      const ex = nextExamForCohort(cohorts.find(c=>c.id===p.cohortId));
+      const ex = nextExamForParticipant(p);
       return ex && daysUntil(ex.date) <= EXAM_PREP_DAYS;
     }).length;
     const stats = [
@@ -1766,14 +1832,16 @@ pako/dist/pako.es5.min.js:
     if(!list.length){ tbody.innerHTML = `<tr><td colspan="6" class="empty">Keine Teilnehmerinnen gefunden.</td></tr>`; return; }
     tbody.innerHTML = list.map(p=>{
       const st = STATUS[p.status] || {label:p.status, cls:'st-neutral'};
-      const ex = nextExamForCohort(cohorts.find(c=>c.id===p.cohortId));
+      const ex = nextExamForParticipant(p);
+      const exMark = ex && ex.source==='override' ? ' <span class="faint" title="Manuell geändert">✎</span>'
+        : ex && ex.source==='shifted' ? ' <span class="faint" title="Automatisch verschoben (Verlängerung)">⟳</span>' : '';
       return `<tr data-id="${p.id}">
         <td>${esc(participantName(p))} ${p.demo?'<span class="demo-tag">Beispiel</span>':''} ${p.archived?'<span class="demo-tag" style="background:var(--surface-3); color:inherit;">Archiv</span>':''}</td>
         <td>${cohortLinkHTML(p.cohortId)}</td>
         <td><span class="pill ${st.cls}">${esc(st.label)}</span></td>
         <td>${fmtDate(p.entryDate)}</td>
         <td>${esc(p.fundingBody||'—')}</td>
-        <td>${ex ? esc(ex.type)+' '+fmtDate(ex.date) : '—'}</td>
+        <td>${ex ? esc(ex.type)+' '+fmtDate(ex.date)+exMark : '—'}</td>
       </tr>`;
     }).join('');
   }
@@ -1813,6 +1881,7 @@ pako/dist/pako.es5.min.js:
     editingDocs = p && Array.isArray(p.documents) ? p.documents.slice() : [];
     editingHistory = p && Array.isArray(p.history) ? p.history.slice() : [];
     editingCurriculum = p && p.curriculum ? JSON.parse(JSON.stringify(p.curriculum)) : {};
+    editingExamOverrides = p && p.examOverrides ? {...p.examOverrides} : {};
     $('#pDlgTitle').textContent = p ? participantName(p) : 'Neue Teilnehmerin';
     $('#pDlgSub').textContent = p ? cohortName(p.cohortId) : 'Persönliche Daten und Ausbildungsdetails erfassen';
     $('#pVorname').value = p?.vorname||''; $('#pNachname').value = p?.nachname||'';
@@ -1839,13 +1908,56 @@ pako/dist/pako.es5.min.js:
     $('#dlgParticipant').showModal();
   }
 
-  // Zeigt die Prüfungstermine des im Formular aktuell gewählten Jahrgangs an (aktualisiert sich
-  // live, wenn der Jahrgang im Dropdown gewechselt wird — die Termine selbst werden im
-  // Jahrgang-Dialog gepflegt, hier nur informativ angezeigt).
+  // Zeigt die Prüfungstermine der Teilnehmerin an und erlaubt deren manuelle Übersteuerung.
+  // Die Termine selbst werden im Reiter "Prüfungstermine" pro Jahrgang gepflegt; hier wird nur
+  // der daraus abgeleitete, für DIESE Teilnehmerin geltende Termin angezeigt (inkl. automatischer
+  // Verschiebung bei Verlängerung) — aktualisiert sich live bei Jahrgang- oder Statuswechsel im
+  // Formular, auch bevor gespeichert wurde.
   function renderParticipantExamInfo(){
     const c = cohorts.find(x=>x.id===$('#pCohort').value);
-    const parts = EXAM_TYPES.map(t=> c && c[t.key] ? `${t.label}: ${fmtDate(c[t.key])}` : null).filter(Boolean);
-    $('#pExamInfo').textContent = parts.length ? 'Prüfungstermine (Jahrgang): ' + parts.join(' · ') : 'Für den gewählten Jahrgang sind noch keine Prüfungstermine eingetragen.';
+    const status = $('#pStatus').value;
+    $('#pExamList').innerHTML = EXAM_TYPES.map(t=>{
+      const ownDate = c ? c[t.key] : null;
+      const shifted = (status==='verlaengerung' && ownDate) ? nextCohortExamDateAfter(t.key, ownDate) : null;
+      const autoDate = shifted || ownDate;
+      const autoLabel = shifted ? 'automatisch verschoben (Verlängerung)' : 'Jahrgangstermin';
+      const overrideVal = editingExamOverrides[t.key] || '';
+      return `<div class="row" style="gap:8px; align-items:center; flex-wrap:wrap;">
+        <strong style="min-width:130px;">${esc(t.label)}</strong>
+        <input class="input" type="date" style="width:auto;" data-exam-override="${t.key}" value="${esc(overrideVal)}" title="Manuell setzen, um den automatischen Termin zu übersteuern">
+        <span class="faint" style="font-size:12px;">${autoDate ? 'automatisch ('+autoLabel+'): '+fmtDate(autoDate) : 'kein Termin im Jahrgang hinterlegt'}</span>
+        ${overrideVal ? `<button type="button" class="btn btn-sm btn-ghost" data-exam-reset="${t.key}">Zurücksetzen</button>` : ''}
+      </div>`;
+    }).join('');
+    $$('#pExamList [data-exam-override]').forEach(inp=> inp.addEventListener('change', e=>{
+      const k = e.target.dataset.examOverride;
+      if(e.target.value) editingExamOverrides[k] = e.target.value; else delete editingExamOverrides[k];
+      renderParticipantExamInfo();
+    }));
+    $$('#pExamList [data-exam-reset]').forEach(b=> b.addEventListener('click', ()=>{
+      delete editingExamOverrides[b.dataset.examReset];
+      renderParticipantExamInfo();
+    }));
+  }
+
+  // ---------- Prüfungstermine (Jahrgang-Tab) ----------
+  function renderExamCohortsTab(){
+    const sorted = cohorts.slice().sort((a,b)=>(a.startDate||'').localeCompare(b.startDate||''));
+    $('#examCohortList').innerHTML = sorted.length ? sorted.map(c=>`
+      <tr data-id="${c.id}">
+        <td>${cohortLinkHTML(c.id)}</td>
+        ${EXAM_TYPES.map(t=>`<td><input class="input" type="date" data-exam-cohort-field="${t.key}" value="${c[t.key]||''}"></td>`).join('')}
+      </tr>`).join('') : `<tr><td colspan="3" class="empty">Noch keine Jahrgänge angelegt.</td></tr>`;
+  }
+
+  async function onExamCohortFieldChange(e){
+    const field = e.target.dataset.examCohortField;
+    if(!field) return;
+    const tr = e.target.closest('tr[data-id]');
+    const id = tr && tr.dataset.id;
+    if(!id || !db) return;
+    try{ await db.collection('cohorts').doc(id).update({[field]: e.target.value || null}); toast('Gespeichert.'); }
+    catch(err){ console.warn(err); toast('Speichern fehlgeschlagen.'); }
   }
 
   function renderDocsList(){
@@ -2564,6 +2676,10 @@ BWK BildungsWerk in Kreuzberg GmbH`
       // (Firestore erlaubt max. 1 MB pro Dokument).
       documents: editingDocs.map(d=>({assetId:d.assetId, mime:d.mime||'', label:d.label, category:d.category, uploadedAt:d.uploadedAt, uploadedBy:d.uploadedBy})),
       history: editingHistory, curriculum: editingCurriculum,
+      // Manuelle Übersteuerungen der (sonst automatisch aus Jahrgang/Status abgeleiteten)
+      // Prüfungstermine — siehe effectiveExamDate(). Leeres Objekt = keine Übersteuerung, es gilt
+      // der automatische Termin.
+      examOverrides: {...editingExamOverrides},
       // "archived" wird nicht mehr manuell gesetzt, sondern stets automatisch aus dem Status
       // abgeleitet (siehe renderArchiveControls) — TN mit Status Unterbrochen/Bestanden/
       // Abgebrochen verschwinden dadurch immer und ohne Zusatzschritt aus den normalen Listen.
