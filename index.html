@@ -713,7 +713,7 @@ pako/dist/pako.es5.min.js:
           <div class="field"><label>Kostenträger / Fördermittelgeber</label><input class="input" id="pFunding" list="fundingList"></div>
           <div class="field"><label>Aktenzeichen / Kundennummer</label><input class="input" id="pAktenzeichen"></div>
         </div>
-        <div id="pExamList" style="margin-top:8px; display:flex; flex-direction:column; gap:6px;"></div>
+        <div id="pExamList" style="margin-top:8px;"></div>
         <datalist id="fundingList"></datalist>
       </fieldset>
       <fieldset>
@@ -1908,36 +1908,51 @@ pako/dist/pako.es5.min.js:
     $('#dlgParticipant').showModal();
   }
 
-  // Zeigt die Prüfungstermine der Teilnehmerin an und erlaubt deren manuelle Übersteuerung.
-  // Die Termine selbst werden im Reiter "Prüfungstermine" pro Jahrgang gepflegt; hier wird nur
-  // der daraus abgeleitete, für DIESE Teilnehmerin geltende Termin angezeigt (inkl. automatischer
-  // Verschiebung bei Verlängerung) — aktualisiert sich live bei Jahrgang- oder Statuswechsel im
-  // Formular, auch bevor gespeichert wurde.
-  function renderParticipantExamInfo(){
+  // Ermittelt für den im Formular aktuell gewählten Jahrgang/Status den automatischen Termin eines
+  // Prüfungstyps (ohne manuelle Übersteuerung) — wird sowohl zum Vorbefüllen des Feldes als auch
+  // beim Erkennen "Eingabe entspricht dem automatischen Termin" gebraucht.
+  function autoExamDateForForm(examKey){
     const c = cohorts.find(x=>x.id===$('#pCohort').value);
     const status = $('#pStatus').value;
-    $('#pExamList').innerHTML = EXAM_TYPES.map(t=>{
-      const ownDate = c ? c[t.key] : null;
-      const shifted = (status==='verlaengerung' && ownDate) ? nextCohortExamDateAfter(t.key, ownDate) : null;
-      const autoDate = shifted || ownDate;
-      const autoLabel = shifted ? 'automatisch verschoben (Verlängerung)' : 'Jahrgangstermin';
-      const overrideVal = editingExamOverrides[t.key] || '';
-      return `<div class="row" style="gap:8px; align-items:center; flex-wrap:wrap;">
-        <strong style="min-width:130px;">${esc(t.label)}</strong>
-        <input class="input" type="date" style="width:auto;" data-exam-override="${t.key}" value="${esc(overrideVal)}" title="Manuell setzen, um den automatischen Termin zu übersteuern">
-        <span class="faint" style="font-size:12px;">${autoDate ? 'automatisch ('+autoLabel+'): '+fmtDate(autoDate) : 'kein Termin im Jahrgang hinterlegt'}</span>
-        ${overrideVal ? `<button type="button" class="btn btn-sm btn-ghost" data-exam-reset="${t.key}">Zurücksetzen</button>` : ''}
+    const ownDate = c ? c[examKey] : null;
+    const shifted = (status==='verlaengerung' && ownDate) ? nextCohortExamDateAfter(examKey, ownDate) : null;
+    return { date: shifted || ownDate || null, shifted: !!shifted };
+  }
+
+  // Zeigt die Prüfungstermine der Teilnehmerin direkt als normale, vorausgefüllte Datumsfelder an —
+  // die Termine selbst werden im Reiter "Prüfungstermine" pro Jahrgang gepflegt und hier automatisch
+  // übernommen (inkl. Verschiebung bei Verlängerung). Das Feld bleibt dabei jederzeit direkt
+  // überschreibbar: eine manuelle Eingabe gilt als Übersteuerung, ein geleertes Feld übernimmt
+  // wieder automatisch den Jahrgangstermin. Aktualisiert sich live bei Jahrgang- oder
+  // Statuswechsel im Formular, auch bevor gespeichert wurde.
+  function renderParticipantExamInfo(){
+    $('#pExamList').innerHTML = `<div class="form-grid">` + EXAM_TYPES.map(t=>{
+      const auto = autoExamDateForForm(t.key);
+      const override = editingExamOverrides[t.key] || '';
+      const value = override || auto.date || '';
+      let note;
+      if(override && override!==auto.date) note = auto.date ? `manuell geändert (automatisch: ${fmtDate(auto.date)})` : 'manuell gesetzt';
+      else if(auto.shifted) note = 'automatisch verschoben (Verlängerung)';
+      else if(auto.date) note = 'Jahrgangstermin';
+      else note = 'Für den Jahrgang noch kein Termin hinterlegt';
+      return `<div class="field">
+        <label>${esc(t.label)}</label>
+        <input class="input" type="date" data-exam-field="${t.key}" value="${esc(value)}">
+        <span class="faint" style="font-size:11px;">${esc(note)}</span>
       </div>`;
-    }).join('');
-    $$('#pExamList [data-exam-override]').forEach(inp=> inp.addEventListener('change', e=>{
-      const k = e.target.dataset.examOverride;
-      if(e.target.value) editingExamOverrides[k] = e.target.value; else delete editingExamOverrides[k];
-      renderParticipantExamInfo();
-    }));
-    $$('#pExamList [data-exam-reset]').forEach(b=> b.addEventListener('click', ()=>{
-      delete editingExamOverrides[b.dataset.examReset];
-      renderParticipantExamInfo();
-    }));
+    }).join('') + `</div>`;
+    $$('#pExamList [data-exam-field]').forEach(inp=> inp.addEventListener('change', onExamFieldChange));
+  }
+
+  function onExamFieldChange(e){
+    const k = e.target.dataset.examField;
+    const val = e.target.value;
+    const auto = autoExamDateForForm(k);
+    // Entspricht die Eingabe dem automatischen Termin (oder wurde das Feld geleert), gilt das NICHT
+    // als Übersteuerung — so bleibt der Termin "automatisch" und folgt künftig weiter Jahrgang/Status.
+    if(!val || val===auto.date) delete editingExamOverrides[k];
+    else editingExamOverrides[k] = val;
+    renderParticipantExamInfo();
   }
 
   // ---------- Prüfungstermine (Jahrgang-Tab) ----------
